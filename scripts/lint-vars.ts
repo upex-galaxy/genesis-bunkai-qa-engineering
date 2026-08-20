@@ -96,6 +96,9 @@ const DOC_META_ALLOWLIST: Array<[string, string]> = [
   ['PROJECT_VAR', 'CLAUDE.md'],
   // §3.5 Validate / §Verify checklist: adapt-framework.md documents the {{VAR}} syntax inside vars:check comments
   ['VAR', 'adapt-framework.md'],
+  // .context/infrastructure/backend.md §Package Scripts documents the vars:check
+  // script itself: "Lints `{{VAR}}`-style template usage"
+  ['VAR', 'infrastructure\\backend.md'],
   // resend-cli (vendored community skill) reference docs use Resend's own
   // Handlebars-style triple-mustache {{{VAR_NAME}}} email-template placeholders —
   // third-party syntax unrelated to this repo's {{VAR}} project convention.
