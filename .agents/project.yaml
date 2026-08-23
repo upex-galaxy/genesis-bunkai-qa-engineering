@@ -40,7 +40,16 @@ testing:
 
 qa:
   formal_blocked_gate: true # When true and the substrate exposes a `blocked` story status, FAILED stories dispatch `defect_reported` (in_test -> blocked). When false (or no `blocked` slug), the skill leaves the story in `in_test` with the linked bug — non-strict fallback. See sprint-testing/references/sprint-orchestration.md Briefing 4 Step 5.
-  qa_artifact_label: qa-process-epic # Label applied to all 4 QA process epics at creation time so scripts/sync-jira-issues.ts can classify them as QA buckets (kept out of .context/PBI/epics/, indexed under qa-artifacts/ instead). See defect-management-doctrine.md "Every QA process epic carries the {{QA_ARTIFACT_LABEL}} label".
+  # Jira LABEL that marks an Epic as a QA-artifact bucket rather than a product Epic.
+  # `sync-jira-issues` keeps labelled Epics out of `.context/PBI/epics/` (which is the product
+  # tree, one folder per Epic with its Stories nested) and indexes them in `qa-artifacts/`
+  # instead. Without it, `QA Test Repository` and friends land beside real product Epics as
+  # near-empty folders, because a Story query against them returns nothing.
+  # A label is used rather than the epic name because a product Epic may legitimately start
+  # with "QA ", and rather than the cached `qa_epics.*.key` below because those are `null`
+  # until a skill discovers them — the label works from the first sync.
+  # Whoever creates a QA-artifact Epic must apply it; the AI does so automatically.
+  qa_artifact_label: QA-Artifact
   # QA process epics — buckets that hold QA artifacts so they never pollute product epics/roadmap.
   # FOUR QA-process epics form the QA-governance cluster: Test Plans parent to `master_test_plan_epic`;
   # Test (TC) issues parent to `test_repository_epic`; Test Executions/Preconditions/Test Sets parent to
@@ -65,25 +74,28 @@ qa:
       key: null # discovered/created at runtime, then cached here (e.g. PROJ-123)
 
 # Git workflow for THIS project — the SOURCE OF TRUTH read by the git-flow-master skill
-# before any git/gh operation. Ships `null` (template): on the first git intent git-flow-master
-# OFFERS "Strategy Setup" and fills these fields (it never auto-picks). Tracked + frozen by the
-# updater (bootstrapOnly), so each project keeps its own. Filled by git-flow-master, NOT by
+# before any git/gh operation. Ships `solo-main` as an inherited DEFAULT, not a decision —
+# `meta.strategy_source` records the difference (`inherited` until Strategy Setup runs and
+# stamps `chosen`, as it has for this project). Tracked + frozen by the updater
+# (bootstrapOnly), so each project keeps its own. Filled by git-flow-master, NOT by
 # `agents:setup`. These leaves are read directly (not {{VAR}} template vars) → skipped by vars:check.
 git_strategy:
-  strategy: solo-main # DEFAULT, not a decision — see meta.strategy_source. One of: solo-main | main-integration | enterprise | trunk-based | gitflow | github-flow | gitlab-flow | sdet
+  strategy: solo-main # DEFAULT, not a decision — see meta.strategy_source (currently `inherited`: Strategy Setup's Q4 was answered but the questionnaire never formally stamped `chosen`). One of: solo-main | main-integration | enterprise | trunk-based | gitflow | github-flow | gitlab-flow | sdet
   description: >
-    Single long-lived branch (main); single maintainer (this repo is the boilerplate
-    template itself). Work is committed and pushed DIRECTLY to main — never via a PR, and
-    without asking the user to confirm each push (standing authorization). Every push to
-    main is effectively a release of the template. No integration branch, no promotion
-    path, no hotfix ceremony.
-    Operational note for the AI: the GitHub ruleset "ProtectPublic" (require-PR +
-    required-signatures on main/staging/dev) is bypassed AUTOMATICALLY on `git push`
-    because the push credential is a repo/org admin — there is NO explicit bypass flag to
-    add; a plain `git push origin main` already applies it. The remote line
-    "Bypassed rule violations ... Changes must be made through a pull request" is EXPECTED
-    and harmless. Do NOT open a PR, do NOT try to satisfy the rule, do NOT ask to confirm —
-    just commit and push.
+    Single long-lived branch (main); single maintainer (this repo, genesis-bunkai-qa-engineering,
+    is a consumer of the agentic-qa-boilerplate template, scaffolded to QA-test the Bunkai
+    product — it is NOT the boilerplate template itself). Work is committed and pushed
+    DIRECTLY to main — never via a PR, and without asking the user to confirm each push
+    (standing authorization). No integration branch, no promotion path, no hotfix ceremony.
+    Operational note for the AI: as of the last `bun run git:policy verify` (see
+    meta.policy_verified below), no GitHub ruleset applies to this repo's `main` branch at
+    all — zero drift, nothing to bypass. An earlier check (2026-08-20/21) had found a
+    `ProtectPublic` ruleset requiring a PR, bypassed automatically because the push
+    credential is a repo/org admin; that ruleset no longer applies as of the later check.
+    If `bun run git:policy verify` reports drift again in the future, treat it as that old
+    situation resurfacing — record it in policy.accepted_divergences below, do not silently
+    "correct" this to `confirm`, and do not run `bun run git:policy apply` while this stays
+    `allowed`. Do NOT open a PR, do NOT ask to confirm on a routine push — just commit and push.
   branches:
     production: main # release / default branch
     integration: null # long-lived integration branch name (e.g. staging), or null
@@ -95,8 +107,13 @@ git_strategy:
     hotfix_policy: n/a # branch-off-prod-backmerge | via-integration | none | n/a
   policy: # how strictly protected branches are guarded (set by Strategy Setup Q4; defaults are safe)
     direct_push_to_protected: allowed # forbidden | confirm | allowed (solo-main = allowed)
-    admin_bypass: true # normal flow here: the admin push credential auto-bypasses the ProtectPublic ruleset on every push (no flag needed). "Bypassed rule violations" is expected — never open a PR.
-    require_pr_reviews: 1 # VERIFIED 2026-08-18 against ruleset 16809536: required_approving_review_count = 1. Informational here, because this repo pushes directly and the admin credential bypasses the rule (see description) — but the number must still state what the host asks of anyone who does open a PR.
+    admin_bypass: true # standing intent: the sole maintainer holds admin credentials on this repo, so a push-blocking ruleset (if one ever applies again) would auto-bypass with no flag needed. No ruleset currently applies (verified 2026-08-23) — this stays true as forward-looking policy, not a claim that a bypass is happening right now.
+    require_pr_reviews: 1 # Historical fact: ruleset 16809536 required 1 approval when last observed (2026-08-18). That ruleset no longer applies as of the 2026-08-23 policy verify (see description above) — kept as the number to expect if a PR-requiring ruleset reappears.
+    # Host divergences that are ACCEPTED, not drift — empty while `bun run git:policy verify`
+    # reports zero drift (current state, verified 2026-08-23). Each `field` names a
+    # `git:policy verify` finding verbatim (`<branch>.<policy_field>`) if one ever reappears;
+    # `verify` moves a matching finding from DRIFT to ACCEPTED (exit 0) instead of failing.
+    accepted_divergences: []
   branch_prefixes:
     precedence: [feat, fix, refactor, test, docs, chore]
     naming_with_key: '{prefix}/{ISSUE-KEY}-{kebab-slug}'
@@ -104,7 +121,7 @@ git_strategy:
   meta:
     setup_version: 1
     created: 2026-06-20 # YYYY-MM-DD stamped by Strategy Setup
-    policy_verified: 2026-08-20 # YYYY-MM-DD of the last `bun run git:policy verify`. null = never reconciled against the host
+    policy_verified: 2026-08-23 # YYYY-MM-DD of the last `bun run git:policy verify`. null = never reconciled against the host
     policy_source: verified # verified | declared. Stays `declared` while the accepted divergence below is open — see the note on direct_push_to_protected
     # Did anyone actually CHOOSE this strategy, or is it just the shipped default?
     # `strategy:` above is never null, so its value alone cannot answer that. Strategy
