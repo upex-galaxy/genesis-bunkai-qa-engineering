@@ -31,7 +31,7 @@ Read directly from `upex-bunkai-tms/package.json` — do not re-quote from memor
 | `test` | `bun test` | Runs the co-located `*.test.ts` suite (bun's built-in test runner — not Jest/Vitest) |
 | `lint:check` / `lint:fix` | `eslint .` / `eslint --fix .` | ESLint, flat config via `@antfu/eslint-config` |
 | `format:check` / `format:fix` | `prettier --check/--write '**/*.{json,yml,yaml,css,scss,html}'` | Prettier — **scoped to json/yml/css/html only, not `.ts`/`.tsx`** (ESLint owns TS formatting via `@antfu/eslint-config`) |
-| `vars:check` | `bun scripts/lint-vars.ts` | Lints `{{VAR}}`-style template usage |
+| `vars:check` | `bun scripts/lint-vars.ts` | Lints double-brace template variable usage |
 | `vars:env:check` | `bun scripts/check-vars.ts` | Cross-checks `.env` against the variables manifest |
 | `skills:check` | `bun scripts/lint-skills.ts` | Skill-file lint |
 | `skills:registry` / `skills:registry:check` | `bun scripts/build-skill-registry.ts [--check]` | Skill registry generation/freshness |
