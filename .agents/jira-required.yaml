@@ -381,8 +381,8 @@ link_types:
 # discovered by the sync.
 work_types:
   story:
-    jira_issue_type: Story
-    description: User story / feature work item
+    jira_issue_type: Historia
+    description: User story / feature work item (Jira issue type localized to Spanish "Historia" in this instance)
     sync: default
     coverable: true
     content: split
@@ -483,8 +483,8 @@ work_types:
     used_by: [acli, sprint-testing, test-documentation, project-discovery]
 
   bug:
-    jira_issue_type: Bug
-    description: Defect / bug work item
+    jira_issue_type: Error
+    description: Defect / bug work item (Jira issue type localized to Spanish "Error" in this instance)
     sync: default
     coverable: true
     content: single
@@ -700,8 +700,8 @@ work_types:
       aborted: { from: any, to: aborted, description: Abandon the defect (global transition) }
 
   improvement:
-    jira_issue_type: Improvement
-    description: Improvement / enhancement work item
+    jira_issue_type: Mejora
+    description: Improvement / enhancement work item (Jira issue type localized to Spanish "Mejora" in this instance)
     sync: optional
     recommended: true
     coverable: true
