@@ -1,7 +1,7 @@
 # Skill Resolver Protocol
 
 > Cited by: `agentic-qa-core/references/briefing-template.md` and every workflow skill that dispatches subagents (`sprint-testing`, `test-documentation`, `test-automation`, `regression-testing`, `project-discovery`).
-> Companion script: `scripts/build-skill-registry.ts`. Cache file: `.claude/skills/REGISTRY.md`.
+> Companion script: `scripts/build-skill-registry.ts`. Cache file: `.agents/skills/REGISTRY.md`.
 
 ## Purpose
 
@@ -21,12 +21,12 @@ This is a token-saving protocol, not a behavioral one. Subagents are still allow
 
 1. **Build (or read) the registry, once per session.**
    - At the first significant subagent dispatch (i.e. the first dispatch where `Skills to load` is non-empty), the orchestrator runs `bun scripts/build-skill-registry.ts`.
-   - The script scans `.claude/skills/*/SKILL.md`, extracts compact rules per skill, and writes `.claude/skills/REGISTRY.md`.
-   - If `.claude/skills/REGISTRY.md` already exists AND every `SKILL.md` mtime is older than the registry's mtime, the orchestrator skips the rebuild and reads the cached file directly.
+   - The script scans `.agents/skills/*/SKILL.md`, extracts compact rules per skill, and writes `.agents/skills/REGISTRY.md`.
+   - If `.agents/skills/REGISTRY.md` already exists AND every `SKILL.md` mtime is older than the registry's mtime, the orchestrator skips the rebuild and reads the cached file directly.
 
 2. **Inject `## Project Standards (auto-resolved)` into every briefing.**
    - For each subagent dispatch, the orchestrator picks the relevant skills (see "How orchestrator picks relevant skills" below).
-   - The orchestrator copies the matching skills' compact-rule blocks from `.claude/skills/REGISTRY.md` into a new briefing section titled `## Project Standards (auto-resolved)`.
+   - The orchestrator copies the matching skills' compact-rule blocks from `.agents/skills/REGISTRY.md` into a new briefing section titled `## Project Standards (auto-resolved)`.
    - This section sits between `Context docs` and `Skills to load` in the 7-component briefing template.
 
 3. **Subagent trusts the compact rules.**
@@ -97,9 +97,9 @@ Skills NOT matched are simply not pasted. The subagent can still load any skill 
 
 The registry is regenerated when any of these is true:
 
-- **No registry file** at `.claude/skills/REGISTRY.md`.
+- **No registry file** at `.agents/skills/REGISTRY.md`.
 - **A SKILL.md is newer than the registry.** The script compares mtimes; any skill with `mtime > registry.mtime` triggers a full rebuild.
-- **A new skill directory exists under `.claude/skills/`** that the registry does not list.
+- **A new skill directory exists under `.agents/skills/`** that the registry does not list.
 - **A skill directory was removed.** The registry still references a skill that no longer has a SKILL.md → rebuild and drop the orphan.
 - **The user runs `bun scripts/build-skill-registry.ts`** explicitly. Manual override always rebuilds.
 - **Session start.** A fresh session always re-checks invalidation conditions before reusing the cache.

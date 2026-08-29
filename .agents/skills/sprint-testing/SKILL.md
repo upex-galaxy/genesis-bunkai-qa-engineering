@@ -43,7 +43,7 @@ natively (no SDD required).
 
 This boundary is mechanical, not advisory: `scripts/lint-skills.ts` rejects
 any `/sdd-` mention outside this section. See:
-`.claude/skills/agentic-qa-core/references/skill-composition-strategy.md` §4
+`.agents/skills/agentic-qa-core/references/skill-composition-strategy.md` §4
 (governs users who manually install SDD).
 
 # Sprint Testing — Plan, Execute, Report per Ticket
@@ -119,7 +119,7 @@ Canonical reading order for any AI starting cold on a sprint-testing workflow. R
 
 This skill scopes per ticket. Single-ticket mode: `<scope>` = `<JIRA-KEY>` (e.g. `UPEX-123`). Batch-sprint mode: `<scope>` = `sprint-<N>/<JIRA-KEY>` (one nested directory per ticket in the wave). Session state lives at `.session/sprint-testing/<scope>/{plan.md, progress.md, test-session-memory.md}` per `agentic-qa-core/references/session-management.md` §3 + §9. `test-session-memory.md` is a SEPARATE concern from `plan.md`: it carries TMS modality + ticket context + stage state shared across the 4 sub-agent dispatches (domain memory). All three coexist — `plan.md` indexes the session, `progress.md` decides the next stage, `test-session-memory.md` holds the cross-stage shared payload.
 
-This skill is compliant with the doctrine in `CLAUDE.md` §"Orchestration Mode (Subagent Strategy)" and the session contract in `.claude/skills/agentic-qa-core/references/session-management.md`. Every dispatch follows the 7-component briefing format defined in `.claude/skills/agentic-qa-core/references/briefing-template.md`, and the pattern selected per stage matches the decision guide in `.claude/skills/agentic-qa-core/references/dispatch-patterns.md`. This skill operates in two modes (single-ticket and batch-sprint) and BOTH modes use the same four dispatch points per ticket — Session Start -> Stage 1 -> Stage 2 -> Stage 3. The only difference is that batch mode loops them once per ticket. The full briefings (Goal / Context docs / Project Standards (auto-resolved) / Skills to load / Exact instructions / Report format / Rules) live in `references/sprint-orchestration.md` §"Sub-agent prompt templates".
+This skill is compliant with the doctrine in `AGENTS.md` §"Orchestration Mode (Subagent Strategy)" and the session contract in `.agents/skills/agentic-qa-core/references/session-management.md`. Every dispatch follows the 7-component briefing format defined in `.agents/skills/agentic-qa-core/references/briefing-template.md`, and the pattern selected per stage matches the decision guide in `.agents/skills/agentic-qa-core/references/dispatch-patterns.md`. This skill operates in two modes (single-ticket and batch-sprint) and BOTH modes use the same four dispatch points per ticket — Session Start -> Stage 1 -> Stage 2 -> Stage 3. The only difference is that batch mode loops them once per ticket. The full briefings (Goal / Context docs / Project Standards (auto-resolved) / Skills to load / Exact instructions / Report format / Rules) live in `references/sprint-orchestration.md` §"Sub-agent prompt templates".
 
 | Stage                                              | Pattern    | Subagent role                                                                                                                                                                  |
 |----------------------------------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -132,7 +132,7 @@ This skill is compliant with the doctrine in `CLAUDE.md` §"Orchestration Mode (
 
 > **Sequential, not Parallel**: each stage feeds the next (Session Start's PBI folder is read by Stage 1; Stage 1's ATP is read by Stage 2; Stage 2's evidences are read by Stage 3). Parallelism inside a single ticket would race on shared PBI state.
 
-> **On any subagent failure**: STOP, report the partial state (which stages completed, what artifacts landed), present retry / skip-stage / abort options. Do NOT auto-fix nor auto-rollback. See `.claude/skills/agentic-qa-core/references/orchestration-doctrine.md`.
+> **On any subagent failure**: STOP, report the partial state (which stages completed, what artifacts landed), present retry / skip-stage / abort options. Do NOT auto-fix nor auto-rollback. See `.agents/skills/agentic-qa-core/references/orchestration-doctrine.md`.
 
 ---
 
@@ -295,7 +295,7 @@ Batch-sprint mode: Phase 0 fires once per ticket as the loop enters it (NOT once
 
 Every invocation starts by initializing the session, even in batch mode. Session Start:
 
-0. **Resolve TMS modality** (Xray on Jira vs Jira-native). By excellence ATP/ATR/ATS are real Jira items — a `Test Plan` issue (`ATP: {STORY-KEY}: {story title}`) parented to the **QA Master Test Plan** epic, a `Test Execution` issue (`ATR: {STORY-KEY}: Story Testing`) parented to the **QA Test Artifacts** epic, and a `Test Set` issue (`ATS: {US_ID}: {story title}`, the Story's coverage backbone) also parented to **QA Test Artifacts**; the Story custom-field + comment mirror (Modality jira-native) is a **fallback ONLY** when those work types are unavailable. Pre-sprint the ATP lives ONLY in the `{{jira.acceptance_test_plan}}` field — Stage 1 is where the Test Plan item is born (find-or-create from the field). The modality probe decides which path is live. Title grammar + epic parenting + the Feature-altitude FTP name: `references/acceptance-test-planning.md`. Full resolution algorithm lives in `test-documentation/SKILL.md` §Phase 0 — apply the same four-step probe here (CLAUDE.md -> master-test-plan.md -> list issue types -> ask the user). Persist the result into `test-session-memory.md`.
+0. **Resolve TMS modality** (Xray on Jira vs Jira-native). By excellence ATP/ATR/ATS are real Jira items — a `Test Plan` issue (`ATP: {STORY-KEY}: {story title}`) parented to the **QA Master Test Plan** epic, a `Test Execution` issue (`ATR: {STORY-KEY}: Story Testing`) parented to the **QA Test Artifacts** epic, and a `Test Set` issue (`ATS: {US_ID}: {story title}`, the Story's coverage backbone) also parented to **QA Test Artifacts**; the Story custom-field + comment mirror (Modality jira-native) is a **fallback ONLY** when those work types are unavailable. Pre-sprint the ATP lives ONLY in the `{{jira.acceptance_test_plan}}` field — Stage 1 is where the Test Plan item is born (find-or-create from the field). The modality probe decides which path is live. Title grammar + epic parenting + the Feature-altitude FTP name: `references/acceptance-test-planning.md`. Full resolution algorithm lives in `test-documentation/SKILL.md` §Phase 0 — apply the same four-step probe here (AGENTS.md -> master-test-plan.md -> list issue types -> ask the user). Persist the result into `test-session-memory.md`.
 0.1. **Load required tool skills** — based on the TMS modality resolved in Step 0:
    - Always load `/acli` (Jira WRITE operations: comment, transition, link, custom-field update, bug creation). Detailed READS (ACs, ATP/ATR, description, comments) do NOT use `/acli` — they use `bun run jira:sync-issues get <KEY> --include-comments` then read the synced `.md`. See `agentic-qa-core/references/acli-integration.md` §"Reads vs writes".
    - In **Modality jira-xray**: also load `/xray-cli` for Test / Test Execution / Test Plan / Test Run operations and traceability reads.
@@ -335,7 +335,7 @@ Every invocation starts by initializing the session, even in batch mode. Session
    ```
    Jira-mirrored files (`story.md`, `acceptance-criteria.md`, `acceptance-test-plan.md`, `acceptance-test-results.md`, `comments.md`, etc.) are NOT hand-written here — they are materialized by `bun run jira:sync-issues get <KEY> --include-comments`.
 
-   The whole PBI tree is gitignored (it is a Jira cache; see `CLAUDE.md` §9), so `context.md` and `evidence/` are local-only by construction. `test-session-memory.md` lives in `.session/` instead because a re-sync rewrites the PBI cache wholesale and this file is what every resume and every sub-agent reads.
+   The whole PBI tree is gitignored (it is a Jira cache; see `AGENTS.md` §9), so `context.md` and `evidence/` are local-only by construction. `test-session-memory.md` lives in `.session/` instead because a re-sync rewrites the PBI cache wholesale and this file is what every resume and every sub-agent reads.
 8. **Writes the session `plan.md`** at `.session/sprint-testing/<scope>/plan.md` per `agentic-qa-core/references/session-management.md` §6 — Goal (one sentence per ticket), Inputs (PBI paths + TMS modality + Team Discussion summary), Approach (mode + per-stage dispatch pattern), Phase breakdown (Session Start / Stage 1 / Stage 2 / Stage 3 with dispatch pointer + exit condition), Risks (from triage), Verification checklist, Cross-references (cites `context.md`, `test-session-memory.md`, `acceptance-test-plan.md`, `acceptance-test-results.md`).
 9. Writes a Story Explanation and **STOPS** for user confirmation. Do not proceed until the user OK's.
 10. After OK, appends the first progress entry `## Session Start — <ts>` with `status: completed`, `next: Stage 1 — Planning` to `.session/sprint-testing/<scope>/progress.md`.
@@ -423,13 +423,13 @@ If Session Start reports that any of the project-wide context files are missing,
 
 | Tag | Resolves to | Defined in |
 |-----|-------------|------------|
-| `[TMS_TOOL]` | xray-cli skill, Atlassian MCP, or `{{TMS_CLI}}` | `CLAUDE.md` Tool Resolution |
-| `[ISSUE_TRACKER_TOOL]` | `acli`, Atlassian MCP, or `{{ISSUE_TRACKER_CLI}}` | `CLAUDE.md` Tool Resolution |
+| `[TMS_TOOL]` | xray-cli skill, Atlassian MCP, or `{{TMS_CLI}}` | `AGENTS.md` Tool Resolution |
+| `[ISSUE_TRACKER_TOOL]` | `acli`, Atlassian MCP, or `{{ISSUE_TRACKER_CLI}}` | `AGENTS.md` Tool Resolution |
 
 > **Reads vs writes split** (per `agentic-qa-core/references/acli-integration.md` §"Reads vs writes"): **detailed reads** of an issue (custom fields, ACs, ATP/ATR, description, comments) use `bun run jira:sync-issues get <KEY> --include-comments` (or `jql "<query>"`) then read the synced `.md` — NEVER `acli workitem view` (returns `null` for custom fields). **Writes / transitions / links / bug creation / trivial summary-or-status lookups** stay on `[ISSUE_TRACKER_TOOL]` (`/acli`). **Traceability** (link graph Story↔ATP↔ATR↔TC, Xray run status) stays on `[TMS_TOOL]` / `/acli` / `/xray-cli` — do NOT migrate trace reads to the sync.
-| `[AUTOMATION_TOOL]` | playwright-cli skill or Playwright MCP | `CLAUDE.md` Tool Resolution |
-| `[DB_TOOL]` | DBHub MCP or Supabase MCP | `CLAUDE.md` Tool Resolution |
-| `[API_TOOL]` | Schema read → OpenAPI MCP (read-only); execute → curl (token via `bun run api:login`) | `CLAUDE.md` Tool Resolution + `agentic-qa-core/references/api-testing-doctrine.md` |
+| `[AUTOMATION_TOOL]` | playwright-cli skill or Playwright MCP | `AGENTS.md` Tool Resolution |
+| `[DB_TOOL]` | DBHub MCP or Supabase MCP | `AGENTS.md` Tool Resolution |
+| `[API_TOOL]` | Schema read → OpenAPI MCP (read-only); execute → curl (token via `bun run api:login`) | `AGENTS.md` Tool Resolution + `agentic-qa-core/references/api-testing-doctrine.md` |
 
 Concrete tools (`bun`, `git`, `gh`) are used literally. Project variables like `{{PROJECT_KEY}}`, `{{DB_MCP}}`, `{{WEB_URL}}` are resolved from `.agents/project.yaml` (env-scoped vars resolve to the active environment).
 
@@ -462,7 +462,7 @@ All references are self-contained. Load one at a time.
 - **S7.** NEVER skip the smoke pass before triforce (UI / API / DB) exploration. Smoke validates the environment; triforce validates the feature. Order matters — a broken env produces false-positive bug reports.
 - **S8.** NEVER mix UI + API + DB findings into a single bug ticket. File per layer (or per root-cause cluster) so triage and routing stay clean.
 - **S9.** NEVER reuse a PBI folder across tickets. Every Story or Bug gets its own `.context/PBI/epics/EPIC-<KEY>-<slug>/stories/STORY-<KEY>-<slug>/` directory; cross-ticket contamination breaks evidence + traceability.
-- **S10.** NEVER transition the ticket Ready For QA → In Test without explaining the story to the user AND waiting for confirmation (CLAUDE.md §8 — Session Start is not a one-shot, it's a hand-off gate).
+- **S10.** NEVER transition the ticket Ready For QA → In Test without explaining the story to the user AND waiting for confirmation (AGENTS.md §8 — Session Start is not a one-shot, it's a hand-off gate).
 - **S11.** NEVER skip the auto-stage promote (Session Start → Stage 1 → Stage 2 → Stage 3) after a phase completes — each promote is a checkpoint that writes a `progress.md` entry and feeds the next subagent's Context docs.
 - **S12.** NEVER file a bug without a reproducible repro path AND evidence (screenshot, trace, log, network HAR, or DB row reference). "It failed for me once" is not a bug ticket.
 - **S13.** NEVER hardcode `customfield_NNNNN` IDs in ATP / ATR / QA comments or in any reference under this skill. Resolve every Jira field via `{{jira.<slug>}}` against `.agents/jira-required.yaml`.

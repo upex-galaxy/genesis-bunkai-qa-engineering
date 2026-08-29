@@ -3,22 +3,25 @@
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
   "templateCommit": "89f4602822ea74826fc01abb8949e34030d01a6a",
   "perComponentCommit": {
-    "skills": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "commands": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "scripts": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "docs": "89f4602822ea74826fc01abb8949e34030d01a6a",
+    "skills": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "scripts": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "docs": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
     "cli": "89f4602822ea74826fc01abb8949e34030d01a6a",
     "vscode": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "husky": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "agents-docs": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "claude-config": "89f4602822ea74826fc01abb8949e34030d01a6a",
+    "husky": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "agents-docs": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
     "tooling": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "env-template": "89f4602822ea74826fc01abb8949e34030d01a6a"
+    "env-template": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "agent-compatibility": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "codex-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b"
   },
   "syncedComponents": [],
   "ignoreFileSync": {
     ".gitignore": {
-      "lastSyncedSha": "d2b8cb964fb1554cd23a0bd2c456bbfe03f36160",
+      "lastSyncedSha": "c5dd162728278252c192d3ff34a9fd487ba34165",
       "appendedLines": [
         ".context/reports/*",
         "!.context/reports/README.md",
@@ -32,35 +35,46 @@
         "!.context/PBI/epics/*/test-specs/",
         ".claude/skills/playwright-cli/",
         ".claude/skills/playwright-best-practices/",
-        ".claude/skills/resend-cli/"
+        ".claude/skills/resend-cli/",
+        ".env*",
+        "!.env.example",
+        ".agents/skills/*-workspace/",
+        ".agents/skills/playwright-cli/",
+        ".agents/skills/playwright-best-practices/",
+        ".agents/skills/resend-cli/",
+        "!skills-lock.json",
+        "!**/skills-lock.json"
       ]
     }
   },
   "packageJsonSync": {
     "package.json": {
       "scripts": {
-        "lastSyncedSha": "646665c6213b0e666ace68411112265cf92e073a",
+        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
         "appliedKeys": [
           "context:hydrate",
           "jira:components",
-          "tests:map"
+          "tests:map",
+          "agents:compat",
+          "agents:compat:check",
+          "codex"
         ]
       },
       "devDependencies": {
-        "lastSyncedSha": "646665c6213b0e666ace68411112265cf92e073a",
+        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
         "appliedKeys": []
       },
       "dependencies": {
-        "lastSyncedSha": "646665c6213b0e666ace68411112265cf92e073a",
+        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
         "appliedKeys": []
       },
       "lint-staged": {
-        "lastSyncedSha": "646665c6213b0e666ace68411112265cf92e073a",
+        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
         "appliedKeys": []
       }
     }
   },
   "cliVersion": "7.0",
-  "lastSyncedAt": "2026-08-23T17:38:59.435Z",
+  "lastSyncedAt": "2026-08-29T16:32:40.206Z",
   "variableSystemVersion": 1
 }
