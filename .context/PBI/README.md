@@ -80,7 +80,7 @@ Custom-field content (ACs, ATP/ATR, scope, business rules, comments) is **only**
 
 ### Backlog Location
 
-- Site: `https://upexgalaxy71.atlassian.net` (resolved via `.agents/project.yaml` → `issue_tracker.atlassian_url`, never hardcode elsewhere — see `CLAUDE.md` §7 Instance-Identity Anchor).
+- Site: `https://upexgalaxy72.atlassian.net` (resolved via `.agents/project.yaml` → `issue_tracker.atlassian_url`, never hardcode elsewhere — see `CLAUDE.md` §7 Instance-Identity Anchor).
 - Project key: `BK`. Project type: `software`, style `classic`, category "UPEX Original Inner-Projects".
 - Board: `Bunkai Board` (id `6`), type `scrum`. Sprint naming: `Bunkai (<N>) Sprint <n>` (e.g. `Bunkai (70) Sprint 3`), ~4-week cadence.
 

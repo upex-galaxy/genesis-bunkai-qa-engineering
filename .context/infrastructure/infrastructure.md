@@ -103,7 +103,7 @@ The single-shared-Supabase-project model (see Environments Matrix above) means t
 |---|---|---|---|
 | Hosting / deploy | Vercel | Build + host the Next.js app, zero-config Git integration | `.context/project-config.md` |
 | Database + Auth + Realtime | Supabase (managed Postgres 16) | All persistence, authentication, and live Run/step updates | `.context/SRS/architecture.md` §7 |
-| Issue tracker (external integration, not infra) | Atlassian Jira Cloud (`upexgalaxy71.atlassian.net`) | Source of imported User Stories via JQL polling | `.context/SRS/architecture.md` §7 |
+| Issue tracker (external integration, not infra) | Atlassian Jira Cloud (`upexgalaxy72.atlassian.net`) | Source of imported User Stories via JQL polling | `.context/SRS/architecture.md` §7 |
 
 **No other external services found** — confirmed by `.context/SRS/architecture.md` §7's own explicit statement ("No other external services found. No payment processor, no email-delivery SDK... no APM/monitoring SDK, no queue/worker system, no Redis/cache service, no CDN config beyond Vercel's default") and re-confirmed here by the `RESEND_API_KEY`/`SUPABASE_ACCESS_TOKEN` env-var findings in `backend.md` (declared in `.env.example` but not actually wired to any SDK dependency in `package.json`). This task's own scan for additional `new .*Client(` third-party service instantiations in `lib/` did not surface anything beyond the Supabase and Jira clients already documented.
 

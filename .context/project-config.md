@@ -43,7 +43,7 @@
 
 ## Tools and Access
 
-- Issue tracker: JIRA (`upexgalaxy71.atlassian.net`) — resolved via [ISSUE_TRACKER_TOOL]
+- Issue tracker: JIRA (`upexgalaxy72.atlassian.net`) — resolved via [ISSUE_TRACKER_TOOL]
 - Project key: BK
 - Database: resolved via [DB_TOOL] (DBHub MCP, session pooler, read-only role — see `dbhub.toml`)
 - Docs: In-repo Markdown (target repo root: `README.md`, `CONTEXT.md`, `DESIGN.md`, `INSTALLER.md`, `CLAUDE.md`). No Confluence or Notion references found.
