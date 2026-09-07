@@ -121,7 +121,7 @@ git_strategy:
   meta:
     setup_version: 1
     created: 2026-06-20 # YYYY-MM-DD stamped by Strategy Setup
-    policy_verified: 2026-08-29 # YYYY-MM-DD of the last `bun run git:policy verify`. null = never reconciled against the host
+    policy_verified: 2026-09-07 # YYYY-MM-DD of the last `bun run git:policy verify`. null = never reconciled against the host
     policy_source: verified # verified | declared. Stays `declared` while the accepted divergence below is open — see the note on direct_push_to_protected
     # Did anyone actually CHOOSE this strategy, or is it just the shipped default?
     # `strategy:` above is never null, so its value alone cannot answer that. Strategy
