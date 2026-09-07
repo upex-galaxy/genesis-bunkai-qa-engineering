@@ -3,17 +3,17 @@
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
   "templateCommit": "89f4602822ea74826fc01abb8949e34030d01a6a",
   "perComponentCommit": {
-    "skills": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "skills": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
     "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "scripts": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "docs": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "cli": "89f4602822ea74826fc01abb8949e34030d01a6a",
+    "scripts": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
+    "docs": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
+    "cli": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
     "vscode": "89f4602822ea74826fc01abb8949e34030d01a6a",
     "husky": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "agents-docs": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "agents-docs": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
     "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
     "tooling": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "env-template": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "env-template": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
     "agent-compatibility": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
     "codex-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
     "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b"
@@ -21,7 +21,7 @@
   "syncedComponents": [],
   "ignoreFileSync": {
     ".gitignore": {
-      "lastSyncedSha": "c5dd162728278252c192d3ff34a9fd487ba34165",
+      "lastSyncedSha": "82195b81ce755d511e8da13bbd672adae0959232",
       "appendedLines": [
         ".context/reports/*",
         "!.context/reports/README.md",
@@ -43,7 +43,15 @@
         ".agents/skills/playwright-best-practices/",
         ".agents/skills/resend-cli/",
         "!skills-lock.json",
-        "!**/skills-lock.json"
+        "!**/skills-lock.json",
+        ".backups*/",
+        ".template/last-apply.json"
+      ]
+    },
+    ".prettierignore": {
+      "lastSyncedSha": "2d65bedc55be87885be51510bc1b977c8aef67c2",
+      "appendedLines": [
+        ".backups*/"
       ]
     }
   },
@@ -74,7 +82,7 @@
       }
     }
   },
-  "cliVersion": "7.0",
-  "lastSyncedAt": "2026-08-29T16:32:40.206Z",
+  "cliVersion": "8.4",
+  "lastSyncedAt": "2026-09-06T18:18:52.105Z",
   "variableSystemVersion": 1
 }

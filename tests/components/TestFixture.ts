@@ -126,6 +126,7 @@ class TestFixture extends TestContext {
  * - If you only use `api`, NO browser is opened
  * - If you use `ui` or `test`, the browser is opened
  */
+
 export const test = base.extend<{
   test: TestFixture
   api: ApiFixture

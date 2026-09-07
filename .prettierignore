@@ -117,3 +117,7 @@ docs/mcp/
 # checkout. Prettier (which honors only .prettierignore, not .git metadata)
 # would otherwise recurse into it and flag formatting on files we don't own here.
 .claude/worktrees/
+
+# ===== Synced from boilerplate v8.4 =====
+# ----- 2026-09-06 (sync) -----
+.backups*/
