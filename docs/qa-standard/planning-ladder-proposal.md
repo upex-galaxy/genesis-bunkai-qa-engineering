@@ -191,7 +191,7 @@ run/coverage engine on top.
 - `agentic-qa-core/references/traceability-linking.md` — Plan/Run item links, roll-up edges.
 - `test-documentation/references/tms-conventions.md` · `tms-architecture.md` · `jira-test-management.md` · `xray-platform.md` — naming + items-over-fields.
 - `sprint-testing/references/acceptance-test-planning.md` · `reporting-templates.md` · `SKILL.md` — ATP/ATR items, FTP/FTR (Feature Testing), Story Testing term.
-- `shift-left-testing/references/atp-draft-template.md` · `handoff-protocol.md` — ATP DRAFT title.
+- `shift-left-testing/references/atp-outline-template.md` (successor of the removed ATP draft template) · `handoff-protocol.md` — ATP DRAFT title.
 - `regression-testing/SKILL.md` — STP/STR (Sprint Regression Testing).
 - `scripts/sync-jira-issues.ts` — Plan/Run as items; field-fallback precedence.
 - `.claude/skills/agentic-qa-core/naming-conventions.es.html` — new "Planning Ladder" layer/slide.
