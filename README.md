@@ -130,8 +130,8 @@ POSTMAN_API_KEY
 | **Start a new project — magic command (recommended)** | `bunx create-agentic-qa@latest <your-repo-name>` — official scaffolder ([npm](https://www.npmjs.com/package/create-agentic-qa))                                                                               |
 | **Start a new project — GitHub "Use this template"**  | Click [**Use this template**](https://github.com/upex-galaxy/agentic-qa-boilerplate/generate) → clone your new repo → `bun install && bun run setup` (see [Other ways to start](#other-ways-to-start)) |
 | **Contribute to the boilerplate itself**              | `git clone …` then `bun install && bun run setup` (see [Other ways to start](#other-ways-to-start))                                                                                                    |
-| **Get oriented before installing**                    | `bun run onboarding` — opens `docs/onboarding.html` with sidebar nav                                                                                                                                   |
-| **Understand the methodology**                        | [`docs/agentic-quality-engineering.md`](docs/agentic-quality-engineering.md)                                                                                                                           |
+| **Get oriented before installing**                    | `bun run onboarding` — opens the docs site on its "Empezar aquí" page (`docs/core/empezar-aqui.html`)                                                                                                        |
+| **Understand the methodology**                        | `bun run docs` → Metodología ([how this repo implements it](docs/core/metodologia/este-repo.html))                                                                                                                           |
 | **See what `bun run setup` configures**               | [`INSTALLER.md`](INSTALLER.md) — run `bun cli/doctor.ts` after setup                                                                                                                                   |
 | **You're an AI agent**                                | [`CLAUDE.md`](CLAUDE.md) (auto-loaded each session)                                                                                                                                                    |
 
@@ -357,7 +357,7 @@ XRAY_PROJECT_KEY=
 
 ### (b) Runtime URLs — `config/variables.ts`
 
-Update `envDataMap` in `config/variables.ts` with your application URLs. The `Environment` type currently accepts `local` and `staging`; extend the type when you need a third environment.
+Update `envDataMap` in `config/variables.ts` with your application URLs. The `Environment` type in `config/variables.ts` lists the accepted values; extend it there when you need another environment.
 
 ```typescript
 const envDataMap: Record<

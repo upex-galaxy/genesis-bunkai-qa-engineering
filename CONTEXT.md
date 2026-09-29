@@ -114,7 +114,7 @@ Two systems, two consumers, two lifecycles. Use the right substrate for the righ
 └── master-test-plan.md        → What to test and why                (/master-test-plan)
 ```
 
-> **TMS configuration**: modality (Xray vs Jira-native) is derived from `.agents/project.yaml` `testing.tms_cli`. Regression Epic and label taxonomy are auto-discovered live by `/test-documentation` Phase 0 + Preflight. IQL methodology reference lives in `docs/methodology/jira-platform.md`.
+> **TMS configuration**: modality (Xray vs Jira-native) is derived from `.agents/project.yaml` `testing.tms_cli`. Regression Epic and label taxonomy are auto-discovered live by `/test-documentation` Phase 0 + Preflight. Jira/Xray setup lives in `docs/core/setup/jira-xray.html`; the IQL methodology narrative is the official site, https://upexgalaxy.com/metodologia.
 
 Workflow instructions and role-specific guidelines (TAE, QA, MCP usage) now live inside agent skills under `.claude/skills/`.
 
@@ -343,6 +343,6 @@ Reference / utility / generator skills (`agentic-qa-core`, `acli`, `xray-cli`, `
 
 ---
 
-> **You are here**: Context Engineering map for AI agents in the QA repo. **Read time**: 15 min. **Next**: [`docs/agentic-quality-engineering.md`](docs/agentic-quality-engineering.md).
+> **You are here**: Context Engineering map for AI agents in the QA repo. **Read time**: 15 min. **Next**: `bun run docs`, then [`docs/core/metodologia/este-repo.html`](docs/core/metodologia/este-repo.html).
 
 **Last Updated**: 2026-04-26
