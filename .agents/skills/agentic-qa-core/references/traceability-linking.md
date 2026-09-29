@@ -12,7 +12,7 @@
 
 ## 1. Purpose + when to use
 
-Traceability linking turns QA intent into a queryable graph in Jira. Five touchpoints invoke it:
+Traceability linking turns QA intent into a queryable graph in Jira. These touchpoints invoke it:
 
 | Touchpoint              | Moment                                                          | Link created                                  |
 | ----------------------- | -------------------------------------------------------------- | --------------------------------------------- |
@@ -51,7 +51,7 @@ Then retry. This mirrors the catalog-or-die rule in `acli-integration.md` §Slug
 
 ## 3. QA link catalog
 
-All slugs below are present in the seeded `.agents/jira-link-types.json`. Resolve names via `{{jira.link_types.<slug>}}` — the literal column is illustrative only.
+Resolve every slug via `{{jira.link_types.<slug>}}`; an absent slug STOPs (§2). The literal column is illustrative only.
 
 | Slug               | Semantic (illustrative)            | Source → Target                                              | Outward (illustrative) | Inward (illustrative) | Required / Optional | When to create                                                                 |
 | ------------------ | ---------------------------------- | ----------------------------------------------------------- | ---------------------- | --------------------- | ------------------- | ------------------------------------------------------------------------------ |
@@ -76,9 +76,11 @@ All slugs below are present in the seeded `.agents/jira-link-types.json`. Resolv
 >
 > **Items-first (default by excellence):** in BOTH modalities the ATP and ATR are real Jira **items** — a **Test Plan** item (`ATP: {STORY-KEY}: {title}`) and a **Test Execution** item (`ATR: {STORY-KEY}: Story Testing`) — so the `test` / `test_design` / `test_execute` edges above apply uniformly. The **fallback** branch — ATP/ATR carried as Story custom fields with no separate issues — applies ONLY when the Test Plan / Test Execution work types are unavailable in the instance and the items therefore cannot be created; there `test_design` / `test_execute` are N-A and the Story is linked directly to each Test via the generic `test` edge instead (the cascade's last rung). `test_automation` stays an optional refinement in both cases.
 >
-> **QA-process Epic parenting (axis 1) + roll-up.** Independently of the coverage links above, every Plan and Run also parents to a QA-process Epic: every **Test Plan** item (ATP · FTP · STP) parents to the **QA Master Test Plan** epic; every **Test Execution** item (ATR · STR), **Test Set** (ATS and feature-level `TS:`), and **Precondition** parents to the **QA Test Artifacts** epic. Optional **roll-up** edges aggregate coverage up the ladder: ATP `is part of` FTP, and FTP `is part of` STP (`relates` family / `is part of`) — the parent Epic stays the QA-process Epic regardless of roll-up.
+> **QA-process Epic parenting (axis 1) + roll-up.** Independently of the coverage links above, every Plan and Run also parents to a QA-process Epic: every **Test Plan** item (ATP · FTP · STP · RTP) parents to the **QA Master Test Plan** epic; every **Test Execution** item (ATR · STR · RTR), **Test Set** (ATS and feature-level `TS:`), and **Precondition** parents to the **QA Test Artifacts** epic. Optional **roll-up** edges aggregate coverage up the ladder: ATP `is part of` FTP, and FTP `is part of` STP (`relates` family / `is part of`) — the parent Epic stays the QA-process Epic regardless of roll-up.
 >
-> **The RESULTS side has NO roll-up edge (binding).** The roll-up above is a **Plans-only** mechanism. There is no `ATR is part of STR` link type, and none is to be invented: the **STR is a sibling recap of the sprint, not an aggregate of the ATRs**. Nothing in Jira or Xray sums per-Story outcomes into it, so an STR's numbers are whatever its own Test Runs hold — never assume they roll up from the Stories. A reader who wants per-Story outcomes reads the ATRs **directly** (they hang off their own Stories via the administrative `ATR→Story` edge); the STR answers "how did the sprint's regression go", a different question. Same for the retired FTR rung: feature results are read from the per-Story ATRs, not aggregated anywhere.
+> **The RESULTS side has NO roll-up edge (binding).** The roll-up above is a **Plans-only** mechanism. There is no `ATR is part of STR` link type, and none is to be invented: the **STR is a sibling recap of the sprint, not an aggregate of the ATRs**. Nothing in Jira or Xray sums per-Story outcomes into it, so an STR's numbers are whatever its own Test Runs hold — never assume they roll up from the Stories. A reader who wants per-Story outcomes reads the ATRs **directly** (they hang off their own Stories via the administrative `ATR→Story` edge); the STR answers "how did the sprint's regression go", a different question. Same for the retired FTR rung: feature results are read from the per-Story ATRs, not aggregated anywhere. The rule extends upward unchanged: there is no `STR is part of RTR` and no `RTR is part of anything`. The **RTR** (Regression Test Results, one Test Execution per regression verdict) answers "is this build releasable"; the STR answers "how did the sprint go". Each Execution's numbers are its own Test Runs, at every altitude.
+>
+> **`testPlan` is an Xray FIELD, not a link type; and there is NO `STP → RTP` edge.** The Execution → Plan binding (STR → STP, STR → RTP at sprint close, RTR → RTP) rides the Xray `testPlan` field on the Execution. It is not a Jira issue link, it is absent from `.agents/jira-link-types.json` by design, and it never needs a slug: do not look for one, do not degrade it to `relates`. On the plans side the roll-up stops at the STP. The RTP is a curated per-TC subset (Candidate and Manual verdicts are promoted into it, Deferred never), so a sprint plan is not "part of" it; regression membership is expressed per Test, through Test Plan membership plus the `regression-candidate` label, never by chaining sprint plans into the RTP. The `test_execute` edge from an RTR to its Tests follows the same rule as the ATR's (§9).
 
 ---
 
@@ -88,14 +90,18 @@ Jira link types are asymmetric: each edge has an outward phrase (read from the s
 
 **Do NOT trust the tool layer's flag naming.** `acli`'s `--out` / `--in` flags are EMPIRICALLY INVERTED relative to Jira's outward/inward semantics — `--out` takes the inward partner and `--in` takes the outward partner. The full per-link-type mapping (including the `Test` / `Test Design` / `Test Execute` / `Test Automation` / `Causes` / `Blocks` / `Relates` rows) and the reverse-mapping rule of thumb live in **`acli/references/workitem.md` §link → "Directionality — EMPIRICAL FLAG INVERSION"**. Read that section before any `link create` call. Do not re-derive it here.
 
-**MANDATORY post-create verification** — every link-create MUST be followed by a direction check. The recipe (`[ISSUE_TRACKER_TOOL]` list-links for the issue → inspect `outwardIssueKey`) lives in `acli/references/workitem.md` §link → "Mandatory post-create verification". The methodology rule per QA edge:
+**MANDATORY post-create verification** — every link-create MUST be followed by a direction check, and the read differs by edge. For `problem_incident` and `blocks`, the recipe (`[ISSUE_TRACKER_TOOL]` list-links for the issue → inspect `outwardIssueKey`) lives in `acli/references/workitem.md` §link → "Mandatory post-create verification". For `test`, that same acli recipe does NOT reach the field this check needs: `acli`'s list-links returns only the flattened `outwardIssueKey`, never the nested `issuelinks[].inwardIssue` shape below — use `[TMS_TOOL] trace: {STORY_KEY}` instead (Modality `jira-xray`; `/xray-cli` owns the syntax), which reads that raw field from Xray's own coverage query. The methodology rule per QA edge:
 
-- **`test`** — for "Story is tested by ATS/ATP/ATR (or last-resort TC)" → list the Story's links → confirm the Story is the INWARD party (`is tested by`) and the container/TC is the outward party (`tests` → Story). Live-verified: the coverage panel reads ONLY the inward `is tested by` on the coverable — an inverted edge silently contributes zero coverage. Mismatch → delete + recreate with swapped flags, re-verify.
+- **`test`** — for "Story is tested by ATS/ATP/ATR (or last-resort TC)" → run `[TMS_TOOL] trace: {STORY_KEY}` (`/xray-cli`) → confirm **the artifact appears under `inwardIssue` in the Story's `issuelinks` entry**. State and check it as that RAW FIELD, never as the outward/inward phrase: the phrases can be read in either direction, and on one measured project three agents read the same sentence oppositely, one of them rewiring live coverage links on the strength of it. The field name cannot be read two ways. Live-verified against Xray's own coverage query, not against Jira link semantics: one Story carrying both shapes over two disjoint sets of ten Tests returned the ten under `inwardIssue` and none of the ten under `outwardIssue`; project-wide, 21 Stories wired the other way read UNCOVERED against as many as 69 attached Tests. An inverted edge exists, reads as a link, and contributes zero coverage. Mismatch → **delete first, then recreate** (see the dedupe note below), re-verify.
 - **`problem_incident`** — for "Story causes Bug" → list the Story's links → confirm the Story's outward partner is the Bug under `causes`.
 - **`blocks`** — for "Story is blocked by Bug" → list the Story's links → the Story is the INWARD party (`is blocked by`); the Bug is the outward party (`blocks`). Confirm the Bug's outward partner is the Story, or equivalently the Story's inward partner is the Bug.
 - **`relates`** and other symmetric types — direction CANNOT be verified; note this in the matrix (§7) and never use `relates` where direction carries meaning.
 
 Mismatch on any asymmetric edge → flag, delete the link via `[ISSUE_TRACKER_TOOL]` (link delete by id), recreate with arguments adjusted per the gotcha catalog, re-verify before moving on.
+
+**Delete BEFORE recreating — adding the corrected link is a silent no-op.** Jira dedupes a link between the same pair and the same type **regardless of direction**: the second create returns success, writes nothing, and leaves the wrong edge in place. Measured while repairing coverage links on a live instance. So the repair is always four steps, in this order: read the link id → delete that id → create the edge the right way round → verify. Never a two-step "just add the right one".
+
+**A per-edge check cannot see the failure that matters.** An inverted coverage link is invisible on one Story — the link is present, the coverage panel is merely empty, and nothing reports it. It reads as a problem only in AGGREGATE, which is why the sweep in §10 exists and why it should run at least once per engagement rather than only per Story under test.
 
 ---
 
@@ -197,7 +203,7 @@ Edge ownership in one line:
 
 **In Modality `jira-xray`, Test ↔ Test Set (ATS / `TS:`) membership is NOT a Jira issuelink.** Neither is Test ↔ Test Plan / Test Execution membership in an Xray-managed project. These are Xray-internal associations stored in Xray's own data model (`TC ∈ ATS`, `TC ∈ ATP`, `TC ∈ ATR`), not in Jira's `issuelinks`. They MUST be handled via **`/xray-cli`** (Xray GraphQL — `addTestsToTestSet` / `getTestSet` / enrichment), NEVER via `acli jira workitem link create`.
 
-**Explicit warning (Modality `jira-xray`)**: do NOT attempt to create membership with the (currently buggy) `"is part of test set"` link-type literal. It is not a real Jira link type in this workspace catalog, it bypasses the slug resolver (violating §2), and the Xray membership it appears to imply will not register. Test Set / Test Plan membership goes through `/xray-cli` only. The `test` issuelink in §3 covers container→Story COVERAGE — in this modality it does not and cannot express Test-Set MEMBERSHIP.
+**Explicit warning (Modality `jira-xray`)**: do NOT attempt to create membership with the `"is part of test set"` link-type literal. It is not a real Jira link type in this workspace catalog, it bypasses the slug resolver (violating §2), and the Xray membership it appears to imply will not register. Test Set / Test Plan membership goes through `/xray-cli` only. The `test` issuelink in §3 covers container→Story COVERAGE — in this modality it does not and cannot express Test-Set MEMBERSHIP.
 
 **jira-native carve-out (explicit — the rule above is xray-modality-only).** In Modality `jira-native` there is NO Xray layer, so membership has no GraphQL home: there, membership IS expressed as Jira issue links — `TC→ATS` links bind each TC into the per-Story ATS, and the `ATS→Story` link carries coverage. An instance without the Test Set work type has no ATS at all; membership degrades to direct `TC→Story` links (the cascade's last rung, §3). The "never a Jira link" prohibition therefore applies ONLY where the Xray layer exists.
 
@@ -212,6 +218,29 @@ The TARGET model (§3, §8) prescribes two distinct layers for an ATP/ATR↔TC r
 
 ---
 
+## 10. Traceability verification — the three-edge check
+
+Consumers that wrote `[TMS_TOOL] trace {TICKET}` were, in practice, checking ONE edge and logging "traceability verified" for all three. In Modality `jira-xray` the one-call form is **`[TMS_TOOL] trace: {STORY_KEY}`** (`/xray-cli` owns the syntax), which performs all four reads and exits non-zero unless every edge passes. Where it is unavailable, verification is explicit and consists of these calls:
+
+```
+[ISSUE_TRACKER_TOOL] Link List: {STORY_KEY}   # expect: ATS "tests" Story   (coverage edge — the only one Xray counts)
+[ISSUE_TRACKER_TOOL] Link List: {ATP_KEY}     # expect: ATP "tests" Story   (administrative edge)
+[ISSUE_TRACKER_TOOL] Link List: {ATR_KEY}     # expect: ATR "tests" Story   (administrative edge)
+[TMS_TOOL] plan get: {ATP_KEY} · exec get: {ATR_KEY}   # expect: Plan + Execution test lists == ATS membership
+```
+
+Concretely: the three link reads are the `/acli` link-list read (§4's direction check — the artifact must appear under `inwardIssue` in the Story's entry); the list comparison is the `/xray-cli` plan/execution read against the ATS membership (the `/xray-cli` test-enrich read), because that membership is Xray-internal and invisible to the link reads (§9). Exact command syntax lives in those two skills, not here.
+
+**The rule.** Traceability is verified ONLY when all three edges are present AND the lists match. A missing administrative edge is a **FAIL** of this check, not a warning. **Never log "traceability verified" from the coverage edge alone** — the ATS→Story edge carries the coverage, but a Story whose ATP or ATR is unlinked has an incomplete audit trail, and the next consumer walking `issuelinks` from the Plan or the Run finds nothing.
+
+**One-call form.** `[TMS_TOOL] trace: {STORY_KEY}` performs all four reads, reports per-edge PASS/FAIL with the exact remediation command for each failure, and exits 0 only when all four hold. Prefer it over the block above; that block stays as the manual equivalent. A failing coverage edge also reports the offending **link id**, so the repair is addressable instead of a hunt — the remediation is never a bare "delete the inverted link".
+
+**Project-wide sweep (run it once per engagement).** The same one-call form accepts several Story keys or a JQL query and closes with a repair worklist: `[TMS_TOOL] trace: {KEY} {KEY} …` or `[TMS_TOOL] trace --jql: {JQL}` (`/xray-cli` owns the syntax). This is not a nice-to-have. A per-Story gate structurally cannot see an inconsistency that exists only in aggregate, and on the one project where the sweep was run first, 21 of 43 linked Stories were wired the wrong way and one had lost a fully populated 69-Test Test Set. Whoever inherits a project whose links were created before this direction was measured should assume the mix is there until a sweep says otherwise. The sweep keeps going past a Story it cannot read, so one permission error does not hide the rest of the worklist.
+
+**Modality `jira-native`.** There is no Xray layer and no one-call form: verification is that the Story's `{{jira.acceptance_test_plan}}` field is populated (or its `## Acceptance Test Plan (ATP)` fallback comment exists — §6 degradation rules), plus the `TC→ATS` and `ATS→Story` issue links per §9's carve-out. An instance with no Test Set work type verifies the last-resort direct `TC→Story` links instead.
+
+---
+
 ## Hard rules — NEVER do these
 
 - NEVER hardcode link-type names. Always resolve via `{{jira.link_types.<slug>}}` (§2).
@@ -220,8 +249,12 @@ The TARGET model (§3, §8) prescribes two distinct layers for an ATP/ATR↔TC r
 - NEVER batch multiple links in one call — one call per edge, verify each (§5, §4).
 - NEVER trust acli `--out` / `--in` naming — consult `acli/references/workitem.md` §link inversion gotcha first, then verify direction after every create (§4).
 - NEVER skip the mandatory post-create direction check for an asymmetric edge (§4).
+- NEVER state the coverage direction as an outward/inward PHRASE — state and verify it as the raw field: the artifact under `inwardIssue` in the Story's entry (§4).
+- NEVER repair a link's direction by adding the corrected link — Jira dedupes the pair+type regardless of direction, so the create is a silent no-op. Delete the offending link id FIRST (§4).
+- NEVER conclude a project's traceability is sound from per-Story checks alone — run the aggregate sweep at least once (§10).
 - NEVER treat an ATP→Story or ATR→Story link as coverage — administrative only (live-verified zero coverage); coverage = ATS→Story, or last-resort TC→Story (§3).
 - NEVER skip the per-Story ATS — it is mandatory even for a single TC; the ATP/ATR derive their test lists from its membership (Set-first, §3).
+- NEVER log "traceability verified" from the coverage edge alone — run the three-edge check (one call in Modality `jira-xray`, the four explicit reads otherwise); a missing administrative edge is a FAIL (§10).
 - NEVER (Modality `jira-xray`) create Test ↔ Test Set / Test Plan membership via acli link, and NEVER use the `"is part of test set"` literal — route to `/xray-cli` (§9). In Modality `jira-native` membership IS `TC→ATS` issue links — the prohibition does not apply there (§9 carve-out).
 
 ---

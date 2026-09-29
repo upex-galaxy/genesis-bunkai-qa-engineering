@@ -7,7 +7,7 @@
 
 1. **Goal** — one sentence. What outcome the subagent must achieve.
 2. **Context docs** — files the subagent reads before acting. Absolute paths. The repo root is written as `<<REPO_ROOT>>` — a session variable per `.agents/README.md` §Variable syntax conventions — which the orchestrator resolves to the real absolute root at dispatch time (a subagent's cwd resets between calls, so relative paths are unsafe).
-3. **Project Standards (auto-resolved)** — REQUIRED. Compact rules of skills relevant to this dispatch. Pulled from `.agents/skills/REGISTRY.md` (built once per session by `bun run skills:registry`). The subagent treats this section as authoritative for the listed conventions and does NOT re-read the full SKILL.md unless explicitly told to. Protocol: `agentic-qa-core/references/skill-resolver.md`.
+3. **Project Standards (auto-resolved)** — REQUIRED. Compact rules of skills relevant to this dispatch. Pulled from `.agents/skills/REGISTRY.md` (built once per session by `bun run skills:registry`). The subagent treats this section as authoritative for the listed conventions and does NOT re-read the full SKILL.md unless explicitly told to. Context skills (`<aspect>-context`, `iql-context`) are included ONLY when the dispatch touches their aspect. Protocol: `agentic-qa-core/references/skill-resolver.md`.
 4. **Skills to load** — skill triggers (e.g. `/acli`, `/xray-cli`, `/playwright-cli`) the subagent must invoke before issuing tool calls. The orchestrator never inlines tool syntax — that lives in the owning skill.
 5. **Exact instructions** — numbered steps. No ambiguity. Each step names the tool / skill action.
 6. **Report format** — what the subagent returns to the orchestrator. Either a JSON object with named fields, or a bullet list with explicit headings. Avoid free-form prose. For workflow-skill stage dispatches, append the mandatory session-footer fields (`skills_loaded`, `mcps_used`, `clis_used`, `testing_levels_touched`, `screenshots_captured`) per `agentic-qa-core/references/session-footer-contract.md` §Briefing snippet — the orchestrator unions them into ONE session-close footer.
@@ -207,6 +207,7 @@ Rules:
 - **Memory reads/writes** — orchestrator owns memory. Subagents must not read or write `AGENTS.md` / `AGENTS.md` / persistent memory.
 - **Task tracking** (TaskCreate / TaskUpdate / progress files) — orchestrator owns tasks.
 - **Asking the user for input** — only the orchestrator can prompt the user. Subagents that hit a question must STOP and report.
+  - Exception, supervised workers ONLY: a persistent worker launched through `/orca-orchestration` sends its conductor a blocking `ask` over the run mailbox instead of stopping, and still never prompts the user (nobody is watching its terminal). Subagents keep the STOP-and-report rule unchanged.
 - **Planning / decision-making** — the orchestrator decides what to do next. Subagents execute pre-decided steps.
 - **Sleeping / polling** — if you would `sleep`, you probably wanted Background pattern instead.
 - **Running tests on someone else's behalf** — verification is part of the same agent that made the change. Don't fan out a "verify" agent for a 1-step edit.

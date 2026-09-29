@@ -276,7 +276,7 @@ For every endpoint the component exposes, the test file (or sibling test files) 
 
 | ID | Check | Severity |
 |----|-------|----------|
-| A-T1 | `ApiFixture` forwards `setRequestContext`, `setAuthToken`, `clearAuthToken` to every child API component. A new component missing these wires is a reject. | CRITICAL |
+| A-T1 | `ApiFixture` overrides `setAuthToken` and `clearAuthToken` and forwards BOTH to every child API component. A new component missing either wire is a reject: it keeps a stale token after the fixture cleared one. The request context is NOT forwarded — it arrives through the constructor (`new XApi(options)`), so there is no `setRequestContext` to check. | CRITICAL |
 | A-T2 | Tests requiring auth call an auth ATC in `beforeEach` — not inline in every test. | HIGH |
 | A-T3 | Credentials come from `@variables` (resolved from `.env`). No hardcoded emails/passwords. | CRITICAL |
 | A-T4 | Token rotation / refresh flows are exercised at least once for components that own them. | MEDIUM |
@@ -357,7 +357,7 @@ When every box is checked, the ticket is handed over to CI via the standard PR f
 
 ## Appendix · Legacy code cross-reference
 
-For PR comments that reference the legacy boilerplate's flat check IDs (`.prompts/stage-5-automation/review/*`). The current refactor split the 29+ flat checks into a shared list (`automation-standards.md` §10) plus deltas (this file). Use this table to resolve historical references.
+For PR comments that reference the legacy boilerplate's flat check IDs (`.prompts/stage-5-automation/review/*`). Those flat checks were split into a shared list (`automation-standards.md` §10) plus deltas (this file). Use this table to resolve historical references.
 
 | Legacy code | Scope | New location |
 |---|---|---|

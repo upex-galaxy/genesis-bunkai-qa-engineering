@@ -13,7 +13,7 @@
       }
     }
   },
-  "outputDir": ".playwright/output",
+  "outputDir": ".context/PBI/epics/EPIC-BK-85-account-settings/stories/STORY-BK-508-settings-request-an-export-of-my-workspace-data/evidence",
   "outputMode": "file",
   "console": {
     "level": "warning"

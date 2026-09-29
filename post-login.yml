@@ -1,0 +1,71 @@
+- generic [active] [ref=e1]:
+    - generic [ref=e96]:
+        - complementary [ref=e97]:
+            - generic [ref=e98]:
+                - generic [ref=e99]:
+                    - generic [ref=e100]: 分
+                    - generic [ref=e101]: Bunkai
+                - generic [ref=e102]:
+                    - button "Notifications, all read" [ref=e104] [cursor=pointer]
+                    - link "New project" [ref=e108] [cursor=pointer]:
+                        - /url: /projects/new
+            - button "AQ Acme QA" [ref=e111] [cursor=pointer]:
+                - generic [ref=e112]:
+                    - generic [ref=e113]: AQ
+                    - generic [ref=e114]: Acme QA
+            - button "Search or jump to… ⌘ K" [ref=e118] [cursor=pointer]:
+                - generic [ref=e119]: Search or jump to…
+                - generic [ref=e123]:
+                    - generic [ref=e124]: ⌘
+                    - generic [ref=e125]: K
+            - navigation [ref=e126]:
+                - link "Home" [ref=e127] [cursor=pointer]:
+                    - /url: /home
+                - link "Activity" [ref=e132] [cursor=pointer]:
+                    - /url: /activity
+                - link "Projects 1" [ref=e136] [cursor=pointer]:
+                    - /url: /projects
+                    - generic [ref=e137]: Projects
+                    - generic [ref=e140]: '1'
+                - generic "Coming soon" [ref=e141]:
+                    - generic [ref=e142]: ATC Library
+                    - generic [ref=e145]: soon
+                - generic "Coming soon" [ref=e146]:
+                    - generic [ref=e147]: Test Runs
+                    - generic [ref=e150]: soon
+                - generic "Coming soon" [ref=e151]:
+                    - generic [ref=e152]: Bug Reports
+                    - generic [ref=e162]: soon
+                - generic "Coming soon" [ref=e163]:
+                    - generic [ref=e164]: Metrics
+                    - generic [ref=e167]: soon
+                - link "Settings" [ref=e168] [cursor=pointer]:
+                    - /url: /settings
+            - generic [ref=e173]: Pinned projects
+            - link "PROJ project-6c4c4607" [ref=e176] [cursor=pointer]:
+                - /url: /projects/project-6c4c4607
+                - generic [ref=e177]: PROJ
+                - generic [ref=e178]: project-6c4c4607
+            - button "BS bunkai-staging-owner@aeasteaont.resend.app Owner" [ref=e181] [cursor=pointer]:
+                - generic [ref=e182]: BS
+                - generic [ref=e183]:
+                    - generic [ref=e184]: bunkai-staging-owner@aeasteaont.resend.app
+                    - generic [ref=e185]: Owner
+        - generic [ref=e191]:
+            - generic [ref=e192]:
+                - generic [ref=e193]:
+                    - heading "Projects" [level=1] [ref=e194]
+                    - paragraph [ref=e195]: 1 project in this workspace, oldest first.
+                - link "New project" [ref=e196] [cursor=pointer]:
+                    - /url: /projects/new
+            - list [ref=e201]:
+                - listitem [ref=e202]:
+                    - link "project-6c4c4607 2026-09-10 /project-6c4c4607 QA" [ref=e203] [cursor=pointer]:
+                        - /url: /projects/project-6c4c4607
+                        - generic [ref=e204]:
+                            - generic [ref=e205]: project-6c4c4607
+                            - generic [ref=e206]: 2026-09-10
+                        - generic [ref=e207]: /project-6c4c4607
+                        - generic [ref=e208]: QA
+    - region "Notifications alt+T"
+    - alert [ref=e83]

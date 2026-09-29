@@ -4,6 +4,9 @@ description: "Onboard a project through four discovery phases: Constitution, Arc
 license: MIT
 compatibility: [claude-code, copilot, cursor, codex, opencode]
 complementary_categories: [meta-skill]
+metadata:
+  kind: workflow
+  requires_capabilities: [db, api-schema]
 ---
 
 # Project Discovery — Onboarding Orchestrator
@@ -12,7 +15,29 @@ Turn an unknown codebase into a testable project. Four phases, always in order, 
 
 The discovery is **conversational**: you read the code, ask when ambiguous, confirm before writing files. Never fabricate -- if you cannot verify a claim from the source, mark it as a "Discovery Gap" and move on.
 
-Grounding methodology: **IQL (Integrated Quality Lifecycle)** — QA is continuous from requirement to release, not a gate at the end. The full rationale and step breakdown live in `docs/methodology/IQL-methodology.md` (shared across all QA skills). This skill does not depend on reading it — only point the user there if they ask why the discovery is structured this way.
+Grounding methodology: **IQL (Integrated Quality Lifecycle)** — QA is continuous from requirement to release, not a gate at the end. The stage contract every QA skill enforces lives in `agentic-qa-core/references/stage-gates.md`; the methodology narrative is the official IQL site: https://upexgalaxy.com/metodologia (ES) / https://upexgalaxy.com/en/methodology (EN). This skill does not depend on reading it — only point the user there if they ask why the discovery is structured this way.
+
+---
+
+## Compact Rules
+
+- DO: run the four phases in order (Constitution → Architecture → Infrastructure → Specification), each gated on the previous. Show the output paths and wait for an explicit "Phase N complete" before continuing — never auto-chain.
+- DO NOT: write anything into the target repo. Discovery is read-only on it; `.context/` is the only write target, and modifying the boilerplate itself is `adapt-framework`.
+- DO NOT: invent business entities, flows, requirements, or Jira/Xray field IDs and status names. Anything not verifiable from the source goes in the `## Discovery Gaps` section that every output must carry.
+- DO: describe what the system DOES, not what product wants it to do. Discovery is reverse-engineering; a "to-be" PRD/SRS is out of scope — point the user at their own product workflow.
+- DO: lock the target repo path(s) before Phase 1 and block on ambiguity. A repo that is not cloned locally cannot be discovered from a URL — ask for the clone first.
+- WHEN the layout is split sibling repos: run the Phase 1 sub-steps once per repo and merge into ONE `project-config.md`, never interleaved. WHEN it is a monorepo: Phase 1 once project-wide, Phases 2-3 per package.
+- DO NOT: generate business maps, the feature catalog, or the master test plan here — those are `project-context` modes, which own their diff and overwrite approval. Exact API types are `bun run api:sync`.
+- DO NOT: create per-ticket PBI content or copy the backlog. Phase 4 produces only the backlog access recipe; the committed `README.md` and `templates/` under `.context/PBI/` stay untouched.
+- DO NOT: paste credentials or a detected secret into any discovery doc. Reference the `.env` key or the file path only; a hardcoded-secret hit is recorded as a HIGH risk with its path.
+- WHEN Phase 2 or 3 settles a test-architecture decision that is architectural AND hard to reverse (runner, isolation/parallelization, fixture and test-data strategy, auth-in-tests, selector contract, CI sharding): record it as an append-only ADR under `.context/ADR/`, drafted `Proposed` for the human to accept.
+- DO NOT: mix a discovery session with `adapt-framework`, and do not use this skill for incremental map refreshes — the write boundaries differ.
+- DO NOT: skip Phase 1 or its domain glossary on a fresh start. Downstream skills read the glossary as a precondition for ATP authoring and TC naming.
+- WHEN both a DB schema/migrations and ORM models exist: prefer the schema or migrations. ORM definitions drift from the live schema.
+- DO: mention the IQL methodology only if the user asks why the discovery is structured this way — never lecture someone who just wants the artifact.
+- DO: before any step that uses a declared MCP capability (`metadata.requires_capabilities`: `db`, `api-schema`), run the point-of-use check in `agentic-qa-core/references/preflight-gate.md` §8: resolve by tool-name suffix, and when no available tool provides it STOP and name the capability + how to enable it, never a silent fallback.
+
+**Read full SKILL.md when**: running any phase's sub-steps, applying a completion gate's content checks, or resolving the pre-`adapt-framework` prerequisite list.
 
 ---
 
@@ -34,7 +59,7 @@ Canonical reading order when starting cold on a discovery run. Read in order; st
 
 > **Orchestration & Session contracts**: this skill follows `agentic-qa-core/references/orchestration-doctrine.md` (mandatory subagent dispatch — main thread is command center) AND `agentic-qa-core/references/session-management.md` (Phase 0 resume check, plan-first persistence at `.session/<skill-slug>/<scope>/`, archive on completion). Phase 0 (resume check) and Phase 1 (plan write) are NOT optional.
 
-This skill is **project-scope**: no `<scope>` segment. Session state lives directly at `.session/project-discovery/{plan.md, progress.md}` per `agentic-qa-core/references/session-management.md` §3 + §9. This is the longest skill in the QA repo (1.5–4 hours, 4 hard-gate phases) and benefits most from per-phase checkpoints: if interrupted between Phase 2 (PRD/SRS) and Phase 3 (Infrastructure), resume reads `progress.md` and skips back to the first incomplete phase without re-prompting the user for already-confirmed scope.
+This skill is **project-scope**: no `<scope>` segment. Session state lives directly at `.session/project-discovery/{plan.md, progress.md}` per `agentic-qa-core/references/session-management.md` §3 + §9. This skill runs long (hours, four hard-gate phases) and benefits most from per-phase checkpoints: if interrupted between Phase 2 (PRD/SRS) and Phase 3 (Infrastructure), resume reads `progress.md` and skips back to the first incomplete phase without re-prompting the user for already-confirmed scope.
 
 This skill is compliant with the doctrine in `AGENTS.md` §"Orchestration Mode (Subagent Strategy)" and the session contract in `.agents/skills/agentic-qa-core/references/session-management.md`. Per-phase dispatch decisions live in `Pick the scope first` below: Fresh = heavy subagent delegation per phase; Boilerplate adoption = medium; Brownfield + Context refresh = main session only.
 
@@ -52,7 +77,7 @@ Before scope selection or any target-repo discovery, run the resume contract fro
    - Surface to the user: scope chosen, target repo, last completed phase, next phase, any open Discovery Gaps from the last entry.
    - Offer **resume / restart / abort**. On `restart`, archive to `.session/.archive/<YYYY-MM-DD>-project-discovery-aborted/` before proceeding.
 
-Resume is high-value here: Fresh onboarding (1.5–4h) crossing a session boundary without resume re-runs Phase 1 from scratch, re-prompting target paths the user already confirmed.
+Resume is high-value here: Fresh onboarding (hours) crossing a session boundary without resume re-runs Phase 1 from scratch, re-prompting target paths the user already confirmed.
 
 ---
 
@@ -236,7 +261,15 @@ Discovery complete. `/project-discovery` has populated:
 It runs data -> features -> api -> test-plan in dependency order and can be re-run whenever project context becomes stale.
 
 After it completes, invoke `adapt-framework` to wire KATA against the target stack.
+
+**Context skills this project could carry** (proposed, not created — `project-context` mode `context-skill <aspect>` creates each one through `skill-creator`, once the map it sits over exists):
+- `data-context` over `.context/business/business-data-map.md` — <one line: the judgment a session needs to read that map right, or "no candidate yet">
+- `api-context` over `.context/business/business-api-map.md` — <one line, or "no candidate yet">
+- `infra-context` over `.context/SRS/` + `.context/infrastructure/` — <one line, or "no candidate yet">
+- <any other aspect the discovery surfaced> — <one line>
 ```
+
+Fill each proposal line from what the phases actually found: a soft-delete convention, a derived field, an auth edge case, an environment-only behaviour. A proposal is one sentence naming the judgment, never a file: the facts stay in the map, and the skill is born later, over an approved map, with dated rules. "No candidate yet" is a valid line.
 
 Do not auto-chain the handoff inside this session. Context generation needs its own token budget and approval lifecycle.
 
@@ -255,7 +288,7 @@ Before the user invokes `adapt-framework`, verify every file below is on disk. M
 
 Handoff line to print to the user:
 
-> Discovery handoff complete. Run `project-context refresh-all`, then invoke `adapt-framework` when the six prerequisites are present.
+> Discovery handoff complete. Run `project-context refresh-all`, then invoke `adapt-framework` when every prerequisite above is present.
 
 ---
 
@@ -356,7 +389,7 @@ Larger templates (full PRD sections, KATA component skeletons, `.context/infrast
 - **Phase 4 (backlog mapping, templates)** -> read `references/phase-4-specification.md`.
 - **Generating or refreshing business maps and master test plan** -> NOT this skill. Invoke the matching `project-context` mode.
 - **API endpoint sync** -> `bun run api:sync` for technical types; `project-context` mode `api` for business narrative.
-- **User asks about IQL methodology** -> point them to `docs/methodology/IQL-methodology.md` (shared across QA skills). This skill no longer carries its own IQL reference.
+- **User asks about IQL methodology** -> `iql-context` (the methodology index: it cites the official site https://upexgalaxy.com/metodologia for the narrative and `agentic-qa-core/references/stage-gates.md` for the enforced per-stage contract). This skill carries no IQL reference of its own.
 - **Code exploration (grep, read files)** -> use built-in tools. If the user wants a browser-driven exploration instead (UI-first discovery), load `/playwright-cli` skill.
 - **Issue-tracker operations (Phase 4)** -> resolve `[ISSUE_TRACKER_TOOL]` via AGENTS.md Tool Resolution. For Jira, load `/acli` skill (primary) or fall back to the Atlassian MCP. If the project also uses Xray for TMS, load `/xray-cli` additionally.
 - **Database inspection** -> resolve `[DB_TOOL]`; read-only queries only during discovery.

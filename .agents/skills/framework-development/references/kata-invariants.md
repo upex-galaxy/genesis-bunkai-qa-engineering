@@ -1,8 +1,22 @@
 # KATA Invariants — Framework Evolution Reference
 
-Canonical knowledge source for `framework-development`. Distinguishes what is INVARIANT (cannot break without major version bump) from what is EXTENSIBLE (safe evolution surface). Derived from the test-automation skill references and `docs/methodology/kata-fundamentals.md`. Use this file to gate framework changes: reject violations, approve safe extensions.
+Canonical knowledge source for `framework-development`. Distinguishes what is INVARIANT (cannot break without major version bump) from what is EXTENSIBLE (safe evolution surface). Derived from the test-automation skill references, chiefly `test-automation/references/kata-architecture.md`. Use this file to gate framework changes: reject violations, approve safe extensions.
 
 Terminology preserved verbatim: ATC, fixture, locator, Component, Steps, Helper, Page, Api, TestContext, ApiBase, UiBase, TestFixture.
+
+> **Canonical formula — the one sentence every KATA surface must agree with:**
+>
+> **KATA organises automation in four layers with a single direction of dependency: TestContext,
+> Base, domain Components and Fixtures. Steps is an optional intermediate layer between Components
+> and Fixtures. Test files consume the Fixtures — they are not a layer.**
+>
+> Short form: **"four named layers, plus optional Steps"**. Never publish a bare number. Banned on
+> every surface: "three layers", "five layers", "6 layers", "Test files" as a layer, and
+> the acronym expanded with a C ("Component Action Test Architecture"). The expansion is
+> **Komponent Action Test Architecture**: the K lives only in the name; the layer is "domain
+> Components", spelled normally. DRY zones that are NOT layers: `tests/utils/`, `tests/data/`, `config/`.
+> Consumers: `tests/e2e/`, `tests/integration/`. Mirrored verbatim in
+> `test-automation/references/kata-architecture.md`; if the two ever differ, that is the drift.
 
 ---
 
@@ -76,26 +90,35 @@ If you are tempted to put an API helper in `tests/utils/`, stop — it depends o
 
 ## 5. Import aliases (INVARIANT)
 
-Aliases are mandatory. Lint rejects relative imports across layers via `eslint-plugin-import`. Disabling the rule is FORBIDDEN.
+Aliases are mandatory across `tests/**`, and **this one is now a compiler, not just doctrine**. The
+alias set is declared in `tsconfig.base.json`; `KATA_IMPORT_ALIASES` in `eslint.config.base.js` is a
+core `no-restricted-imports` block scoped to `tests/**/*.ts` + `playwright.config.ts` that rejects
+every `./` and `../` import there. It is a SECOND block beside `CLI_IMPORT_CLOSURE` (which stays
+scoped to `cli/**` and guards the updater's import closure); the two file sets are disjoint.
 
-Required `tsconfig.json` `paths`:
+Three things a reader should know before citing it:
 
-```
-"@config/*"     -> ./config/*
-"@variables"    -> ./config/variables.ts
-"@components/*" -> ./tests/components/*
-"@api/*"        -> ./tests/components/api/*
-"@ui/*"         -> ./tests/components/ui/*
-"@steps/*"      -> ./tests/components/steps/*
-"@utils/*"      -> ./tests/utils/*
-"@schemas/*"    -> ./api/schemas/*
-"@TestContext"  -> ./tests/components/TestContext.ts
-"@TestFixture"  -> ./tests/components/TestFixture.ts
-"@ApiFixture"   -> ./tests/components/ApiFixture.ts
-"@UiFixture"    -> ./tests/components/UiFixture.ts
-"@data/*"       -> ./tests/data/*
-"@openapi"      -> ./api/openapi-types.ts (FACADE-ONLY consumer)
-```
+- The rule is core ESLint (`no-restricted-imports`), not `eslint-plugin-import`. Do not
+  attribute it to a plugin nobody installed — that was the previous version of this paragraph's
+  mistake, in reverse.
+- **Dynamic `await import('./x')` is not caught.** The rule matches static import and export
+  declarations only.
+- **`eslint.config.js` is project-owned and never overwritten by the sync**, so a downstream project
+  receives the exported block and not the wiring. `validateEslintBlockWiring`
+  (`cli/lib/agent-compatibility-contracts.ts`) fails `agents:compat:check` when a block the base
+  exports is absent from the consumer, which is what stops the rule from shipping inert.
+
+Review (`/pr-review-lead`) is no longer the only enforcement point, but it still owns the half a
+lint rule cannot judge: whether the alias chosen is the RIGHT one for the layer.
+
+The alias set is whatever `tsconfig.base.json` `paths` declares (the authority — read it, do not
+trust a copy; `tsconfig.json` extends the base and declares no `paths` of its own). `@openapi` is a
+FACADE-ONLY consumer.
+
+There is no `@config/*` and no `@components/*`: config is reached through `@variables`, and the
+component tree through the per-layer aliases (`@ui/*`, `@api/*`, `@steps/*`) or the named fixture /
+context entries. Earlier revisions of this file listed both; they never existed in `tsconfig.json`,
+and a framework change that assumes them will not resolve.
 
 Rule: Domain components import from `@schemas/{domain}.types`, NEVER from `@openapi`. Only files under `api/schemas/` may import `@openapi`. Test files import `test` from `@TestFixture`, NOT from `@playwright/test`.
 
@@ -107,7 +130,7 @@ Renaming an alias is a major-version-bump-level change because every test file a
 
 KATA distinguishes the public API surface (ATCs and class-public helpers) from internal utilities. Error-handling discipline differs by surface and is part of the test contract.
 
-- **Public methods (ATCs, class-public helpers): fail fast — `throw new Error(...)` with descriptive message**. Test must fail loudly at the call site. Example: `apiGET<T>(...)` throws if `this.request` is unset.
+- **Methods a test can reach (ATCs, class-public `@step` helpers): fail fast — `throw new Error(...)` with descriptive message**. Test must fail loudly at the call site. Note the `apiXXX` HTTP primitives are `protected`, not part of that surface: `ApiBase` fails fast from its `get request()` getter when no context is available.
 - **Private utilities (parsers, matchers, internal helpers): silent fail — `return null` / `return undefined`**. Caller decides. Example: `parseResponseBody<T>` returns `null` when the response is not JSON.
 - **Why**: public methods are part of the test contract that downstream tests rely on; failing silently masks real bugs. Utilities are convenience — `null` lets the caller handle the missing-data case explicitly.
 
@@ -128,9 +151,9 @@ Where new code CAN safely land WITHOUT a major-version bump. Anything not on thi
 | New agnostic utility | `tests/utils/<name>.ts` | MUST NOT depend on Playwright `Page` or `APIRequestContext`. If it does, it belongs in `UiBase` or `ApiBase`. |
 | New helper method on `ApiBase` | `tests/components/api/ApiBase.ts` | MUST be reusable across multiple `*Api` subclasses. Domain-specific logic stays in the Domain component. |
 | New helper method on `UiBase` | `tests/components/ui/UiBase.ts` | Same constraint — must be reusable across multiple `*Page` subclasses. |
-| New Domain component | `tests/components/api/{Resource}Api.ts` or `tests/components/ui/{Page}Page.ts` | MUST be registered in the matching Fixture (`ApiFixture`, `UiFixture`). Without registration, tests cannot reach it. ApiFixture must also forward `setRequestContext`/`setAuthToken`/`clearAuthToken`. |
+| New Domain component | `tests/components/api/{Resource}Api.ts` or `tests/components/ui/{Page}Page.ts` | MUST be registered in the matching Fixture (`ApiFixture`, `UiFixture`). Without registration, tests cannot reach it. ApiFixture must also forward `setAuthToken` and `clearAuthToken` to it (there is no `setRequestContext` — the request context arrives through the constructor). |
 | New Steps module | `tests/components/steps/{Domain}Steps.ts` | Extends `TestContext`; instantiated directly in tests (`new {Domain}Steps(options)`) — NEVER fixture-registered. NOT decorated with `@atc`. Used only when 3+ ATCs repeat across 3+ files. Anti-duplication check: `kata-manifest.json` `steps[]` lists every existing Steps module — consult it before proposing a new one. |
-| New Fixture registration entry | `ApiFixture` / `UiFixture` constructor | Must mirror auth propagation pattern (forward `setRequestContext` / `setAuthToken` / `clearAuthToken` from ApiFixture override). |
+| New Fixture registration entry | `ApiFixture` / `UiFixture` constructor | Must mirror the auth propagation pattern (forward `setAuthToken` and `clearAuthToken` from the ApiFixture overrides; the request context is constructor-injected, not forwarded). |
 | New OpenAPI facade | `api/schemas/{domain}.types.ts` | Must be re-exported from `api/schemas/index.ts` barrel. Only facade files import `@openapi`. |
 | New DataFactory generator | `tests/data/DataFactory.ts` (+ matching interface in `tests/data/types.ts`) | Use `faker` only inside DataFactory. Tests/components must NEVER import `faker` directly. |
 | New static fixture data | `tests/data/fixtures/*.json` | Only for reference data (roles, permission matrices, mock responses, configuration trees). Transactional data goes to DataFactory. |
@@ -148,7 +171,7 @@ Mandatory verification matrix when modifying load-bearing surface area. Each row
 | If you change... | You must verify... |
 |------------------|-------------------|
 | `ApiBase.apiGET/POST/PUT/PATCH/DELETE` signature or tuple return | Re-run ALL Api ATC tests; type-check entire repo; grep every `*Api.ts` for tuple destructure shape. |
-| `ApiBase` auth methods (`setAuthToken`, `clearAuthToken`, `setRequestContext`) | Verify `ApiFixture` overrides forward to every registered Api component. Run all 401-coverage tests. |
+| `ApiBase` auth methods (`setAuthToken`, `clearAuthToken`) | Verify `ApiFixture` overrides forward to every registered Api component. Run all 401-coverage tests. |
 | `UiBase.interceptResponse` / `waitForApiResponse` signature | Re-run ALL UI ATCs that use interception; confirm Allure attachments still produce. |
 | `TestContext` constructor or option shape (`TestContextOptions`) | Audit every Layer 2/3/3.5 constructor that calls `super(options)`. Re-run full suite. |
 | Fixture signature in `TestFixture`/`ApiFixture`/`UiFixture` | Grep all consumers (`tests/**/*.test.ts`); update destructures; re-run full suite. |
@@ -170,11 +193,11 @@ Out-of-scope surfaces. Modifying these from a framework-development task is FORB
 - **Generated artifacts**: `api/openapi-types.ts` is generated by `bun run api:sync` from `api/openapi.json`. Never hand-edit. `api/openapi.json` and `api/.openapi-config.json` are gitignored local cache. `kata-manifest.json` is generated by `bun run kata:manifest`. `reports/atc_results.json` and `reports/.atc_partial.ndjson` are runtime artifacts.
 - **Per-ticket test specs** (consumers, not framework): `tests/e2e/**/*.test.ts`, `tests/integration/**/*.test.ts`, and ticket-specific subclasses under `tests/components/{module}/` (the BASE classes `ApiBase`/`UiBase`/`TestContext` are framework; concrete `*Api`/`*Page` for a ticket are consumer code owned by `test-automation`).
 - **Per-ticket QA context**: `.context/PBI/**` (PBI folders, ATPs, ATRs, evidence). Owned by `sprint-testing` / `test-documentation`.
-- **Project-wide context**: `.context/business/**`, `.context/master-test-plan.md`. Owned by `/business-*-map`, `/master-test-plan`. (TMS modality + Regression Epic are resolved live by `/test-documentation` from `.agents/project.yaml` and Jira itself — no `.context/` file.)
+- **Project-wide context**: `.context/business/**`, `.context/master-test-plan.md`. Owned by `project-context` (modes `data` / `features` / `api` and `test-plan`). (TMS modality + Regression Epic are resolved live by `/test-documentation` from `.agents/project.yaml` and Jira itself — no `.context/` file.)
 - **Credentials and env**: `.env`, `.env.example` (only the variable list may be appended when adding a new framework env var; never values).
 - **Playwright artifacts (gitignored)**: `test-results/`, `tests/data/downloads/`, `playwright/.auth/`.
 - **Test results / TMS sync state**: outputs of CI runs, not framework code.
-- **Skills / Commands / AGENTS.md**: owned by `/agentic-qa-core`, `/sync-ai-memory`, and the SDD orchestrator. A framework change that needs to surface in AI memory must coordinate via `/sync-ai-memory`, not direct edit.
+- **Skills / AGENTS.md**: owned by `/agentic-qa-core`, `sync-ai-context`, and the SDD orchestrator. A framework change that needs to surface in AI memory must coordinate via `sync-ai-context`, not direct edit.
 
 ---
 
@@ -198,7 +221,6 @@ These are POLICY tables, not INVARIANT rules. They can be amended additively wit
 | `package.json` deps + scripts                         | Dependency upgrades, script registry, engines. Not test specs in `tests/`.                                       |
 | `.agents/skills/agentic-qa-core/references/`          | Briefing template, dispatch patterns, orchestration doctrine, skill-composition-strategy.                        |
 | `.agents/skills/framework-development/`               | This skill itself — references, scripts, agents/.                                                                |
-| `.claude/commands/`                                   | Slash-command source (`/sync-ai-memory`, `/business-*-map`, `/master-test-plan`, etc.).                          |
 
 ### 10.2 FORBIDDEN paths (redirect map)
 
@@ -208,8 +230,8 @@ These are POLICY tables, not INVARIANT rules. They can be amended additively wit
 | `tests/integration/`                                | `/test-automation` — per-ticket API/integration specs                                           |
 | `tests/components/{module}/` (Page/Api/Steps)       | `/test-automation` — module-specific Domain components and Steps                                |
 | `.context/PBI/`                                     | `/sprint-testing` — per-ticket QA context                                                       |
-| `.context/master-test-plan.md`                      | `/master-test-plan` command — regenerative                                                      |
-| `.context/business/`                                | `/business-data-map`, `/business-feature-map`, `/business-api-map` commands — regenerative      |
+| `.context/master-test-plan.md`                      | `project-context` mode `test-plan` — regenerative                                               |
+| `.context/business/`                                | `project-context` modes `data`, `features`, `api` — regenerative                                |
 | `api/openapi-types.ts`                              | Generated artifact — regenerated by `bun run api:sync`                                          |
 | `kata-manifest.json`, `reports/atc_results.json`    | Generated artifacts — runtime / build outputs                                                   |
 | `.env`, credentials                                 | Manual edit only — no skill, no AI rewrite                                                      |
@@ -222,4 +244,4 @@ These are POLICY tables, not INVARIANT rules. They can be amended additively wit
 
 ---
 
-*Reference compiled from `kata-architecture.md`, `typescript-patterns.md`, `api-patterns.md`, `e2e-patterns.md`, `atc-tracing.md`, `automation-standards.md`, `data-testid-strategy.md`, `test-data-management.md`, `review-checklists.md`, `test-automation/SKILL.md`, and `docs/methodology/kata-fundamentals.md`. Update only when a source doc changes a load-bearing rule.*
+*Reference compiled from `kata-architecture.md`, `typescript-patterns.md`, `api-patterns.md`, `e2e-patterns.md`, `atc-tracing.md`, `automation-standards.md`, `data-testid-strategy.md`, `test-data-management.md`, `review-checklists.md`, and `test-automation/SKILL.md`. Update only when a source doc changes a load-bearing rule.*

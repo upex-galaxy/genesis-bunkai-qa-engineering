@@ -1,12 +1,13 @@
 import type { Component, SyncStateV6, SyncStateV7 } from './updater-types.ts';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import { dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, test } from 'bun:test';
 import {
+  advanceSyncStateV7,
   classifyFile,
   componentOwnedPaths,
   computeComponentAdvancement,
@@ -16,6 +17,7 @@ import {
   foreignDirtyPaths,
   isBootstrapOnlyFile,
   isLocalTemplateSource,
+  isProjectLocalSkillPath,
   isRepoOnlyPath,
   isWithinWriteSurface,
   LAST_APPLY_FILE,
@@ -30,6 +32,7 @@ import {
   UPDATER_OWNED_PATHS_ENV,
   UPDATER_SELF_UPDATED_ENV,
   UPDATER_UPSTREAM_DIR_ENV,
+  UPSTREAM_CONTEXT_SUFFIX_SKILLS,
   writeLastApply,
 } from './updater-core.ts';
 
@@ -178,10 +181,73 @@ describe('dirty-tree guard: self-update re-exec', () => {
     expect(foreignDirtyPaths(' M cli-tools/x.ts\n M cli/y.ts', ['cli'])).toEqual(['cli-tools/x.ts']);
   });
 
+  test('an accented filename survives git C-quoting, from real git output', () => {
+    // The downstream repos are Spanish. With `core.quotepath` at its default,
+    // git wraps any non-ASCII path in quotes and escapes its UTF-8 bytes as
+    // octal. Decoding those wrong gives a path that matches no exemption and
+    // hashes to nothing, so the dirty-tree guard aborts `bun run up` naming a
+    // file that does not exist. Drive the real binary, not a hand-typed line.
+    const root = temporaryRoot();
+    git(root, ['init', '--quiet', '--initial-branch=main']);
+    write(root, 'src/configuración.md', 'hola\n');
+    write(root, 'src/plain.md', 'plain\n');
+    const porcelain = git(root, ['status', '--porcelain', '--untracked-files=all']).trimEnd();
+    // Guard the premise: if this git ever stopped quoting, the test would pass
+    // for the wrong reason and the regression could come back unnoticed.
+    expect(porcelain).toContain('\\303\\263');
+    expect(parsePorcelainPaths(porcelain).sort()).toEqual(['src/configuración.md', 'src/plain.md']);
+    // And the guard it feeds: the accented path is dirt like any other, and an
+    // exemption on its directory covers it.
+    expect(foreignDirtyPaths(porcelain, [])).toContain('src/configuración.md');
+    expect(foreignDirtyPaths(porcelain, ['src'])).toEqual([]);
+  });
+
+  test('C-quoted escapes decode by byte, and unquoted paths are left literal', () => {
+    // Multi-byte characters are several octal escapes that only mean anything
+    // decoded together; a per-escape decode yields replacement characters.
+    expect(parsePorcelainPaths('?? "a/\\360\\237\\232\\200.md"')).toEqual(['a/🚀.md']);
+    // The named single-character escapes, and a literal backslash in a name.
+    expect(parsePorcelainPaths('?? "a/b\\\\c.md"')).toEqual(['a/b\\c.md']);
+    expect(parsePorcelainPaths('?? "a/say \\"hi\\".md"')).toEqual(['a/say "hi".md']);
+    expect(parsePorcelainPaths('?? "a/tab\\there.md"')).toEqual(['a/tab\there.md']);
+    // An UNQUOTED path is already literal: porcelain uses forward slashes on
+    // every platform, so a backslash there is part of the filename and must
+    // survive. The old code turned it into a separator.
+    expect(parsePorcelainPaths(' M a/b\\c.ts')).toEqual(['a/b\\c.ts']);
+  });
+
   test('component claims cover directory trees and file-list literals', () => {
     expect(componentOwnedPaths(CLI)).toEqual(['cli']);
     expect(componentOwnedPaths({ name: 'tooling', type: 'file-list', paths: ['.'], files: ['.editorconfig'] })).toEqual(['.editorconfig']);
     expect(componentOwnedPaths({ name: 'agents', type: 'file-list', paths: ['.agents'], files: ['project.yaml'] })).toEqual(['.agents/project.yaml']);
+  });
+});
+
+describe('advanceSyncStateV7 with a retired component', () => {
+  // A consumer lock written before a component was retired (the `commands`
+  // alias wrappers) still carries its cursor. Every walk iterates the CURRENT
+  // component list, so the stale key must never hold `templateCommit` back
+  // nor abort the run; it simply stays behind, unread.
+  test('a stale cursor in the lock neither blocks the advance nor gets walked', () => {
+    const prior: SyncStateV7 = {
+      schemaVersion: 7,
+      templateRepo: 'upex-galaxy/agentic-qa-boilerplate',
+      templateCommit: 'old',
+      perComponentCommit: { cli: 'old', docs: 'old', commands: 'old' },
+      syncedComponents: ['cli', 'docs', 'commands'],
+      ignoreFileSync: {},
+      packageJsonSync: {},
+      cliVersion: '8.4',
+      lastSyncedAt: '2026-09-04T10:00:00.000Z',
+      variableSystemVersion: 1,
+    };
+    const current: Component[] = [
+      { name: 'cli', type: 'directory', paths: ['cli'] },
+      { name: 'docs', type: 'directory', paths: ['docs/core'] },
+    ];
+    const next = advanceSyncStateV7(prior, { applied: [], skipped: [], failed: [], newHeadSha: 'new', componentsAdvanced: ['cli', 'docs'], componentsHeldBack: [] } as never, current, 'new', '8.5');
+    expect(next.templateCommit).toBe('new');
+    expect(next.perComponentCommit).toMatchObject({ cli: 'new', docs: 'new', commands: 'old' });
   });
 });
 
@@ -274,13 +340,13 @@ describe('isLocalTemplateSource', () => {
 
 describe('isBootstrapOnlyFile', () => {
   const agents: Component = { name: 'agents', type: 'file-list', paths: ['.agents'], files: ['README.md', 'project.yaml'] };
-  const compat: Component = { name: 'agent-compatibility', type: 'directory', paths: ['.agents/skills', '.agents/compatibility'] };
-  const paths = ['.agents/project.yaml', '.agents/compatibility/command-aliases.project.json'];
+  const compat: Component = { name: 'agent-compatibility', type: 'directory', paths: ['.agents/skills', '.agents/hooks'] };
+  const paths = ['.agents/project.yaml', '.agents/hooks/project-hook.mjs'];
 
   test('an exact listed path binds for ANY component, not only `agents`', () => {
-    expect(isBootstrapOnlyFile('.agents/compatibility/command-aliases.project.json', compat, paths)).toBe(true);
-    expect(isBootstrapOnlyFile('.agents/compatibility/command-aliases.json', compat, paths)).toBe(false);
-    expect(isBootstrapOnlyFile('.agents\\compatibility\\command-aliases.project.json', compat, paths)).toBe(true);
+    expect(isBootstrapOnlyFile('.agents/hooks/project-hook.mjs', compat, paths)).toBe(true);
+    expect(isBootstrapOnlyFile('.agents/hooks/personality-reinject.mjs', compat, paths)).toBe(false);
+    expect(isBootstrapOnlyFile('.agents\\hooks\\project-hook.mjs', compat, paths)).toBe(true);
   });
 
   test('the legacy agents basename contract and its framework-file override still hold', () => {
@@ -500,7 +566,7 @@ describe('isWithinWriteSurface (the dirty-tree guard blocks only on paths the sy
     packageJsonSpecs: [{ path: 'package.json', sections: ['scripts'] }],
     deprecatedFiles: [],
     excludePaths: ['.agents/skills/REGISTRY.md'],
-    repoOnlyPaths: ['docs/qa-standard'],
+    repoOnlyPaths: ['docs/reports'],
     bootstrapOnlyPaths: ['.husky/pre-push', '.agents/project.yaml', 'scripts/lint-skills.ts'],
   };
 
@@ -513,6 +579,11 @@ describe('isWithinWriteSurface (the dirty-tree guard blocks only on paths the sy
     expect(isWithinWriteSurface(cfg, '.agents\\skills\\acli\\SKILL.md')).toBe(true);
   });
 
+  test('a consumer\'s `<aspect>-context/` skill is outside; upstream\'s `iql-context` is inside', () => {
+    expect(isWithinWriteSurface(cfg, '.agents/skills/data-context/SKILL.md')).toBe(false);
+    expect(isWithinWriteSurface(cfg, '.agents/skills/iql-context/SKILL.md')).toBe(true);
+  });
+
   test('project code, protected paths, bootstrap-only components, excluded and repo-only paths are outside', () => {
     expect(isWithinWriteSurface(cfg, 'tests/e2e/login.spec.ts')).toBe(false);
     expect(isWithinWriteSurface(cfg, 'tests/components/pages/login.page.ts')).toBe(false);
@@ -522,7 +593,7 @@ describe('isWithinWriteSurface (the dirty-tree guard blocks only on paths the sy
     expect(isWithinWriteSurface(cfg, '.agents/project.yaml')).toBe(false);
     expect(isWithinWriteSurface(cfg, '.codex/config.toml')).toBe(false);
     expect(isWithinWriteSurface(cfg, '.agents/skills/REGISTRY.md')).toBe(false);
-    expect(isWithinWriteSurface(cfg, 'docs/qa-standard/x.md')).toBe(false);
+    expect(isWithinWriteSurface(cfg, 'docs/reports/x.md')).toBe(false);
     // Segment-aware: `.husky` never swallows `.husky-old`.
     expect(isWithinWriteSurface(cfg, '.husky-old/pre-push')).toBe(false);
   });
@@ -656,22 +727,22 @@ describe('cli lock cursor after a self-update', () => {
 });
 
 describe('isRepoOnlyPath', () => {
-  const prefixes = ['docs/qa-standard'];
+  const prefixes = ['docs/reports'];
 
   test('matches the prefix itself', () => {
-    expect(isRepoOnlyPath('docs/qa-standard', prefixes)).toBe(true);
+    expect(isRepoOnlyPath('docs/reports', prefixes)).toBe(true);
   });
 
   test('matches anything beneath the prefix', () => {
-    expect(isRepoOnlyPath('docs/qa-standard/planning-ladder-proposal.md', prefixes)).toBe(true);
-    expect(isRepoOnlyPath('docs/qa-standard/nested/deep.md', prefixes)).toBe(true);
+    expect(isRepoOnlyPath('docs/reports/2026-01-01-report.md', prefixes)).toBe(true);
+    expect(isRepoOnlyPath('docs/reports/nested/deep.md', prefixes)).toBe(true);
   });
 
   test('leaves siblings alone', () => {
     // The bug this guards: a naive startsWith would swallow all three.
-    expect(isRepoOnlyPath('docs/qa-standards/x.md', prefixes)).toBe(false);
-    expect(isRepoOnlyPath('docs/qa-standard-archive/x.md', prefixes)).toBe(false);
-    expect(isRepoOnlyPath('docs/qa-standardish.md', prefixes)).toBe(false);
+    expect(isRepoOnlyPath('docs/reportsx/x.md', prefixes)).toBe(false);
+    expect(isRepoOnlyPath('docs/reports-archive/x.md', prefixes)).toBe(false);
+    expect(isRepoOnlyPath('docs/reportsish.md', prefixes)).toBe(false);
   });
 
   test('leaves unrelated paths alone', () => {
@@ -684,12 +755,12 @@ describe('isRepoOnlyPath', () => {
   });
 
   test('normalizes backslashes on both sides', () => {
-    expect(isRepoOnlyPath('docs\\qa-standard\\x.md', prefixes)).toBe(true);
-    expect(isRepoOnlyPath('docs/qa-standard/x.md', ['docs\\qa-standard'])).toBe(true);
+    expect(isRepoOnlyPath('docs\\reports\\x.md', prefixes)).toBe(true);
+    expect(isRepoOnlyPath('docs/reports/x.md', ['docs\\reports'])).toBe(true);
   });
 
   test('tolerates a trailing slash in the configured prefix', () => {
-    expect(isRepoOnlyPath('docs/qa-standard/x.md', ['docs/qa-standard/'])).toBe(true);
+    expect(isRepoOnlyPath('docs/reports/x.md', ['docs/reports/'])).toBe(true);
   });
 
   test('an empty prefix never matches, so a stray entry cannot blank the sync', () => {
@@ -698,6 +769,60 @@ describe('isRepoOnlyPath', () => {
   });
 
   test('no prefixes configured means nothing is filtered', () => {
-    expect(isRepoOnlyPath('docs/qa-standard/x.md', [])).toBe(false);
+    expect(isRepoOnlyPath('docs/reports/x.md', [])).toBe(false);
+  });
+});
+
+describe('project-local context skills (a consumer\'s `<aspect>-context/` is never synced)', () => {
+  test('isProjectLocalSkillPath: any `-context` slug under the skills dir, except the ones upstream owns', () => {
+    expect(isProjectLocalSkillPath('.agents/skills/data-context/SKILL.md')).toBe(true);
+    expect(isProjectLocalSkillPath('.agents/skills/api-context/references/gotchas.md')).toBe(true);
+    expect(isProjectLocalSkillPath('.agents\\skills\\data-context\\SKILL.md')).toBe(true);
+    expect(isProjectLocalSkillPath('.agents/skills/iql-context/SKILL.md')).toBe(false);
+    expect(isProjectLocalSkillPath('.agents/skills/project-context/SKILL.md')).toBe(false);
+    expect(isProjectLocalSkillPath('.agents/skills/sync-ai-context/references/sync.md')).toBe(false);
+    expect(isProjectLocalSkillPath('.agents/skills/acli/SKILL.md')).toBe(false);
+    // Segment-aware: the suffix binds the SLUG, not a deeper directory or a sibling store.
+    expect(isProjectLocalSkillPath('.agents/skills/acli/references/data-context/x.md')).toBe(false);
+    expect(isProjectLocalSkillPath('.agents/skills-context/x.md')).toBe(false);
+    expect(isProjectLocalSkillPath('tests/data-context/x.ts')).toBe(false);
+  });
+
+  test('the upstream set matches the `-context` slugs scripts/lint-skills.ts grandfathers (cli/ is import-closed, so this is the seam)', () => {
+    const lint = readFileSync(join(import.meta.dir, '..', '..', 'scripts', 'lint-skills.ts'), 'utf8');
+    const m = /const KIND_SUFFIX_EXEMPT = new Set<string>\(\[([^\]]+)\]\)/.exec(lint);
+    expect(m).not.toBeNull();
+    const exempt = [...m![1].matchAll(/'([^']+)'/g)].map(x => x[1]).filter(slug => slug.endsWith('-context'));
+    for (const slug of exempt) { expect(UPSTREAM_CONTEXT_SUFFIX_SKILLS.has(slug)).toBe(true); }
+    expect(UPSTREAM_CONTEXT_SUFFIX_SKILLS.has('iql-context')).toBe(true);
+  });
+
+  test('the upstream walk skips a same-slug context skill, and a delete upstream never reaches the consumer copy', () => {
+    const SKILLS: Component = { name: 'skills', type: 'directory', paths: ['.agents/skills'] };
+    const template = temporaryRoot();
+    git(template, ['init', '--quiet', '--initial-branch=main']);
+    git(template, ['config', 'user.email', 'test@example.com']);
+    git(template, ['config', 'user.name', 'test']);
+    write(template, '.agents/skills/iql-context/SKILL.md', 'iql v1\n');
+    write(template, '.agents/skills/api-context/SKILL.md', 'an example upstream should never ship, but might\n');
+    git(template, ['add', '-A']);
+    git(template, ['commit', '--quiet', '-m', 'lock']);
+    const lock = git(template, ['rev-parse', 'HEAD']).trim();
+    git(template, ['rm', '--quiet', '-r', '.agents/skills/api-context']);
+    write(template, '.agents/skills/iql-context/SKILL.md', 'iql v2\n');
+    git(template, ['add', '-A']);
+    git(template, ['commit', '--quiet', '-m', 'head']);
+
+    const local = temporaryRoot();
+    write(local, '.agents/skills/iql-context/SKILL.md', 'iql v1\n');
+    write(local, '.agents/skills/api-context/SKILL.md', 'the consumer\'s own judgment layer\n');
+
+    const reconciled = reconcileComponentsByContent(template, [SKILLS], local, []);
+    expect(reconciled.map(e => e.path)).toEqual(['.agents/skills/iql-context/SKILL.md']);
+
+    const state: SyncStateV6 = { schemaVersion: 6, lastSync: '', templateCommit: lock, cliVersion: '8.1', syncedComponents: [], variableSystemVersion: 1, perComponentCommit: { skills: lock } };
+    const delta = computeDelta(template, [SKILLS], state, local, []);
+    expect(delta.map(e => e.path)).toEqual(['.agents/skills/iql-context/SKILL.md']);
+    expect(delta.some(e => e.classification === 'deleted-upstream')).toBe(false);
   });
 });

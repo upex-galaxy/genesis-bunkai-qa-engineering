@@ -4,7 +4,7 @@ Load during Phase 1 (Plan) of the Plan → Code → Review pipeline. Covers the 
 
 Scope-selection rules (which scope to pick, the one-line summary of each) live in SKILL.md §"Pick the planning scope first". This file assumes the scope has been chosen and documents what to produce.
 
-> **Two plans, do not confuse them.** This playbook authors the **automation plan** (`automation-plan.md`) — a NON-Jira, hand-authored file living in the Epic's `test-specs/<scope>/` tree (committed to git). It is NOT the Story's dev `implementation-plan.md`, which is a Jira-synced, read-only per-field cache in the Story folder (`.context/PBI/epics/EPIC-<KEY>-<slug>/stories/STORY-<KEY>-<slug>/implementation-plan.md`) — read that as input via `bun run jira:sync-issues get <STORY-KEY>`, never hand-write it. The automation plan was historically named `implementation-plan.md`; it is renamed to `automation-plan.md` to avoid colliding with the Jira-synced dev plan.
+> **Two plans, do not confuse them.** This playbook authors the **automation plan** (`automation-plan.md`) — a NON-Jira, hand-authored file living in the Epic's `test-specs/<scope>/` tree (committed to git). It is NOT the Story's dev `implementation-plan.md`, which is a Jira-synced, read-only per-field cache in the Story folder (`.context/PBI/epics/EPIC-<KEY>-<slug>/stories/STORY-<KEY>-<slug>/implementation-plan.md`) — read that as input via `bun run jira:sync-issues get <STORY-KEY>`, never hand-write it. The automation plan is named `automation-plan.md` precisely so it cannot be confused with the Jira-synced dev plan.
 
 > **Path model.** All `test-specs/` artifacts live at the **Epic** level: `.context/PBI/epics/EPIC-<KEY>-<slug>/test-specs/` (sibling of `stories/`). Module = Epic (1:1). `<scope>` = the ticket/regression slug or module slug.
 
@@ -146,8 +146,10 @@ TCs in `spec.md` must reference TMS-generated IDs, never local-only IDs. Before 
 
 1. Query the TMS for tests already linked to the ticket (via `[TMS_TOOL] List Tests` — resolve per AGENTS.md Tool Resolution).
 2. **If TCs exist** — consume them as the base for `spec.md`; do not duplicate.
-3. **If TCs are missing** — create them in the TMS first (`[TMS_TOOL] Create Test`), capture the returned IDs, then write `spec.md`.
-4. **If partial** — consume what exists, create the gaps in TMS, write `spec.md` with the combined set.
+3. **If TCs are missing** — create them in the TMS first (`[TMS_TOOL] Create Test`), titled to the canonical form `{US_ID}: TC#: should <expected outcome> [<connector> <condition>] [given <precondition>]` (`#` = a stable per-Story index, never renumbered), capture the returned IDs, then write `spec.md`.
+4. **If partial** — consume what exists, create the gaps in TMS under the same title form, write `spec.md` with the combined set.
+
+> A Test created here enters the regression repository the same way a promoted one does, so the same title rule binds — full grammar, the re-derive-then-verify order, and the anti-patterns: `test-documentation/SKILL.md` §"Naming — the one rule that matters" + §"Title on promotion".
 
 Local `{PREFIX}-T{NN}` naming is filesystem scaffolding. All TC headings inside `spec.md` use the TMS IDs (`### PROJ-101: should ...`). The same IDs become `@atc('PROJ-101')` decorators during the Code phase.
 
@@ -157,7 +159,7 @@ Local `{PREFIX}-T{NN}` naming is filesystem scaffolding. All TC headings inside 
 
 The spec is the **automation batch plan**: which TCs this scope automates, in what order, and what they share. It does NOT restate the test cases.
 
-> **Why it stopped carrying the Gherkin.** The TC body — preconditions, action, expected output, Gherkin — lives in the Jira `Test` issue, and `bun run jira:sync-issues` now materializes every Test linked to a Story into `test-cases/TEST-<KEY>-<slug>.md` under that Story. Copying it here too put the same text on disk twice, and the copy nobody re-synced was the one people read. Reference the TMS ID; the body is one sync away.
+> **Why it does not carry the Gherkin.** The TC body — preconditions, action, expected output, Gherkin — lives in the Jira `Test` issue, and `bun run jira:sync-issues` materializes every Test linked to a Story into `test-cases/TEST-<KEY>-<slug>.md` under that Story. Copying it here too put the same text on disk twice, and the copy nobody re-synced was the one people read. Reference the TMS ID; the body is one sync away.
 
 > **Reference TCs by Jira key, never by path.** Folder slugs are derived from issue summaries, so a Story retitled in Jira renames its folder and breaks every hardcoded link — relative or aliased. The key is the only stable identifier.
 

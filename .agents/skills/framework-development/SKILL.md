@@ -4,6 +4,10 @@ description: "Framework evolution mode — evolves the QA boilerplate itself (KA
 license: MIT
 compatibility: [claude-code, copilot, cursor, codex, opencode]
 complementary_categories: [framework-evolution, meta-skill]
+metadata:
+  kind: workflow
+  stage_owner: true
+
 ---
 
 # Framework Development — Evolve the QA Boilerplate
@@ -11,6 +15,27 @@ complementary_categories: [framework-evolution, meta-skill]
 Gateway skill for changes to the framework itself: KATA layers, fixtures, installer, OpenAPI pipeline, scripts, doctrine docs. Per-ticket QA work, test specs, and TMS documentation are owned by other workflow skills (`/sprint-testing`, `/test-documentation`, `/test-automation`, `/regression-testing`) and MUST NOT trigger this skill.
 
 The skill exists because framework-surface changes — new fixture, new layer helper, installer rewrite, manifest extractor — deserve a planning gate before code. Per-ticket test writing already has its own gate in `/test-automation` Plan → Code → Review; this skill is its architectural-surface counterpart.
+
+---
+
+## Compact Rules
+
+- DO NOT: use this skill for per-ticket work — test writing is `/test-automation`, manual QA is `/sprint-testing`, TMS docs are `/test-documentation`, suite runs are `/regression-testing`. This skill governs the architectural surface only.
+- DO: clear the readiness preflight, then run the Phase 0 path self-check against `references/kata-invariants.md` §10 before dispatching anything. A FORBIDDEN path aborts and redirects to the skill named in the row; a path in neither table is ASKED about, never assumed.
+- WHEN one change spans both ALLOWED and FORBIDDEN paths: split it. This skill changes the base; `/test-automation` migrates the consuming specs in a follow-up.
+- DO: run Plan → Code → Verify → Archive in order for every non-trivial framework change. The pipeline IS the gate; "it's a quick refactor" is not an exemption.
+- DO NOT: edit `tests/components/` from a framework-development session — those L2/L3 KATA components are per-ticket surface.
+- DO NOT: collapse the KATA layers (TestContext / Base / Domain / Fixture) under a simplicity argument. They are framework architecture, not speculative abstraction.
+- DO NOT: add a new fixture API without updating the matching fixture file AND `kata-manifest.json` AND citing at least one existing test that consumes it. Orphan fixtures rot, and the manifest is the anti-duplication gate.
+- DO NOT: bump a major version of Playwright / Bun / TypeScript without a regression run on a representative E2E suite — lockstep upgrades hide breaks in fixture lifecycle, locator engines, and type emit.
+- DO NOT: refactor `cli/install.ts` without exercising the full install flow on a clean clone. Verification on an already-installed repo proves nothing, and the installer is the one surface where a bug ships silently to every new user.
+- WHEN the chosen approach reshapes test architecture (KATA layers, a fixture API, the runner, the isolation/parallelization model, the OpenAPI/type pipeline) AND is hard to reverse: record an ADR under `.context/ADR/` after plan approval and before coding, drafted `Proposed` for the human to accept. ADRs are append-only — supersede, never rewrite.
+- DO: verify with all four checks (test, types, lint, skills) and treat any non-zero exit as REJECT — present retry / skip-and-document / abort, never auto-fix. A skill that itself broke (a wrong step, a missing verifier, a stale rule) is reported upstream per `../agentic-qa-core/references/upstream-feedback.md`: drafted and redacted locally, filed only on explicit OK, verified with `gh issue view`.
+- WHEN the change IS a skill (a new or restructured `.agents/skills/<slug>/`): scaffold it per `../agentic-qa-core/references/skill-scaffold.md` (frontmatter incl. `metadata.kind`, per-kind files and sections, Definition of Done). `skill-creator` (T3, installed at project level) is ALWAYS the builder: load it for the draft, the test prompts, the evals and the description pass; the scaffold contract stays this repo's. Missing on the machine → scaffold from the reference's template and say so. Consumer SUT context skills are NOT this skill's job: `project-context` mode `context-skill` owns them.
+- DO NOT: let a subagent write `progress.md`; it is orchestrator-only. Code subagents return one-line summaries per task, and the orchestrator does not read their diffs.
+- DO: archive the session directory only after all four verifiers pass. On REJECT it stays in place so the run can be debugged or resumed.
+
+**Read full SKILL.md when**: writing the plan artifact, batching Code-phase tasks, resuming an interrupted session, or reading the ALLOWED/FORBIDDEN path tables themselves.
 
 ---
 
@@ -55,6 +80,18 @@ This skill is compliant with the doctrine in `AGENTS.md` §"Orchestration Mode (
 
 ---
 
+## Fleet seam (optional)
+
+Phase 2 Code is sequential per task batch by default, and a change that fits one plan stays that way. A **wave** — several persistent worker sessions taking one task batch each, a conductor integrating them — is for a plan whose batches are genuinely independent (different files, no shared public API in flight). Offer it; never enter it silently.
+
+- **Topology: same checkout with file ownership per worker.** Each worker's brief lists the exact files it owns and commits with explicit paths (never `git add -A`), so two workers never stage each other's work. When two batches must touch the same module, they do not run in the same wave: serialize them, or give each worker its own worktree.
+- The conductor writes `launch.txt` in `.session/framework-development/<change-name>/` — one self-contained line per worker — **always**, whether or not any orchestration transport exists on the machine. Launching, supervising and closing those sessions is `orca-orchestration/SKILL.md` (`[ORCHESTRATION_TOOL]`): supervised launch is the native path, and `launch.txt` is the payload for the human-paste fallback when nothing can launch it.
+- **Phase 0 and Phase 3 stay with the conductor.** The path self-check runs once, over the union of every worker's paths, before the first launch; the four Phase 3 verifiers run once, on the integrated tree, after the last worker reports. A per-worker green gate is not a wave gate.
+- **Read before every edit.** A worker's neighbour may have changed a shared file since the brief was written; Critical Rule #15 (no global discards) binds twice as hard when sessions share a tree.
+- **Silence rule**: the absence of an orchestration transport is never named to the user and never appears in the preflight gate or the plan.
+
+---
+
 ## Readiness Preflight Gate (MANDATORY — runs before Phase 0)
 
 > Full doctrine: `agentic-qa-core/references/preflight-gate.md`. Runs FIRST, before the path self-check and resume check. Two laws: (1) **args-as-answers** — the change name and touched paths are provided args; ask only the gaps. (2) **probe, don't assume**. Surface gaps + REDs as ONE `AskUserQuestion` checklist; self-fix with approval + explanation; STOP on any blocking RED. This skill evolves the framework itself — it does NOT hit a live env, Jira, DB, or API — so its gate is a **dev-toolchain readiness** check that pairs with the Phase 0 path self-check. **Generic baseline** (the two laws, secret/restart handling, output contract) is inherited from the reference §3.1 — not repeated here; the env/creds half of the baseline is N/A for meta-work. Below is only this skill's **specific capability delta**.
@@ -66,7 +103,7 @@ This skill is compliant with the doctrine in `AGENTS.md` §"Orchestration Mode (
 | Playwright browsers | SCOPE — touching fixtures / KATA bases / tests | Verify of a fixture or base-class change runs the suite, which needs chromium (`bun run pw:install`). |
 | `/github-actions-docs` + `/playwright-best-practices` | OPTIONAL | Injected per dispatch when the change touches CI YAML or fixtures/tests (already noted in the briefing skeleton). |
 
-Active env, test-user creds, OpenAPI/`API_TOKEN`, DBHub, issue-tracker, TMS and `resend` are **N/A** — framework evolution is meta-work on this repo. After the gate clears (all REQUIRED GREEN), continue to Phase 0 below.
+Active env, test-user creds, OpenAPI / API token, DBHub, issue-tracker, TMS and `resend` are **N/A** — framework evolution is meta-work on this repo. After the gate clears (all REQUIRED GREEN), continue to Phase 0 below.
 
 ---
 
@@ -136,6 +173,8 @@ Dispatch: **Single**. The Plan subagent writes one consolidated artifact at `.se
 
 Present the plan to the user. Wait for approval before Phase 2.
 
+When the change IS a skill, the plan's Task breakdown follows `../agentic-qa-core/references/skill-scaffold.md` §2 for that kind, and the Verification checklist includes its §5 Definition of Done.
+
 **ADR seeding (framework architecture).** When the chosen approach reshapes the framework's test architecture — KATA layers, fixture APIs, the test runner, the isolation/parallelization model, or the OpenAPI/type pipeline — and the decision passes the two-gate test (architectural AND hard to reverse per `agentic-qa-core/references/adr-doctrine.md` §1), record a `.context/ADR/ADR-NNNN-<slug>.md` after the plan is approved and before Phase 2 coding. Framework evolution is meta-work: its decisions bind every test session that follows, so historicize them rather than leaving them in a one-off `plan.md` that gets archived. The plan's "Invariants touched" / "Public API delta" sections are the prime ADR candidates. Draft `Proposed`; the human accepts. Template + lifecycle: `.context/ADR/README.md`.
 
 ### Phase 2 — Code
@@ -161,7 +200,7 @@ Dispatch: **Parallel** — four Verifier subagents in the same `<function_calls>
 | V3       | `bun run lint:check`   | exit code, summary   |
 | V4       | `bun run skills:check` | exit code, ERROR/WARN/INFO counts |
 
-`skills:check` is included because framework changes routinely touch `.agents/skills/framework-development/`, `agentic-qa-core/references/`, `AGENTS.md`, and `cli/install.ts` — every one of those surfaces is read by `scripts/lint-skills.ts` and gated by 10 named checks (tier coherence, anti-leak, stale-path, duplicate-tier, etc.). The other three commands never see this surface; adding the fourth verifier costs one parallel slot and prevents an entire failure class.
+`skills:check` is included because framework changes routinely touch `.agents/skills/framework-development/`, `agentic-qa-core/references/`, `AGENTS.md`, and `cli/install.ts` — every one of those surfaces is read by `scripts/lint-skills.ts` and gated by the named checks it declares (tier coherence, anti-leak, stale-path, duplicate-tier, etc.). The other three commands never see this surface; adding the fourth verifier costs one parallel slot and prevents an entire failure class.
 
 After all four return, the orchestrator inline-aggregates:
 
@@ -196,14 +235,14 @@ Archive is a "close-the-loop" step, not "ship-the-code". Code is shipped by `/gi
 
 ## Session close contract
 
-**Session-footer contract (mandatory at close).** The final phase is not done until the two chat-facing blocks from `../agentic-qa-core/references/session-footer-contract.md` are printed: (1) consolidated screenshot list — repo-relative paths, verified on disk, bug annotations first — plus in-flow surfacing of every capture's path the instant it lands; (2) Session Footer listing skills/MCPs/CLIs actually used + testing levels touched, with explicit "none" entries for expected-but-untouched levels. Framing for this skill: meta. Multi-subagent sessions: each stage report carries the five footer fields (`skills_loaded`, `mcps_used`, `clis_used`, `testing_levels_touched`, `screenshots_captured`); the orchestrator compiles the footer ONCE at close. Chat only — never in a Jira comment or ATR body.
+**Session-footer contract (mandatory at close).** The final phase is not done until the two chat-facing blocks from `../agentic-qa-core/references/session-footer-contract.md` are printed: (1) consolidated screenshot list — repo-relative paths, verified on disk, bug annotations first — plus in-flow surfacing of every capture's path the instant it lands; (2) Session Footer listing skills/MCPs/CLIs actually used + testing levels touched, with explicit "none" entries for expected-but-untouched levels. Framing for this skill: meta. Multi-subagent sessions: each stage report carries the five footer fields (`skills_loaded`, `mcps_used`, `clis_used`, `testing_levels_touched`, `screenshots_captured`); the orchestrator compiles the footer ONCE at close. Chat only — never in a Jira comment or ATR body. Lessons noticed during the session are PROPOSED to `.session/<skill-slug>/<scope>/refinements.md` and never applied to a live skill, per `../agentic-qa-core/references/skill-refinement-protocol.md`; the footer's `Refinements proposed:` line counts them.
 
 ---
 
 ## References
 
 - `references/kata-invariants.md` — INVARIANT vs EXTENSIBLE rules for the 4 KATA layers, fixture selection, ATC identity, DRY scope, import aliases, public-method contract, extension points, evolution checklist, out-of-scope surfaces, and §10 ALLOWED / FORBIDDEN path tables. Required reading before any Plan or Code subagent that touches `tests/components/`, `api/schemas/`, or fixtures.
-- `../agentic-qa-core/references/skill-composition-strategy.md` — T1/T2/T3/T4 tier model, category vocabulary, validation rules. The §4 anti-leak contract is informational here: framework-development no longer chains SDD by default; §4 governs users who manually install SDD and explicitly request the SDD ceremony.
+- `../agentic-qa-core/references/skill-composition-strategy.md` — T1/T2/T3/T4 tier model, category vocabulary, validation rules. The §4 anti-leak contract is informational here: framework-development does not chain SDD by default; §4 governs users who manually install SDD and explicitly request the SDD ceremony.
 - `../agentic-qa-core/references/briefing-template.md` — 7-component briefing examples per pattern.
 - `../agentic-qa-core/references/dispatch-patterns.md` — Single / Sequential / Parallel / Background decision guide.
 - `../agentic-qa-core/references/orchestration-doctrine.md` — failure protocol, ASK-on-error rule, no auto-fix.

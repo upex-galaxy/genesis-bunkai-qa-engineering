@@ -11,8 +11,12 @@
  *
  * The MCP server SET is project-declared: whatever `.mcp.json` lists is what
  * the other two hosts must list (see PARITY RULE). Only the per-host SHAPE of
- * the six servers this boilerplate ships is pinned here (`KNOWN_MCP_IDS`), so
- * a downstream project that drops `postman` or adds `supabase` still passes.
+ * the servers this boilerplate ships is pinned here (`KNOWN_MCP_IDS`), so a
+ * downstream project that keeps a server upstream dropped, or adds `supabase`,
+ * still passes. Remote servers whose only project-side content was an API key
+ * (web search, Postman) left the shipped set with ADR-0005: they run at
+ * harness level and skills resolve them by capability. A project that still
+ * declares one gets the generic cross-host check, nothing stricter.
  *
  * Import-closed: only Node builtins and `cli/lib` siblings (see the header of
  * `agent-compatibility.ts` for why `cli/` must never import a sibling
@@ -30,12 +34,26 @@ import { join, relative, resolve } from 'node:path';
  */
 export const KNOWN_MCP_IDS = [
   'context7',
-  'tavily',
   'playwright',
   'dbhub',
   'openapi',
-  'postman',
 ] as const;
+
+/**
+ * The emitter carries three payloads per prompt (output contract, forensic
+ * identity line, conditional Orca line), so the contract pins the exports the
+ * three adapters rely on plus the markers a consumer greps for. A drift here
+ * is a harness that silently lost its identity line: `git-flow-master` would
+ * then write `Session: unknown` into every commit trailer instead of failing.
+ */
+export const HOOK_IDENTITY_EXPORTS = [
+  'resolveAgentIdentity',
+  'agentContextLines',
+  'orcaAvailable',
+] as const;
+
+export const HOOK_IDENTITY_MARKER = 'AGENT IDENTITY:';
+export const HOOK_ORCA_MARKER = 'ORCA: available.';
 
 export const CLAUDE_HOOK_COMMAND = 'node "$CLAUDE_PROJECT_DIR/.agents/hooks/personality-reinject.mjs"';
 export const CODEX_HOOK_COMMAND = 'root="$(git rev-parse --show-toplevel)" && node "$root/.agents/hooks/personality-reinject.mjs"';
@@ -87,13 +105,12 @@ interface JsonObject {
  *
  * `transport`, `command` and `args` are NOT compared generically, because Codex
  * cannot expand `${VAR}` inside `args` and a host may legitimately reach the
- * same server another way. For the six servers this boilerplate ships they
- * are pinned per host in `EXPECTED_MCP` instead, and that strict shape check
- * runs only when the project declares the server. Today the six share one
- * shape on every host (the two HTTP servers carry the key as a bearer token
- * on every host, so Codex needs no adaptation), but the table is keyed per
- * host so a Codex-specific shape can diverge later without touching the
- * generic check.
+ * same server another way. For the servers this boilerplate ships
+ * (`KNOWN_MCP_IDS`) they are pinned per host in `EXPECTED_MCP` instead, and
+ * that strict shape check runs only when the project declares the server.
+ * Today they share one shape on every host, but the table is keyed per host
+ * so a Codex-specific shape can diverge later without touching the generic
+ * check.
  *
  * Whatever the spelling, the `.env` names each server depends on are identical
  * across the three hosts. That is what the cross-host check enforces.
@@ -125,12 +142,7 @@ function canonical(shape: Pick<NormalizedMcpServer, 'transport'> & Partial<Norma
 const server = canonical;
 
 const EVERY_HOST: Record<KnownMcpId, NormalizedMcpServer> = {
-  context7: server({ transport: 'stdio', command: 'npx', args: ['-y', '@upstash/context7-mcp@4.0.3'] }),
-  tavily: server({
-    transport: 'http',
-    url: 'https://mcp.tavily.com/mcp/',
-    dependsOn: ['TAVILY_API_KEY'],
-  }),
+  context7: server({ transport: 'stdio', command: 'bunx', args: ['-y', '@upstash/context7-mcp@4.0.3'] }),
   playwright: server({
     transport: 'stdio',
     command: 'bunx',
@@ -150,17 +162,18 @@ const EVERY_HOST: Record<KnownMcpId, NormalizedMcpServer> = {
     transport: 'stdio',
     command: 'bunx',
     args: ['-y', '@bytebase/dbhub@1.2.1', '--config', 'dbhub.toml'],
+    // `dbhub.toml` interpolates these from the environment the server is
+    // LAUNCHED with, which is why they are declared at the MCP layer on all
+    // three hosts rather than left to process inheritance: Codex forwards only
+    // what it is told to, and dbhub substitutes the literal `${DBHUB_HOST}`
+    // when a variable is absent instead of failing at startup.
+    dependsOn: ['DBHUB_DATABASE', 'DBHUB_HOST', 'DBHUB_PASSWORD', 'DBHUB_PORT', 'DBHUB_TYPE', 'DBHUB_USER'],
   }),
   openapi: server({
     transport: 'stdio',
     command: 'bunx',
     args: ['-y', '@ivotoby/openapi-mcp-server@1.16.1', '--tools', 'dynamic'],
     dependsOn: ['API_BASE_URL', 'OPENAPI_SPEC_PATH'],
-  }),
-  postman: server({
-    transport: 'http',
-    url: 'https://mcp.postman.com/mcp',
-    dependsOn: ['POSTMAN_API_KEY'],
   }),
 };
 
@@ -284,20 +297,43 @@ function stripTrailingCommas(source: string): string {
   return result;
 }
 
-const PLACEHOLDER = /\$\{([A-Z][A-Z0-9_]*)\}|\{env:([A-Z][A-Z0-9_]*)\}/g;
+/**
+ * OpenCode's `{file:<path>/<VAR>}` form, which substitutes a FILE'S CONTENTS.
+ *
+ * It belongs here because it is a DEPENDENCY, not a literal.
+ * `{file:.auth/opencode/DBHUB_HOST}` says the server needs DBHUB_HOST
+ * exactly as `{env:DBHUB_HOST}` does; only the delivery route differs, and
+ * `scripts/harness-env.ts` generates those files from `.env`. This checker exists
+ * to assert SEMANTIC parity across the three hosts, so reading the file form as
+ * an opaque literal reported the hosts as disagreeing when they agree. Teaching
+ * the normalizer this form is not loosening the contract, it is correcting a
+ * blind spot the contract always had, which only surfaced once something finally
+ * used the other route.
+ *
+ * WHAT KEEPS IT SAFE, and do not widen it: only an ALL-CAPS final path segment
+ * matches. A generic `{file:some/config.json}` or `{file:certs/ca.pem}` still
+ * reads as a literal, which is correct — those are files, not credentials named
+ * after a variable. Widening this pattern would start swallowing real literals.
+ */
+const FILE_REF = /\{file:(?:[^}]*\/)?([A-Z][A-Z0-9_]*)\}/g;
 
-/** OpenCode spells a placeholder `{env:VAR}`; compare it as `${VAR}`. */
+const PLACEHOLDER = /\$\{([A-Z][A-Z0-9_]*)\}|\{env:([A-Z][A-Z0-9_]*)\}|\{file:(?:[^}]*\/)?([A-Z][A-Z0-9_]*)\}/g;
+
+/** OpenCode spells a placeholder `{env:VAR}` or `{file:dir/VAR}`; compare both as `${VAR}`. */
 function canonicalPlaceholders(text: string): string {
-  return text.replace(/\{env:([A-Z][A-Z0-9_]*)\}/g, (_match, name: string) => ref(name));
+  return text
+    .replace(/\{env:([A-Z][A-Z0-9_]*)\}/g, (_match, name: string) => ref(name))
+    .replace(FILE_REF, (_match, name: string) => ref(name));
 }
 
-/** Every `${VAR}` / `{env:VAR}` referenced anywhere inside `value`. */
+/** Every `${VAR}` / `{env:VAR}` / `{file:dir/VAR}` referenced anywhere inside `value`. */
 function placeholderNames(value: unknown): string[] {
   const names = new Set<string>();
   const visit = (entry: unknown): void => {
     if (typeof entry === 'string') {
       for (const match of entry.matchAll(PLACEHOLDER)) {
-        names.add(match[1] ?? match[2]);
+        const name = match[1] ?? match[2] ?? match[3];
+        if (name !== undefined) { names.add(name); }
       }
     }
     else if (Array.isArray(entry)) {
@@ -530,6 +566,21 @@ function personalAbsolutePath(command: string): boolean {
   return /(?:^|[\s"'])(?:\/Users\/|\/home\/|[A-Za-z]:[\\/]Users[\\/])/.test(command);
 }
 
+/**
+ * The repository-relative script a hook command executes, or null when the
+ * command names none.
+ *
+ * Every adapter reaches the emitter through a root placeholder — `$CLAUDE_PROJECT_DIR`
+ * for Claude, `$root` for both Codex forms — so whatever follows that placeholder IS
+ * the repository-relative path, wherever the emitter happens to live. Deriving it
+ * rather than hardcoding `.agents/hooks/` is the point: a rename of the emitter is
+ * exactly what this is here to catch.
+ */
+export function hookScriptPath(command: string): string | null {
+  const match = /(?:\$CLAUDE_PROJECT_DIR\/|\$root\/|\$root\s+')([^"')]+\.m?js)/.exec(command);
+  return match === null ? null : match[1];
+}
+
 function readHookCommand(settings: JsonObject, host: 'claude' | 'codex'): JsonObject {
   const hooks = object(settings.hooks, `${host} hooks`);
   const event = hooks.UserPromptSubmit;
@@ -579,6 +630,20 @@ export function validateHookCompatibility(root = process.cwd()): string[] {
       if (personalAbsolutePath(command)) {
         errors.push(`${host} hook command contains an absolute personal path.`);
       }
+      // `.claude/settings.json` and `.codex/hooks.json` are bootstrap-only: the
+      // updater ships them once and never overwrites them, so an upstream rename
+      // of the emitter leaves a downstream project pointing at a file that no
+      // longer exists. The hook is what injects the `AGENT IDENTITY:` line that
+      // git-flow-master copies into the mandatory commit trailers, so that
+      // failure is silent trailer loss rather than an error. Resolve the path
+      // the adapter actually carries, not the one the constant above pins.
+      const script = hookScriptPath(command);
+      if (script === null) {
+        errors.push(`${host} hook command does not name a repository-relative hook script.`);
+      }
+      else if (!existsSync(join(resolvedRoot, script))) {
+        errors.push(`${host} hook command points at a file that does not exist: ${script}`);
+      }
     }
 
     const shared = readFileSync(join(resolvedRoot, '.agents', 'hooks', 'personality-reinject.mjs'), 'utf8');
@@ -586,11 +651,29 @@ export function validateHookCompatibility(root = process.cwd()): string[] {
     if (!shared.includes('AGENTS.md') || shared.includes('CLAUDE.md')) {
       errors.push('Shared personality hook must reference AGENTS.md and must not treat CLAUDE.md as canonical.');
     }
+    for (const name of HOOK_IDENTITY_EXPORTS) {
+      if (!shared.includes(`export function ${name}`)) {
+        errors.push(`Shared hook emitter must export ${name}(): the identity line has one source.`);
+      }
+    }
+    for (const marker of [HOOK_IDENTITY_MARKER, HOOK_ORCA_MARKER]) {
+      if (!shared.includes(marker)) {
+        errors.push(`Shared hook emitter must emit the "${marker}" line.`);
+      }
+    }
     if (!plugin.includes('../../.agents/hooks/personality-reinject.mjs')) {
       errors.push('OpenCode personality adapter must import the shared hook contract.');
     }
+    if (!plugin.includes('agentContextLines')) {
+      errors.push('OpenCode personality adapter must push the shared context lines (agentContextLines), identity line included.');
+    }
     if (plugin.includes('output.system =')) {
       errors.push('OpenCode personality adapter must mutate output.system in place.');
+    }
+    for (const [label, source] of [['emitter', shared], ['OpenCode adapter', plugin]] as const) {
+      if (personalAbsolutePath(source)) {
+        errors.push(`Shared hook ${label} contains an absolute personal path.`);
+      }
     }
     for (const duplicate of ['.claude/hooks/personality-reinject.js', '.codex/hooks/personality-reinject.js']) {
       if (existsSync(join(resolvedRoot, duplicate))) {
@@ -602,6 +685,66 @@ export function validateHookCompatibility(root = process.cwd()): string[] {
     errors.push(error instanceof Error ? error.message : String(error));
   }
 
+  return errors;
+}
+
+/**
+ * Every scoped config block `eslint.config.base.js` exports must be wired into
+ * `eslint.config.js`.
+ *
+ * THE HOLE THIS CLOSES. The base is SYNCED, so a new block reaches every
+ * project on the next `bun run up`. `eslint.config.js` is on the protected
+ * watchlist and is NEVER overwritten, and the wiring — importing the block and
+ * passing it to `antfu(...)` — lives only there. So upstream can ship a rule
+ * that lands on disk, exports cleanly, and enforces NOTHING, while
+ * `lint:check` stays green and the parity report shows at most a
+ * non-blocking drift row. Measured on this repo: `CLI_IMPORT_CLOSURE` has
+ * carried that hole since it was introduced, and `KATA_IMPORT_ALIASES`
+ * inherited it the day it was added.
+ *
+ * This is a NAME check on purpose. Verifying the blocks actually take effect
+ * would mean executing the consumer's flat config, which depends on its
+ * plugins resolving — a check that cannot run is worse than a coarse one that
+ * does. A project is free to narrow a block's `files` afterwards; it is not
+ * free to drop it silently.
+ */
+export function validateEslintBlockWiring(root = process.cwd()): string[] {
+  const basePath = join(root, 'eslint.config.base.js');
+  const consumerPath = join(root, 'eslint.config.js');
+  if (!existsSync(basePath) || !existsSync(consumerPath)) { return []; }
+
+  let base: string;
+  let consumer: string;
+  try {
+    base = readFileSync(basePath, 'utf8');
+    consumer = readFileSync(consumerPath, 'utf8');
+  }
+  catch { return []; }
+
+  // Scoped blocks are SCREAMING_SNAKE exports; `BASE_ESLINT_OPTIONS` is the
+  // options object spread into the first argument, not a block, so it is
+  // excluded by name.
+  const blocks = [...base.matchAll(/^export const ([A-Z][A-Z0-9_]*)\s*=/gm)]
+    .map(m => m[1])
+    .filter(name => name !== 'BASE_ESLINT_OPTIONS');
+
+  // Comments are stripped before the search, and the search is word-bounded.
+  // Both matter, and the first one was a live hole the moment this check was
+  // written: `eslint.config.js`'s own JSDoc says "Extra project-only config
+  // blocks go after `CLI_IMPORT_CLOSURE`", so a raw `includes` found that name
+  // in prose and passed a consumer that had stopped wiring the block at all.
+  // The word boundary closes the second: without it, wiring
+  // `CLI_IMPORT_CLOSURE_EXTRA` silently satisfies `CLI_IMPORT_CLOSURE`.
+  const code = consumer
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+  const errors: string[] = [];
+  for (const name of blocks) {
+    if (!new RegExp(`\\b${name}\\b`).test(code)) {
+      errors.push(`eslint.config.js does not wire ${name} from eslint.config.base.js: the rule ships but enforces nothing. Add it to the import and to the antfu(...) call.`);
+    }
+  }
   return errors;
 }
 

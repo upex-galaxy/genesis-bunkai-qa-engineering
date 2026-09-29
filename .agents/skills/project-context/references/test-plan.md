@@ -147,7 +147,7 @@ Only the state machines with financial, legal, or operational impact. Skip cosme
 Crons, webhooks, DB triggers that fail without visible UI feedback. Per process:
 - What it does and which flow depends on it
 - What breaks if it misses a run, runs twice, or runs out of order
-- How failure is detected today (logs? alerts? none?)
+- How failure is detected (logs? alerts? none?)
 - Recommended QA strategy (synthetic probe, log assertion, scheduled audit)
 
 This section is usually the most undertested area of a system.
@@ -206,7 +206,7 @@ MANDATORY. List anything you could not ground in evidence:
 
 ## Jira mirror — the MTP Epic
 
-Runs AFTER `.context/master-test-plan.md` is written (in UPDATE mode: after the user confirmed the overwrite). The file is the real plan; the Epic is its Jira anchor in the planning ladder (MTP altitude — see `docs/qa-standard/planning-ladder-proposal.md`). Load `/acli` before any `[ISSUE_TRACKER_TOOL]` call.
+Runs AFTER `.context/master-test-plan.md` is written (in UPDATE mode: after the user confirmed the overwrite). The file is the real plan; the Epic is its Jira anchor in the planning ladder (MTP altitude — see `.agents/skills/agentic-qa-core/references/planning-ladder.md`). Load `/acli` before any `[ISSUE_TRACKER_TOOL]` call.
 
 ### Step 1 — Find-or-create the Epic
 
@@ -248,3 +248,4 @@ Ensure a `relates to` link from the MTP Epic to each sibling (resolve by name fr
   - Discovery gaps open: N
   - MTP Epic: {key} (created | updated) — mirror refreshed, sibling links ensured (note any missing sibling)
 - If §1.2 warned, remind the user to run `project-context` mode `features` and re-run mode `test-plan`.
+- If a project-owned context skill sits over the master test plan (the project names the aspect): offer to run `project-context` mode `context-skill <aspect>` in UPDATE now. The methodology index itself (`iql-context`) is shipped upstream and is NOT updated from a map: a local rule goes to its `references/project-overrides.md`.

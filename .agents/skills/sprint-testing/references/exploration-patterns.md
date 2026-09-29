@@ -4,7 +4,7 @@
 
 Stage 2 Execution playbook for in-sprint manual / exploratory QA: smoke test, then UI / API / DB exploration as applicable to the ticket. Session notes written into the ticket PBI folder; bugs filed via `reporting-templates.md`.
 
-This reference is for IN-SPRINT manual execution RIGHT NOW. It does NOT cover:
+This reference is for IN-SPRINT manual execution (Stage 2). It does NOT cover:
 - Stage 1 planning, Discover-Modify-Generate data classification, test-outline naming, or traceability checks (see `acceptance-test-planning.md`).
 - Stage 5 automated-test coding patterns (see `test-automation`).
 - Stage 6 CI regression-suite execution (see `regression-testing`).
@@ -28,7 +28,7 @@ Every feature validates through up to three layers. Pick by feature type:
 
 ## Finding triage — blocking vs non-blocking (graduated pause)
 
-A FAIL found during deep exploration is NOT automatically a Critical bug and does NOT automatically halt the pass. Triage first, then decide whether to stop or keep going. Pausing the whole 17-TC pass on a cosmetic finding wastes the dispatch and loses coverage; a genuine blocker must still stop immediately.
+A FAIL found during deep exploration is NOT automatically a Critical bug and does NOT automatically halt the pass. Triage first, then decide whether to stop or keep going. Pausing the whole pass on a cosmetic finding wastes the dispatch and loses coverage; a genuine blocker must still stop immediately.
 
 | Finding class | Examples | Action |
 |---------------|----------|--------|
@@ -55,7 +55,7 @@ Deep-dive the UI on `{{WEB_URL}}` via `[AUTOMATION_TOOL]`. Goal: validate ACs, d
 | Screenshot | `[AUTOMATION_TOOL]` | Evidence |
 | Console + Network | `[AUTOMATION_TOOL]` | Observe errors / requests |
 
-Before any `[AUTOMATION_TOOL]` call, set `.playwright/cli.config.json` `outputDir` to `.context/PBI/epics/EPIC-<KEY>-<slug>/stories/STORY-<KEY>-<slug>/evidence/`. Screenshots still need the full path in `--filename` because `outputDir` does not apply to `.png`.
+Before any `[AUTOMATION_TOOL]` call, capture with an explicit destination path resolving to the ticket's `evidence/` folder — never repoint the shared `.playwright/cli.config.json` `outputDir` (see `agentic-qa-core/references/evidence-conventions.md` §1 Bucket B and §5). Screenshots still need the full path in `--filename` because `outputDir` does not apply to `.png`.
 
 ### 1.2 Scenario loop (per AC)
 
@@ -411,7 +411,7 @@ At end of Stage 2, each Stage-1 test outline / TC must have PASSED or FAILED. No
 
 ## §6. Pre-flight checklist
 
-- [ ] Playwright / automation tool config `outputDir` set to `evidence/` folder BEFORE first action
+- [ ] Capture destination is an explicit full path into the ticket's `evidence/` folder per capture — the shared `.playwright/cli.config.json` `outputDir` is never repointed (§1.1, `agentic-qa-core/references/evidence-conventions.md` §1 Bucket A + §5)
 - [ ] Credentials pulled from `.env` (no hardcoding)
 - [ ] Smoke test ran FIRST and produced Go decision
 - [ ] Triforce layers selected based on feature type (UI / API / DB)

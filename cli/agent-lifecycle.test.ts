@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { afterEach, describe, expect, test } from 'bun:test';
 
-import { diagnoseAgentCompatibility } from './doctor.ts';
+import { communitySkillStatus, diagnoseAgentCompatibility } from './doctor.ts';
 import {
   buildCommunitySkillArgs,
   detectAgents,
@@ -14,13 +14,14 @@ import {
   launchCommandsForAgents,
   migrateAgentIds,
   parseAgentsEnv,
+  PROJECT_LEVEL_SKILLS,
   PROJECT_SKILL_DESTINATION,
+  remoteHeadRef,
   repairRepositoryCompatibility,
 } from './install.ts';
 import { declaredMcpIds } from './lib/agent-compatibility-contracts.ts';
 import {
   claudeSkillsAliasPlan,
-  mergedCommandAliases,
   repairClaudeSkillsAlias,
 } from './lib/agent-compatibility.ts';
 import { COMPONENTS, makeAgentCompatibilityHook } from './update-boilerplate.ts';
@@ -71,7 +72,7 @@ function compatibilityFixture(): string {
   for (const path of [
     'AGENTS.md',
     'CLAUDE.md',
-    '.agents/compatibility/command-aliases.json',
+    '.agents/skills/project-context/SKILL.md',
     '.agents/hooks/personality-reinject.mjs',
     '.claude/settings.json',
     '.opencode/plugins/personality-reinject.js',
@@ -80,19 +81,7 @@ function compatibilityFixture(): string {
     '.mcp.json',
     'opencode.jsonc',
   ]) { copyPath(root, path); }
-
-  const manifest = JSON.parse(readFileSync(join(root, '.agents/compatibility/command-aliases.json'), 'utf8')) as {
-    aliases: Array<{ skill: string }>
-  };
-  for (const skill of new Set(manifest.aliases.map(alias => alias.skill))) {
-    copyPath(root, `.agents/skills/${skill}/SKILL.md`);
-  }
   return root;
-}
-
-/** Aliases the copied manifest declares: the fixture's wrapper count is derived, never a literal. */
-function aliasCount(root: string): number {
-  return mergedCommandAliases(root).aliases.length;
 }
 
 afterEach(() => {
@@ -155,11 +144,20 @@ describe('installer Codex lifecycle', () => {
   });
 
   test('discovers Codex MCP environment contracts and exposes launch guidance', async () => {
+    // The six DBHUB_* arrive through `env_vars` on the dbhub server: Codex
+    // inherits only `core`, so anything dbhub.toml interpolates has to be
+    // forwarded by name. Every one of these is project-scoped, so the
+    // installer defers them to `bun run setup:doctor` instead of prompting.
+    // No remote server's key appears: those servers run at harness level.
     expect(await discoverRequiredEnvVars(['codex'], REPO_ROOT)).toEqual([
       'API_BASE_URL',
+      'DBHUB_DATABASE',
+      'DBHUB_HOST',
+      'DBHUB_PASSWORD',
+      'DBHUB_PORT',
+      'DBHUB_TYPE',
+      'DBHUB_USER',
       'OPENAPI_SPEC_PATH',
-      'POSTMAN_API_KEY',
-      'TAVILY_API_KEY',
     ]);
     expect(launchCommandsForAgents(['claude-code', 'opencode', 'codex']))
       .toEqual(['bun claude', 'bun opencode', 'bun codex']);
@@ -233,14 +231,14 @@ describe('compatibility repair lifecycle', () => {
     const root = compatibilityFixture();
     const first = repairRepositoryCompatibility(root, 'linux');
     const second = repairRepositoryCompatibility(root, 'linux');
-    expect(first.wrappersWritten).toBe(aliasCount(root) * 2);
-    expect(second).toMatchObject({ wrappersWritten: 0, alias: { status: 'valid' } });
+    expect(first.alias.status).toBe('created');
+    expect(second).toMatchObject({ shadowingCommandsMoved: [], alias: { status: 'valid' } });
 
     const steps: string[] = [];
     const hook = makeAgentCompatibilityHook(recordingSink(steps), root);
     await hook({ applied: [] } as never);
     await hook({ applied: [] } as never);
-    expect(steps.at(-1)).toContain('0 wrapper(s) actualizado(s)');
+    expect(steps.at(-1)).toBe('Compatibilidad lista: alias valid.');
   });
 });
 
@@ -254,10 +252,8 @@ describe('doctor and updater parity', () => {
     expect(diagnostic.errors).toEqual([]);
     expect(diagnostic.errors_by_surface).toEqual([]);
     expect(diagnostic.alias.status).toBe('valid');
-    // Derived from the copied manifest and `.mcp.json`, never literal counts: a
-    // downstream project with more aliases or servers passes unchanged.
-    const expected = aliasCount(root);
-    expect(diagnostic.command_wrappers).toEqual({ expected, claude: expected, opencode: expected, ok: true });
+    // Derived from `.mcp.json`, never a literal count: a downstream project
+    // with more servers passes unchanged.
     expect(diagnostic.mcp).toMatchObject({ expected_servers: declaredMcpIds(root).length, parity: true });
     expect(diagnostic.codex).toMatchObject({
       cli_detected: false,
@@ -286,10 +282,10 @@ describe('doctor and updater parity', () => {
   test('updater owns every canonical source and generated adapter family', () => {
     const paths = COMPONENTS.flatMap(component => component.paths);
     expect(paths).toContain('.agents/skills');
-    expect(paths).toContain('.agents/compatibility');
     expect(paths).toContain('.agents/hooks');
-    expect(paths).toContain('.claude/commands');
-    expect(paths).toContain('.opencode/commands');
+    // The alias wrappers are retired: harness command dirs are the project's own.
+    expect(paths).not.toContain('.claude/commands');
+    expect(paths).not.toContain('.opencode/commands');
     expect(paths).toContain('.opencode/plugins');
     expect(paths).toContain('.codex');
     // Since 8.2 `agent-root-config` delivers `.claude/settings.json` once and
@@ -302,6 +298,54 @@ describe('doctor and updater parity', () => {
     const syncedFiles = COMPONENTS.flatMap(component => component.files ?? []);
     for (const never of ['CLAUDE.md', '.mcp.json', 'opencode.jsonc']) {
       expect(syncedFiles).not.toContain(never);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T3 community skills. Installed once at scaffold time, gitignored, and
+// outside the updater's surface — so without this reporting a project runs its
+// scaffold-day copy forever with no signal. Reporting only: no reinstall path,
+// because an overwrite of a gitignored skill has no backup to restore from.
+// ---------------------------------------------------------------------------
+
+describe('community skill version reporting', () => {
+  const SHA = 'a'.repeat(40);
+  const OTHER = 'b'.repeat(40);
+
+  test('reads the remote HEAD from one ls-remote, no clone', () => {
+    const calls: string[][] = [];
+    const run = (binary: string, args: string[]): { ok: boolean, stdout: string } => {
+      calls.push([binary, ...args]);
+      return { ok: true, stdout: `${SHA}\tHEAD\n` };
+    };
+
+    expect(remoteHeadRef('https://github.com/microsoft/playwright-cli', run)).toBe(SHA);
+    expect(calls).toEqual([['git', 'ls-remote', 'https://github.com/microsoft/playwright-cli', 'HEAD']]);
+  });
+
+  test('an unreachable or nonsense remote yields null, never a stale sha', () => {
+    expect(remoteHeadRef('x', () => ({ ok: false, stdout: '' }))).toBeNull();
+    expect(remoteHeadRef('x', () => ({ ok: true, stdout: '' }))).toBeNull();
+    expect(remoteHeadRef('x', () => ({ ok: true, stdout: 'not-a-sha\tHEAD\n' }))).toBeNull();
+  });
+
+  test('ignorance never reads as current', () => {
+    expect(communitySkillStatus(false, SHA, SHA)).toBe('not-installed');
+    expect(communitySkillStatus(true, null, SHA)).toBe('untracked');
+    expect(communitySkillStatus(true, SHA, null)).toBe('unknown');
+  });
+
+  test('compares the recorded baseline against the remote head', () => {
+    expect(communitySkillStatus(true, SHA, SHA)).toBe('current');
+    expect(communitySkillStatus(true, SHA, OTHER)).toBe('outdated');
+  });
+
+  test('every declared T3 skill carries the package the baseline is recorded against', () => {
+    expect(PROJECT_LEVEL_SKILLS.length).toBeGreaterThan(0);
+    for (const item of PROJECT_LEVEL_SKILLS) {
+      expect(item.package).toMatch(/^https?:\/\//);
+      expect(item.skill).toBeTruthy();
     }
   });
 });

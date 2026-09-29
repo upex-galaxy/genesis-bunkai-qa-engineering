@@ -25,7 +25,7 @@ Two properties follow from the feature altitude. Both change how the plan is use
 
 **The FTP is living, not frozen.** It is authored once per epic and then refined continuously across it. Every story that ships teaches the team something the plan did not know — an integration boundary that turned out to be real, a risk that never materialized, an answer the PO finally gave. Fold that back into the plan (see Gotcha 6, "Regeneration"). A feature plan that has not moved since the first story of a long epic is stale, not stable.
 
-**Analyze the sibling stories, not just the one in hand.** When a tester picks up a story, the unit of analysis is the epic, not the ticket: read the siblings that already shipped, the ones currently in development, and the ones that are only defined and not yet built. That full-feature picture is what makes the per-story ATPs good — it surfaces shared preconditions, cross-story state, and regression surface that a single-story reading cannot see. The sibling list comes free from the JQL child-story query in "Inputs required".
+**Analyze the sibling stories, not just the one in hand.** When a tester picks up a story, the unit of analysis is the epic, not the ticket: read the siblings that already shipped, the ones in development, and the ones that are only defined and not yet built. That full-feature picture is what makes the per-story ATPs good — it surfaces shared preconditions, cross-story state, and regression surface that a single-story reading cannot see. The sibling list comes free from the JQL child-story query in "Inputs required".
 
 ---
 
@@ -64,7 +64,7 @@ Keep the feature plan **feature-level**: no per-story test cases, no test data v
 ## Nomenclature — FTP (item-first)
 
 The feature altitude is this doc's home altitude, so its artifact is named here per the
-ratified QA Planning Ladder (`docs/qa-standard/planning-ladder-proposal.md`). Grammar:
+ratified QA Planning Ladder (`.agents/skills/agentic-qa-core/references/planning-ladder.md`). Grammar:
 `{ACRONYM}: {scope-id}: {descriptor}`.
 
 | Artifact | Jira work type | Title pattern | Example | Parent Epic (axis 1) | Scope link (axis 2) |
@@ -78,7 +78,7 @@ ratified QA Planning Ladder (`docs/qa-standard/planning-ladder-proposal.md`). Gr
 - **Lifecycle.** Find-or-created/updated whenever this skill loads the Epic's context;
   CONSUMED as context thereafter (see "A living document" above).
 - **Cardinality.** FTP = **1 per feature**.
-- **No FTR.** The Feature Test Results rung is **RETIRED from the ladder** — feature results are
+- **No FTR.** There is no Feature Test Results rung in the ladder — feature results are
   read from the per-story ATRs directly and REVIEWED together at sprint close alongside the sprint
   recap Execution `STR: Sprint#{N}: Regression Testing` (created at sprint close by the batch-close
   recap or `/regression-testing`, whichever arrives first). There is **no structural aggregation**
@@ -301,3 +301,92 @@ Else:
 - [ ] FTP item (`FTP: {EPIC-KEY}: {feature}`) find-or-created under QA Master Test Plan with the plan in its description and linked `tests` the feature Epic — field / `## Feature Test Plan` fallback comment ONLY when the Test Plan work type is unavailable — AND the local cache materialized via `bun run jira:sync-issues`
 - [ ] Epic labeled `test-plan-ready`
 - [ ] Executive summary delivered to user, blocker called out if critical questions open
+
+---
+
+## Worked example: `FTP: UPEX-100: Authentication`
+
+A compact FTP body from this repo's own sample module (Epic `UPEX-100`, cached at
+`.context/PBI/epics/EPIC-UPEX-100-authentication/`). It is the automation-leaning subset a
+small, single-story feature needs, not the full 7-section Full-scope plan: read it for tone and
+granularity, not as a template. The selectors table is there because the module is already
+automated; a pre-automation FTP would stop at section 4.
+
+### FTP: UPEX-100: Authentication
+
+> **Module**: Authentication (`/auth/*`)
+> **Total Tickets**: 1
+> **Total Items**: 4 TCs (2 API + 2 UI)
+> **Created**: 2026-03-19
+
+---
+
+#### 1. Executive Summary
+
+The authentication module is the gateway to the entire application. Every user flow depends on a valid session, making auth the highest-priority module for test coverage.
+
+**Key Risks:**
+- Invalid credentials silently creating sessions (security breach)
+- Token expiration not enforced (stale sessions)
+- Protected endpoints accessible without auth (authorization bypass)
+
+---
+
+#### 2. Module Overview
+
+| Aspect | Value |
+|--------|-------|
+| **Domain** | Authentication & Session Management |
+| **Primary Actors** | All users (login is universal) |
+| **API Endpoints** | `POST /api/auth/login`, `GET /api/auth/me` |
+| **UI Pages** | `/login` (public form) |
+
+---
+
+#### 3. Data Flow & API Endpoints
+
+```
+Login Flow (API):
+POST /api/auth/login { email, password }
+  → 200: { access_token, token_type, expires_in }
+  → 401: { error }
+
+Session Verification:
+GET /api/auth/me (requires Bearer token)
+  → 200: { user: { id, email, name } }
+  → 401: unauthorized
+```
+
+```
+Login Flow (UI):
+/login page → fill form → submit
+  → Success: redirect away from /login
+  → Failure: error message, stay on /login
+```
+
+---
+
+#### 4. Test Data Strategy
+
+| Data | Source | Notes |
+|------|--------|-------|
+| Valid credentials | `config.testUser` from `.env` | Pre-existing test user |
+| Invalid credentials | Inline in test | Hardcoded bad values |
+| Auth token | `api-state.json` from setup project | Auto-loaded by ApiFixture |
+
+---
+
+#### 5. Key Selectors Reference
+
+| Element | Selector | Page |
+|---------|----------|------|
+| Email input | `[data-testid="login-email-input"]` | `/login` |
+| Password input | `[data-testid="login-password-input"]` | `/login` |
+| Submit button | `[data-testid="login-submit-button"]` | `/login` |
+
+---
+
+#### See Also
+
+- Test specs: `.context/PBI/epics/EPIC-UPEX-100-authentication/test-specs/`
+- Components and test files: the Auth entries in `kata-manifest.json`

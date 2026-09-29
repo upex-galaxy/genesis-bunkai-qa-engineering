@@ -100,6 +100,33 @@ export function isRepoOnlyPath(filePath: string, prefixes: string[]): boolean {
 }
 
 /**
+ * Context skills a consumer authors (`<aspect>-context/`, the judgment layer
+ * over its own `.context/` maps) are PROJECT-LOCAL by construction: the sync
+ * never delivers, overwrites or deletes one, even on the day upstream ships a
+ * same-slug directory as an example. Two families keep syncing as before: the
+ * one context skill upstream owns (`iql-context`), and the workflow skills
+ * whose slugs predate the `-context` suffix rule (`project-context`,
+ * `sync-ai-context`), the same names `scripts/lint-skills.ts` grandfathers in
+ * KIND_SUFFIX_EXEMPT; `cli/` is import-closed, so the set is repeated here
+ * and a test keeps the two in step.
+ */
+export const CONTEXT_SKILL_SUFFIX = '-context';
+export const UPSTREAM_CONTEXT_SUFFIX_SKILLS: ReadonlySet<string> = new Set(['iql-context', 'project-context', 'sync-ai-context']);
+
+/**
+ * True for any path inside `<skillsDir>/<slug>/` where `slug` ends in
+ * `-context` and is not one upstream owns. Segment-aware and separator-agnostic.
+ */
+export function isProjectLocalSkillPath(relPath: string, skillsDir = '.agents/skills'): boolean {
+  const p = relPath.replace(/\\/g, '/');
+  const root = skillsDir.replace(/\\/g, '/').replace(/\/+$/, '');
+  if (!p.startsWith(`${root}/`)) { return false; }
+  const slug = p.slice(root.length + 1).split('/')[0] ?? '';
+  if (slug === '' || !slug.endsWith(CONTEXT_SKILL_SUFFIX)) { return false; }
+  return !UPSTREAM_CONTEXT_SUFFIX_SKILLS.has(slug);
+}
+
+/**
  * Recursive count of plain files under a directory. Returns 0 when the dir is missing.
  */
 export function countFilesInDir(dir: string): number {
@@ -447,8 +474,8 @@ export function isFrameworkExemptPath(
  *  1. the whole component is `bootstrapOnly`, except its framework-exempt
  *     files (`frameworkFiles` minus `frameworkFilesExcept`), which flow through;
  *  2. the repo-relative path is listed in `bootstrapOnlyPaths`, whatever
- *     component owns it (`.agents/compatibility/command-aliases.project.json`
- *     belongs to `agent-compatibility`, not `agents`);
+ *     component owns it (`scripts/api-login.project.ts` belongs to
+ *     `scripts`, not `agents`);
  *  3. legacy `agents` contract: a basename listed there (`project.yaml`,
  *     `jira-*.json`) is bootstrap-only for the `agents` root file-list, unless
  *     `agentsFrameworkFiles` names it as boilerplate-owned (`README.md`).
@@ -748,7 +775,11 @@ export function computeDelta(
   // conflicts during `--auto` runs.
   const componentIndex = new Map<string, number>();
   components.forEach((c, idx) => { componentIndex.set(c.name, idx); });
-  return dedupeDeltaByPath(delta, components, componentIndex, logger);
+  // A consumer's `<aspect>-context/` is never in play: not delivered, not
+  // overwritten, and never a `deleted-upstream` candidate that `--force` would
+  // remove the day upstream drops an example of the same name.
+  const withoutProjectLocal = delta.filter(e => !isProjectLocalSkillPath(e.path));
+  return dedupeDeltaByPath(withoutProjectLocal, components, componentIndex, logger);
 }
 
 // ============================================================================
@@ -1063,11 +1094,53 @@ export function selfUpdateComponentByContent(
  */
 export const LAST_APPLY_FILE = '.template/last-apply.json';
 
+/** The single-character C escapes git emits inside a quoted path, to their byte. */
+const C_ESCAPE_BYTES: Record<string, number> = {
+  'a': 0x07,
+  'b': 0x08,
+  'f': 0x0C,
+  'n': 0x0A,
+  'r': 0x0D,
+  't': 0x09,
+  'v': 0x0B,
+  '\\': 0x5C,
+  '"': 0x22,
+};
+
+/**
+ * Decode the body of a git C-quoted path (`core.quotepath`, ON by default):
+ * any path with a space, a control character or a byte above 0x7f comes back
+ * wrapped in double quotes with its bytes escaped.
+ *
+ * The `\NNN` escapes are octal BYTES of the UTF-8 encoding, not characters, so
+ * they are collected into a buffer and decoded once at the end — otherwise
+ * `configuraci\303\263n.md` yields two replacement characters instead of `ó`.
+ */
+function decodeCQuotedPath(body: string): string {
+  const bytes: number[] = [];
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (ch !== '\\') { bytes.push(...Buffer.from(ch, 'utf8')); continue; }
+    const next = body[i + 1];
+    if (next === undefined) { bytes.push(0x5C); break; } // trailing lone backslash
+    const simple = C_ESCAPE_BYTES[next];
+    if (simple !== undefined) { bytes.push(simple); i += 1; continue; }
+    const octal = /^[0-7]{1,3}/.exec(body.slice(i + 1))?.[0];
+    if (octal !== undefined) { bytes.push(Number.parseInt(octal, 8) & 0xFF); i += octal.length; continue; }
+    bytes.push(0x5C); // unknown escape: keep the backslash, re-read the next char
+  }
+  return Buffer.from(bytes).toString('utf8');
+}
+
 /**
  * Paths named by `git status --porcelain` output. Renames (`R  old -> new`)
  * report BOTH sides: either one being foreign is reason enough to stop.
- * Quoted paths (spaces, unicode) lose their quotes. Tolerates a line whose
- * leading status column was trimmed away (` D path` -> `D path`).
+ * Tolerates a line whose leading status column was trimmed away
+ * (` D path` -> `D path`).
+ *
+ * A QUOTED path is C-unescaped (see `decodeCQuotedPath`). An unquoted one is
+ * already literal and is left exactly as it came: porcelain emits forward
+ * slashes on every platform, so a backslash there belongs to the filename.
  */
 export function parsePorcelainPaths(porcelain: string): string[] {
   const out: string[] = [];
@@ -1080,8 +1153,10 @@ export function parsePorcelainPaths(porcelain: string): string[] {
     else if (raw.length > 2 && raw[1] === ' ') { rest = raw.slice(2); }
     else { rest = raw.trim(); }
     for (const side of rest.split(' -> ')) {
-      const unquoted = side.trim().replace(/^"(.*)"$/, '$1');
-      if (unquoted !== '') { out.push(unquoted.replace(/\\/g, '/')); }
+      const trimmed = side.trim();
+      const quoted = /^"(.*)"$/.exec(trimmed)?.[1];
+      const path = quoted === undefined ? trimmed : decodeCQuotedPath(quoted);
+      if (path !== '') { out.push(path); }
     }
   }
   return out;
@@ -1158,6 +1233,7 @@ export function isWithinWriteSurface(
   const p = relPath.replace(/\\/g, '/');
   const never = new Set([...(cfg.excludePaths ?? []), ...cfg.bootstrapOnlyPaths].map(x => x.replace(/\\/g, '/')));
   if (never.has(p) || isRepoOnlyPath(p, cfg.repoOnlyPaths ?? [])) { return false; }
+  if (isProjectLocalSkillPath(p)) { return false; } // a consumer's `<aspect>-context/`: never written by the sync
   const exact = new Set<string>([
     ...cfg.ignoreFiles.map(ig => ig.path),
     ...(cfg.packageJsonSpecs ?? []).map(spec => spec.path),
@@ -2092,6 +2168,7 @@ function collectComponentRelPaths(component: Component, templateDir: string): st
           if (item.isDirectory()) { walk(full); }
           else {
             const rel = full.slice(templateDir.length + 1).replace(/\\/g, '/');
+            if (isProjectLocalSkillPath(rel)) { continue; } // upstream never delivers a consumer's context skill
             out.push(rel);
           }
         }
@@ -2352,7 +2429,7 @@ export async function runUpdate(
   /**
    * Record what this run left uncommitted (everything dirty now minus the
    * user's own dirt from before), so the next guard recognises it. Runs after
-   * the afterApply hooks: wrappers, the registry and the prompt count too.
+   * the afterApply hooks: the alias repair, the registry and the prompt count too.
    */
   const recordLastApply = (summary: RunSummary, promptFile: string | null): void => {
     if (opts.dryRun) { return; }
@@ -2788,7 +2865,7 @@ export async function runUpdate(
     ...settledSelfUpdate,
   ])];
   // The afterApply hooks still run on a no-op: they are idempotent (alias,
-  // wrappers, registry) and they own the parity report, which is the run's
+  // registry) and they own the parity report, which is the run's
   // end state whatever was applied. A re-run over an uncommitted sync lands
   // here and ends with the same table instead of an abort.
   const runAfterApply = async (summary: RunSummary): Promise<void> => {
@@ -3334,10 +3411,9 @@ export async function runUpdate(
     appendBackupManifest(backupDir, [...applied.map(a => a.entry), ...skipped, ...failed.map(f => f.entry)], v6Shape, cfg.cliVersion);
   }
 
-  // Deprecated cleanup runs AFTER apply, BEFORE state write
-  if (!opts.dryRun) {
-    cleanupDeprecated(cfg, repoRoot, false, makeCoreLoggerFromSink(sink));
-  }
+  // Deprecated cleanup runs AFTER apply, BEFORE state write (and before the
+  // afterApply hooks). A dry-run lists what it would remove and writes nothing.
+  cleanupDeprecated(cfg, repoRoot, opts.dryRun, makeCoreLoggerFromSink(sink));
 
   // Compute advancement
   const advancement = computeComponentAdvancement(

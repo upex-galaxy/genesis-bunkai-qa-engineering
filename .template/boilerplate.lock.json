@@ -3,25 +3,27 @@
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
   "templateCommit": "89f4602822ea74826fc01abb8949e34030d01a6a",
   "perComponentCommit": {
-    "skills": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
+    "skills": "42b8949659a435e76d807cded5ec033b4205189a",
     "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "scripts": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
-    "docs": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
+    "scripts": "42b8949659a435e76d807cded5ec033b4205189a",
+    "docs": "42b8949659a435e76d807cded5ec033b4205189a",
     "cli": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
     "vscode": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "husky": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "agents-docs": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
+    "husky": "42b8949659a435e76d807cded5ec033b4205189a",
+    "agents-docs": "42b8949659a435e76d807cded5ec033b4205189a",
     "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "tooling": "89f4602822ea74826fc01abb8949e34030d01a6a",
-    "env-template": "c9b7577f38677b4b339e545aa73c0525ceef7b4c",
-    "agent-compatibility": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "tooling": "42b8949659a435e76d807cded5ec033b4205189a",
+    "env-template": "42b8949659a435e76d807cded5ec033b4205189a",
+    "agent-compatibility": "42b8949659a435e76d807cded5ec033b4205189a",
     "codex-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b"
+    "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
+    "config-core": "42b8949659a435e76d807cded5ec033b4205189a",
+    "env-schema": "42b8949659a435e76d807cded5ec033b4205189a"
   },
   "syncedComponents": [],
   "ignoreFileSync": {
     ".gitignore": {
-      "lastSyncedSha": "82195b81ce755d511e8da13bbd672adae0959232",
+      "lastSyncedSha": "20c61b5c23a9de049fb8d8eedce5319ffd90cb12",
       "appendedLines": [
         ".context/reports/*",
         "!.context/reports/README.md",
@@ -45,7 +47,13 @@
         "!skills-lock.json",
         "!**/skills-lock.json",
         ".backups*/",
-        ".template/last-apply.json"
+        ".template/last-apply.json",
+        "!.env.schema",
+        "!.env.core.schema",
+        "env.d.ts",
+        ".template/doctrine-ledger.json",
+        " is GITIGNORED (per-dev record of what the last",
+        ".agents/skills/skill-creator/"
       ]
     },
     ".prettierignore": {
@@ -58,31 +66,45 @@
   "packageJsonSync": {
     "package.json": {
       "scripts": {
-        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
+        "lastSyncedSha": "41748da278949890d205b09fe137a9f79c332a6a",
         "appliedKeys": [
           "context:hydrate",
           "jira:components",
           "tests:map",
           "agents:compat",
           "agents:compat:check",
-          "codex"
+          "codex",
+          "agents:schema",
+          "agents:schema:check",
+          "docs",
+          "docs:build",
+          "docs:check",
+          "harness:env",
+          "harness:env:check",
+          "jira:baseline",
+          "skills:evals",
+          "vars:schema",
+          "vars:schema:check",
+          "worktree:provision"
         ]
       },
       "devDependencies": {
-        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
-        "appliedKeys": []
+        "lastSyncedSha": "41748da278949890d205b09fe137a9f79c332a6a",
+        "appliedKeys": [
+          "varlock"
+        ]
       },
       "dependencies": {
-        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
+        "lastSyncedSha": "41748da278949890d205b09fe137a9f79c332a6a",
         "appliedKeys": []
       },
       "lint-staged": {
-        "lastSyncedSha": "f043848877ffcc7e5865cedd022766333074efcc",
+        "lastSyncedSha": "41748da278949890d205b09fe137a9f79c332a6a",
         "appliedKeys": []
       }
     }
   },
-  "cliVersion": "8.4",
-  "lastSyncedAt": "2026-09-06T18:18:52.105Z",
+  "cliVersion": "8.5",
+  "lastSyncedAt": "2026-09-29T00:11:47.666Z",
   "variableSystemVersion": 1
 }
