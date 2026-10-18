@@ -1,11 +1,14 @@
 /**
  * KATA Architecture - API Auth Setup (Project)
  *
- * Authenticates via API directly using AuthApi.authenticateSuccessfully() ATC.
- * Generates a JWT token for use by Integration tests.
+ * Authenticates headlessly via AuthApi.authenticateSuccessfully() ATC.
+ * One POST /api/v1/auth/signin yields BOTH Bunkai credentials:
+ * - the Supabase session cookie -> saved as storageState (api-session.json),
+ *   loaded by the integration project for cookie-only routes
+ * - a 1-day PAT -> saved to api-state.json, sent as Bearer by the fixtures
  *
  * Dependencies: global-setup
- * Dependents: integration
+ * Dependents: integration, smoke
  */
 
 import type { ApiState } from '@data/types';
@@ -16,46 +19,42 @@ import { attachRequestResponseToAllure } from '@utils/allure';
 import { config } from '@variables';
 
 const apiStateFile = config.auth.apiStatePath;
+const apiSessionFile = config.auth.apiSessionPath;
+const PAT_TTL_DAYS = 1;
 
-/**
- * API Authentication Setup
- *
- * 1. Uses AuthApi.authenticateSuccessfully() ATC
- * 2. Saves token to api-state.json for integration tests
- */
-setup('API Setup: authenticate via API', async ({ api }) => {
+setup('API Setup: authenticate via API', async ({ api, request }) => {
   console.log('[API Setup] Starting API authentication...');
   console.log(`[API Setup] Target: ${config.apiUrl}${config.auth.loginEndpoint}`);
 
-  // Use AuthApi ATC (UPEX Dojo uses 'email' field)
   const credentials = {
     email: config.testUser.email,
     password: config.testUser.password,
+    pat_name: 'qa-automation',
+    pat_expires_in_days: PAT_TTL_DAYS,
   };
-  const [response, tokenData] = await api.auth.authenticateSuccessfully(credentials);
+  const [response, signIn] = await api.auth.authenticateSuccessfully(credentials);
 
-  // Attach to Allure for debugging
+  // Attach to Allure for debugging (never the secrets)
   await attachRequestResponseToAllure({
     url: response.url(),
     method: 'POST',
-    responseBody: tokenData,
+    responseBody: { user: signIn.user, pat: { id: signIn.pat.id, scopes: signIn.pat.scopes } },
     requestBody: { email: credentials.email, password: '***' },
   });
 
-  console.log('[API Setup] Authentication successful');
-  console.log(`[API Setup] Token type: ${tokenData.token_type}`);
-  console.log(`[API Setup] Expires in: ${tokenData.expires_in} seconds`);
+  // Session cookie for cookie-only routes
+  await request.storageState({ path: apiSessionFile });
+  console.log(`[API Setup] Session cookie saved to ${apiSessionFile}`);
 
-  // Save token to file for use by integration tests
+  // PAT for Bearer routes
   const apiState: ApiState = {
-    token: tokenData.access_token,
-    tokenType: tokenData.token_type,
-    expiresIn: tokenData.expires_in,
-    refreshToken: tokenData.refresh_token ?? null,
+    token: signIn.pat.token,
+    tokenType: 'Bearer',
+    expiresIn: PAT_TTL_DAYS * 86400,
+    refreshToken: null,
     source: 'api-login',
     createdAt: new Date().toISOString(),
   };
-
   writeFileSync(apiStateFile, JSON.stringify(apiState, null, 2));
-  console.log(`[API Setup] Token saved to ${apiStateFile}`);
+  console.log(`[API Setup] PAT saved to ${apiStateFile} (scopes: ${signIn.pat.scopes.join(', ')})`);
 });

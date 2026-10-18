@@ -2,6 +2,7 @@
 
 > Project: Bunkai
 > Generated: 2026-08-19
+> Re-verified: 2026-10-11 against `upex-bunkai-tms` `origin/staging` (98ee1b4); the local checkout is older, read via `git show origin/staging:<path>`
 
 ## Repositories
 
@@ -23,14 +24,15 @@
 - ORM: None — direct Supabase client usage (`@supabase/supabase-js`, `@supabase/ssr`; client/server/admin/rpc helpers found in `lib/supabase/`). No Prisma dependency in `package.json` despite `.env.example` listing optional Postgres direct-connection vars "Required if using Prisma / raw SQL" (template boilerplate text, not an active usage signal).
 
 ### Database
-- Type: PostgreSQL 16
+- Type: PostgreSQL 17.6 on the live instance (recorded in `supabase/migrations/0075_run_inactivity_sweep.sql`); extensions in use include `pg_cron`
 - Provider: Supabase (single project/tenancy shared across local/staging/production per `.agents/project.yaml`, project ref `fmbpikzpkafptqximhxn`)
 - Access: DBHub MCP (see `dbhub.toml`) — connects via Supabase **session pooler** (port 5432, NOT the 6543 transaction pooler) using a read-only role `qa_inspector_ro.<project-ref>`. Config is templated from `${DBHUB_*}` env vars, no secrets committed. Real credentials are tracked in Jira epic BK-29 per the file's own comment.
-- Migrations: `supabase/migrations/` — 73 SQL migration files present (schema is actively evolving; covers tenancy, projects/modules, authoring, ATCs, RLS helpers, workspace bootstrap, access tokens, cross-cutting concerns, workspace invites, and more).
+- Migrations: `supabase/migrations/` — 89 SQL migration files at `origin/staging` (73 at the 2026-08-19 pass). Since then: test plans (0073, 0076), run inactivity sweep via pg_cron (0075), Stripe billing checkout (0077), notification digest log (0078), workspace data export (0083), workspace soft-delete + pg_cron purge (0084, 0084a, 0089), `qa_inspector` role grants (0085, 0086, 0088), ATC classification (0087), coverage skipped/blocked split (0090).
 
 ### Infrastructure
-- Cloud: Vercel (no `vercel.json` found — zero-config Next.js deploy via Vercel's Git integration, consistent with the `main-integration` git strategy where `main` maps to the Vercel production environment and `staging` maps to the Vercel staging environment)
-- CI/CD: No `.github/workflows/` directory found in the target repo (confirmed absent). No GitHub Actions CI/CD pipeline detected locally — deploys appear to be driven entirely by Vercel's native Git integration (auto-deploy on push to `main`/`staging`), not a custom Actions pipeline. Local git hooks exist via Husky (`.husky/`) for pre-commit/lint-staged.
+- Cloud: Vercel, deployed through Vercel's Git integration (`main` maps to the Vercel production environment, `staging` to the Vercel staging environment). `vercel.json` now exists and only declares one Vercel Cron: `POST /api/v1/admin/send-digest` daily at 08:00 UTC (`CRON_SECRET`-gated).
+- Third-party services added since 2026-08-19: Stripe (`stripe` dependency; hosted Checkout + `app/api/v1/billing/webhook/route.ts`) and Resend (`resend` dependency; daily notification digest email).
+- CI/CD: No `.github/workflows/` directory in the target repo (confirmed absent at `origin/staging` on 2026-10-11). No GitHub Actions CI/CD pipeline detected locally — deploys appear to be driven entirely by Vercel's native Git integration (auto-deploy on push to `main`/`staging`), not a custom Actions pipeline. Local git hooks exist via Husky (`.husky/`) for pre-commit/lint-staged.
 - Monitoring: Discovery Gap — no Sentry/Datadog/PostHog or similar observability dependency found in `package.json`.
 
 ## Environments
@@ -52,14 +54,15 @@
 ## Access Checklist
 
 - [x] Repository read access — confirmed, target repo present locally at `C:\Users\Genesis Ojose\Documents\Auto\Dojo 4\upex-bunkai-tms`
-- [ ] Database access (MCP or direct) — DBHub config present (`dbhub.toml`) but requires `${DBHUB_*}` env vars (host/port/database/user/password) not verified as set in this boilerplate's `.env`
-- [ ] Issue tracker access — `ATLASSIAN_EMAIL`/`ATLASSIAN_API_TOKEN` are expected in `.env` per this boilerplate's `.env.example`; not verified live (would require an authenticated `acli` call, out of scope for this read-only discovery pass)
-- [ ] Staging environment reachable — not verified (would require a live HTTP request, out of scope for this read-only discovery pass)
+- [x] Database access (MCP or direct) — DBHub read-only queries used in sprint-testing sessions through 2026-10-10 (e.g. `pg_get_functiondef` checks for migration 0089)
+- [x] Issue tracker access — `acli` and `jira:sync-issues` used daily through 2026-10-11; re-checked by Phase 4 `bun run jira:check`
+- [x] Staging environment reachable — `https://staging-upexbunkai.vercel.app` exercised by UI and API retests through 2026-10-11 (BK-988, BK-991, BK-512)
 - [ ] CI/CD visibility — N/A locally: no GitHub Actions workflows exist in the target repo to have visibility into; deploy visibility would instead be via Vercel dashboard/CLI (not verified)
 
 ## Discovery Gaps
 
 - [ ] Monitoring/observability tooling (Sentry, Datadog, PostHog, etc.) — none found in `package.json`, unconfirmed whether handled outside the repo (e.g. Vercel Analytics dashboard-only)
-- [ ] Live reachability of staging (`https://staging-upexbunkai.vercel.app`) and production (`https://upexbunkai.vercel.app`) — not tested (read-only discovery, no network calls made)
-- [ ] Live Jira/DBHub credential validity — env var names are known (`.env.example`), but whether they are populated and valid was not tested
+- [ ] Live reachability of production (`https://upexbunkai.vercel.app`) — not tested (staging is verified, see Access Checklist)
+- [ ] Stripe mode on staging (test vs live keys) — checkout and webhook routes exist; key mode not verified
+- [ ] `bun run jira:check` exits 1 on one mismatch (2026-10-11): `.agents/jira-workflows.json` names the story work type `Story`, while the live instance and `.agents/jira-required.yaml` say `Historia` (verified on BK-508 via `acli`). Connection, 234 field/workflow checks and all link types are green. Likely fix: `bun run jira:sync-workflows` to refresh the stale catalog, then re-run `jira:check`.
 - [ ] Whether a GitHub Actions pipeline exists remotely-only (e.g. added after this local checkout, or configured via GitHub UI/Vercel dashboard rather than committed YAML) — local filesystem shows no `.github/workflows/`, but this cannot rule out remote-only or dashboard-configured automation

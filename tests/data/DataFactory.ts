@@ -9,8 +9,10 @@
  *   - Import directo: import { DataFactory } from '@DataFactory'
  */
 
-import type { TestBooking, TestCredentials, TestHotel, TestUser } from '@data/types';
+import type { TestCredentials, TestUser } from '@data/types';
+import type { CreateWorkspacePayload } from '@schemas/workspaces.types';
 
+import { SYNTHETIC_WORKSPACE_SLUG_PREFIX } from '@data/constants';
 import { faker } from '@faker-js/faker';
 
 export class DataFactory {
@@ -67,43 +69,24 @@ export class DataFactory {
   }
 
   /**
+   * Payload for a synthetic workspace. Slug: `qa-auto-bk508-<ts>-<rand6>`
+   * (matches `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`, <= 40 chars).
+   */
+  static createWorkspacePayload(overrides?: Partial<CreateWorkspacePayload>): CreateWorkspacePayload {
+    const suffix = `${Date.now()}-${faker.string.alphanumeric({ length: 6, casing: 'lower' })}`;
+    return {
+      name: `QA Auto BK-508 ${suffix}`,
+      slug: `${SYNTHETIC_WORKSPACE_SLUG_PREFIX}${suffix}`,
+      ...overrides,
+    };
+  }
+
+  /**
    * Genera un ID único para identificar datos de test
    * Útil para cleanup y trazabilidad
    */
   static createTestId(prefix = 'test'): string {
     return `${prefix}-${this.uniqueId()}`;
-  }
-
-  // ============================================
-  // PROJECT-SPECIFIC (example structure)
-  // ============================================
-
-  /**
-   * Genera datos de Hotel para testing
-   * TODO: Expandir cuando se necesite
-   */
-  static createHotel(overrides?: Partial<TestHotel>): TestHotel {
-    return {
-      name: `Test Hotel ${faker.location.city()}`,
-      organizationId: faker.number.int({ min: 1, max: 100 }),
-      invoiceCap: faker.number.int({ min: 1000, max: 50000 }),
-      ...overrides,
-    };
-  }
-
-  /**
-   * Genera datos de Booking para testing
-   * TODO: Expandir cuando se necesite
-   */
-  static createBooking(overrides?: Partial<TestBooking>): TestBooking {
-    return {
-      confirmationNumber: `CONF-${faker.string.alphanumeric(8).toUpperCase()}`,
-      hotelId: faker.number.int({ min: 1, max: 1000 }),
-      stayValue: faker.number.float({ min: 100, max: 5000, fractionDigits: 2 }),
-      checkInDate: faker.date.future().toISOString().split('T')[0],
-      emailHash: faker.string.alphanumeric(32),
-      ...overrides,
-    };
   }
 }
 

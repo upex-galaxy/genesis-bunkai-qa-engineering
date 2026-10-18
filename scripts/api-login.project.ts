@@ -63,33 +63,42 @@ import type { ApiLoginContext, ExtractedToken } from './lib/api-login-core';
  */
 export const environments = ['local', 'staging'] as const;
 
+/** Bunkai PAT lifetime minted by each login. Short on purpose: every run mints a new one. */
+const PAT_TTL_DAYS = 1;
+
 /**
- * Build the request body for the auth endpoint.
- * Override for different auth formats (e.g. `{ username, password }`, OAuth2).
+ * Build the request body for POST /api/v1/auth/signin (config.auth.loginEndpoint).
+ * Bunkai mints a Personal Access Token in the same call; name it and keep it short-lived.
  */
 export function buildAuthPayload(
   email: string,
   password: string,
-  _context: ApiLoginContext,
+  context: ApiLoginContext,
 ): Record<string, unknown> {
-  return { email, password };
+  return {
+    email,
+    password,
+    pat_name: `qa-agent-${context.role}`,
+    pat_expires_in_days: PAT_TTL_DAYS,
+  };
 }
 
 /**
- * Extract the token fields from the auth response.
- * Override if your API returns tokens in a different shape.
+ * Extract the Bearer credential from the sign-in response.
  *
- * Expected response format (default):
- *   { access_token: string, token_type: string, expires_in: number, refresh_token?: string }
+ * Bunkai returns `{ user, session, pat, warning }`. The API accepts only the PAT
+ * (`bk_pat_*`) as Bearer; `session.access_token` is the Supabase JWT behind the
+ * browser cookie and is NOT a valid Bearer for /api/v1.
  */
 export function extractTokenFromResponse(
   body: Record<string, unknown>,
   _context: ApiLoginContext,
 ): ExtractedToken {
+  const pat = (body.pat ?? {}) as Record<string, unknown>;
   return {
-    accessToken: String(body.access_token ?? ''),
-    tokenType: String(body.token_type ?? 'Bearer'),
-    expiresIn: Number(body.expires_in ?? 86400),
-    refreshToken: body.refresh_token ? String(body.refresh_token) : null,
+    accessToken: String(pat.token ?? ''),
+    tokenType: 'Bearer',
+    expiresIn: PAT_TTL_DAYS * 86400,
+    refreshToken: null,
   };
 }

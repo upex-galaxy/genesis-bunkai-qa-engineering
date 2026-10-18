@@ -1,66 +1,50 @@
 /**
- * KATA Architecture - User Session Integration Tests
+ * KATA Architecture - User Session Integration Tests (BK-166)
  *
- * Tests for authenticated user session via API.
- * Validates that token propagation works correctly.
+ * Validates that the credentials produced by api-setup work:
+ * - the PAT from api-state.json authenticates as Bearer
+ * - without any credential the API answers 401
+ * - a fresh sign-in mints a new PAT
  *
  * Project: integration (depends on api-setup)
  */
 
 import { config, expect, test } from '@TestFixture';
 
-test.describe('UPEX-100: User Session API', { tag: ['@critical'] }, () => {
-  /**
-   * Validates that the auth token is automatically loaded from api-state.json
-   * and can be used to make authenticated API calls.
-   */
-  test('UPEX-100: should get current user with valid token', async ({ api }) => {
-    // The token is automatically loaded from api-state.json by ApiFixture
-    // Use helper (not ATC) — this is a read-only verification
-    const [response, userData] = await api.auth.getCurrentUser();
+test.describe('BK-166: User Session API', { tag: ['@critical'] }, () => {
+  test('BK-166: should get the current user with the stored PAT', async ({ api }) => {
+    // The PAT is loaded from api-state.json by the api fixture
+    const [response, me] = await api.auth.getCurrentUser();
 
-    // Test-level assertions (UPEX Dojo format)
     expect(response.status()).toBe(200);
-    expect(userData.user).toBeDefined();
-    expect(userData.user.id).toBeDefined();
-    expect(userData.user.email).toBeDefined();
-    expect(userData.user.name).toBeDefined();
-    expect(typeof userData.user.name).toBe('string');
+    expect(me.user.id).toBeTruthy();
+    expect(me.user.email).toBe(config.testUser.email);
   });
 
-  /**
-   * Validates that unauthenticated requests are rejected.
-   * Uses the helper directly with token cleared.
-   */
-  test('UPEX-100: should fail without token', async ({ api }) => {
-    // Temporarily clear token to test unauthorized access
+  test('BK-166: should be able to re-authenticate', async ({ api }) => {
+    api.clearAuthToken();
+
+    const [response, signIn] = await api.auth.authenticateSuccessfully({
+      email: config.testUser.email,
+      password: config.testUser.password,
+      pat_name: 'qa-automation-reauth',
+      pat_expires_in_days: 1,
+    });
+
+    expect(response.status()).toBe(200);
+    expect(signIn.pat.token).toMatch(/^bk_pat_/);
+  });
+});
+
+test.describe('BK-166: User Session API (no credentials)', { tag: ['@critical'] }, () => {
+  // Drop the session cookie the integration project loads by default
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('BK-166: should answer 401 without any credential', async ({ api }) => {
     api.clearAuthToken();
 
     const [response] = await api.auth.getCurrentUser();
 
-    // Test-level assertions — no session should exist
     expect(response.status()).toBe(401);
-    expect(response.ok()).toBe(false);
-  });
-
-  /**
-   * Validates that we can re-authenticate and get a new token.
-   * This tests the runtime token refresh capability.
-   */
-  test('UPEX-100: should be able to re-authenticate', async ({ api }) => {
-    // Clear existing token
-    api.clearAuthToken();
-
-    // Re-authenticate using the ATC (UPEX Dojo uses 'email' field)
-    const credentials = {
-      email: config.testUser.email,
-      password: config.testUser.password,
-    };
-
-    const [response, tokenData] = await api.auth.authenticateSuccessfully(credentials);
-
-    // Verify new token was obtained and set
-    expect(response.status()).toBe(200);
-    expect(tokenData.access_token).toBeDefined();
   });
 });

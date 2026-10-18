@@ -182,7 +182,8 @@
               <td>
                 Escribe el plan (especificación y plan de automatización), implementa sobre la
                 arquitectura del Implementation Standard con el decorador que ata cada método a su
-                caso, corre los tres verificadores y abre el pull request.
+                caso y corre los tres verificadores; el pull request lo abre
+                <code>/git-flow-master</code>.
               </td>
             </tr>
             <tr>
@@ -205,7 +206,10 @@
             </tr>
             <tr>
               <th>Verificador separado</th>
-              <td>Obligatorio: <code>pr-review-lead</code> y <code>judgment-day</code></td>
+              <td>
+                Obligatorio: <code>pr-review-lead</code> o <code>judgment-day</code>, en un contexto
+                limpio
+              </td>
             </tr>
             <tr>
               <th>Roles</th>
@@ -369,7 +373,7 @@
                 Hace trazable cada ATC a su historia (<code>@atc('KEY')</code>) y es lo que los
                 skills saben operar. Sobre un framework que el cliente conserva se aplican sus
                 invariantes (capas, inyección de dependencias, decoradores) con
-                <code>/adapt-framework</code>, sin reescribirlo.
+                <code>/test-framework-adaptation</code>, sin reescribirlo.
               </td>
             </tr>
             <tr>
@@ -451,7 +455,10 @@
         </li>
         <li>
           <strong>Enlazar el ATS a la historia</strong>
-          <p>Enlace <em>Test · is tested by</em>. Es la única arista que da cobertura.</p>
+          <p>
+            Enlace <em>Test · is tested by</em>. Es la arista que da cobertura; el enlace directo de
+            un caso a la historia también cubre, pero solo como último recurso.
+          </p>
         </li>
         <li>
           <strong>Recién ahí, el ATP</strong>

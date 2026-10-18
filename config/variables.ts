@@ -152,12 +152,12 @@ const envDataMap: Record<
 > = {
   local: {
     base: 'http://localhost:3000',
-    api: 'http://localhost:3000/api',
+    api: 'http://localhost:3000/api/v1',
     user: userCredentialsMap.local,
   },
   staging: {
-    base: 'https://dojo.upexgalaxy.com',
-    api: 'https://dojo.upexgalaxy.com/api',
+    base: 'https://staging-upexbunkai.vercel.app',
+    api: 'https://staging-upexbunkai.vercel.app/api/v1',
     user: userCredentialsMap.staging,
   },
 };
@@ -172,15 +172,16 @@ export const config = {
   baseUrl: envData.base,
   apiUrl: envData.api,
 
-  // Authentication config (UPEX Dojo endpoints - relative to apiUrl)
+  // Authentication config (Bunkai endpoints - relative to apiUrl)
   auth: {
-    loginEndpoint: '/auth/login',
-    tokenEndpoint: '/auth/login', // Endpoint to intercept for token (used by page.waitForResponse)
-    meEndpoint: '/auth/me',
-    tokenLifetimeSeconds: 86400, // 24 hours (1 day)
+    loginEndpoint: '/auth/signin', // Headless sign-in: sets the Supabase session cookie AND mints a PAT
+    tokenEndpoint: '/auth/signin', // Endpoint to intercept for token (used by page.waitForResponse)
+    meEndpoint: '/me',
+    tokenLifetimeSeconds: 3600, // Supabase session (~1 hour); the minted PAT lives 1 day
     // Storage paths for authenticated sessions
     storageStatePath: '.auth/user.json',
     apiStatePath: '.auth/api-state.json',
+    apiSessionPath: '.auth/api-session.json', // Session cookie from headless sign-in (integration storageState)
   },
 
   // Test User (configure in .env)

@@ -21,7 +21,6 @@ export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.test\.ts/,
   // Exclude example files - they are reference templates, not functional tests
-  testIgnore: ['**/module-example/**'],
 
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -132,17 +131,21 @@ export default defineConfig({
         storageState: config.auth.storageStatePath,
       },
       testMatch: '**/e2e/**/*.test.ts',
-      dependencies: ['ui-setup'],
+      // api-setup too: E2E tests also call the API with the stored PAT
+      dependencies: ['ui-setup', 'api-setup'],
     },
 
     // ============================================
-    // Integration Tests - API only with token
+    // Integration Tests - API only. The request context carries the session
+    // cookie from api-setup (cookie-only routes); the PAT rides as Bearer.
     // ============================================
     {
       name: 'integration',
       testMatch: '**/integration/**/*.test.ts',
       dependencies: ['api-setup'],
-      use: {},
+      use: {
+        storageState: config.auth.apiSessionPath,
+      },
     },
 
     // ============================================
@@ -150,13 +153,23 @@ export default defineConfig({
     // Usage: bun run test:smoke
     // ============================================
     {
-      name: 'smoke',
+      name: 'smoke-ui',
       grep: /@critical/,
-      testMatch: '**/{e2e,integration}/**/*.test.ts',
+      testMatch: '**/e2e/**/*.test.ts',
+      // api-setup too: E2E tests also call the API with the stored PAT
       dependencies: ['ui-setup', 'api-setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: config.auth.storageStatePath,
+      },
+    },
+    {
+      name: 'smoke-api',
+      grep: /@critical/,
+      testMatch: '**/integration/**/*.test.ts',
+      dependencies: ['api-setup'],
+      use: {
+        storageState: config.auth.apiSessionPath,
       },
     },
 

@@ -1,96 +1,43 @@
 /**
  * KATA Framework - Type Facade: Auth Domain
  *
- * Type definitions for authentication endpoints.
- * When openapi-types.ts is available (after `bun run api:sync`),
- * migrate Custom Types to Schema/Endpoint Types using @openapi imports.
+ * Type definitions for Bunkai authentication endpoints.
  *
- * Consumed by: tests/components/api/AuthApi.ts
+ * Bunkai has two credential families:
+ * - Supabase session cookie (`sb-<ref>-auth-token`), set by POST /api/v1/auth/signin
+ *   and by the UI login. Required by cookie-only routes (e.g. workspace data export).
+ * - Personal Access Token (`bk_pat_*`), minted by the same sign-in call and sent as
+ *   `Authorization: Bearer`. Accepted by routes that declare `bearerAuth`.
  *
- * Migration example:
- *   import type { components, paths } from '@openapi';
- *   export type TokenResponse = components['schemas']['TokenResponse'];
- *   type LoginPath = paths['/api/auth/login']['post'];
- *   export type LoginRequest = LoginPath['requestBody']['content']['application/json'];
+ * Consumed by: tests/components/api/AuthApi.ts, tests/setup/*.setup.ts
  */
+
+import type { components, paths } from '@openapi';
 
 // ============================================================================
 // Schema Types (from components.schemas)
 // ============================================================================
 
-// TODO: Uncomment after running `bun run api:sync` and replace Custom Types below
-// import type { components, paths } from '@openapi';
-// export type TokenResponse = components['schemas']['TokenResponse'];
-// export type UserInfo = components['schemas']['UserInfoModel'];
+/** Canonical error envelope returned by every /api/v1 route on failure. */
+export type ErrorEnvelope = components['schemas']['ErrorEnvelope'];
+
+/** Authenticated principal: user + workspaces (GET /api/v1/me). */
+export type MeResponse = components['schemas']['MeResponse'];
 
 // ============================================================================
-// Endpoint Types - POST /api/auth/login
+// Endpoint Types - POST /api/v1/auth/signin
 // ============================================================================
 
-// TODO: Uncomment after running `bun run api:sync`
-// type LoginPath = paths['/api/auth/login']['post'];
-// export type LoginPayload = LoginPath['requestBody']['content']['application/json'];
-// export type LoginSuccessResponse = LoginPath['responses']['200']['content']['application/json'];
-// export type LoginErrorResponse = LoginPath['responses']['401']['content']['application/json'];
+type SignInPath = paths['/api/v1/auth/signin']['post'];
 
-// ============================================================================
-// Endpoint Types - GET /api/auth/me
-// ============================================================================
+/** Body: email + password, plus optional PAT name / scopes / TTL. */
+export type SignInPayload = NonNullable<SignInPath['requestBody']>['content']['application/json'];
 
-// TODO: Uncomment after running `bun run api:sync`
-// type MePath = paths['/api/auth/me']['get'];
-// export type MeResponse = MePath['responses']['200']['content']['application/json'];
+/** 200 body: `{ user, session, pat, warning }`. */
+export type SignInResponse = SignInPath['responses']['200']['content']['application/json'];
 
-// ============================================================================
-// Custom Types (pre-sync definitions — replace with OpenAPI types when available)
-// ============================================================================
+/** The PAT minted by the sign-in call. */
+export type SignInPat = SignInResponse['pat'];
 
-/**
- * Login request payload.
- * TODO: Replace with OpenAPI endpoint type after sync.
- */
-export interface LoginPayload {
-  email: string
-  password: string
-}
-
-/**
- * Token response from authentication endpoints.
- * Compatible with IdentityServer4 token response.
- * TODO: Replace with OpenAPI schema type after sync.
- */
-export interface TokenResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-  refresh_token?: string
-  scope?: string
-}
-
-/**
- * Error response for failed authentication.
- * TODO: Replace with OpenAPI endpoint type after sync (if documented in spec).
- */
-export interface AuthErrorResponse {
-  error: string
-  statusCode?: number
-  identityServerError?: {
-    error: string
-    error_description: string
-  }
-  hint?: string
-}
-
-/**
- * User info response from /api/auth/me.
- * TODO: Replace with OpenAPI endpoint type after sync.
- */
-export interface UserInfoResponse {
-  user: {
-    id: string
-    email: string
-    name: string
-    createdAt: string
-    updatedAt: string
-  }
-}
+/** PAT scope vocabulary accepted by the sign-in route. */
+export type PatScope = NonNullable<SignInPayload['pat_scopes']>[number];

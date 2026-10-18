@@ -1,80 +1,94 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-09-29T22:32:27.100Z",
+  "generatedAt": "2026-10-18T20:25:44.729Z",
   "components": {
     "api": [
+      {
+        "name": "AtcsApi",
+        "file": "AtcsApi.ts",
+        "relativePath": "tests/components/api/AtcsApi.ts",
+        "atcs": []
+      },
       {
         "name": "AuthApi",
         "file": "AuthApi.ts",
         "relativePath": "tests/components/api/AuthApi.ts",
         "atcs": [
           {
-            "id": "PROJ-101",
+            "id": "BK-311",
             "method": "authenticateSuccessfully",
             "line": 73
           },
           {
-            "id": "PROJ-102",
+            "id": "BK-312",
             "method": "loginWithInvalidCredentials",
-            "line": 112
+            "line": 114
           }
         ]
       },
       {
-        "name": "ExampleApi",
-        "file": "ExampleApi.ts",
-        "relativePath": "tests/components/api/ExampleApi.ts",
+        "name": "ProjectsApi",
+        "file": "ProjectsApi.ts",
+        "relativePath": "tests/components/api/ProjectsApi.ts",
+        "atcs": []
+      },
+      {
+        "name": "RunsApi",
+        "file": "RunsApi.ts",
+        "relativePath": "tests/components/api/RunsApi.ts",
+        "atcs": []
+      },
+      {
+        "name": "TestsApi",
+        "file": "TestsApi.ts",
+        "relativePath": "tests/components/api/TestsApi.ts",
+        "atcs": []
+      },
+      {
+        "name": "UserStoriesApi",
+        "file": "UserStoriesApi.ts",
+        "relativePath": "tests/components/api/UserStoriesApi.ts",
+        "atcs": []
+      },
+      {
+        "name": "WorkspaceExportApi",
+        "file": "WorkspaceExportApi.ts",
+        "relativePath": "tests/components/api/WorkspaceExportApi.ts",
         "atcs": [
           {
-            "id": "PROJ-103",
-            "method": "getResourceSuccessfully",
-            "line": 113
+            "id": "BK-1015",
+            "method": "downloadArchiveWithNdjsonRunSnapshots",
+            "line": 135
           },
           {
-            "id": "PROJ-121",
-            "method": "createResourceSuccessfully",
-            "line": 57
-          },
-          {
-            "id": "PROJ-122",
-            "method": "createResourceWithInvalidData",
-            "line": 88
+            "id": "BK-1018",
+            "method": "getExportStatusSuccessfully",
+            "line": 101
           }
         ]
+      },
+      {
+        "name": "WorkspacesApi",
+        "file": "WorkspacesApi.ts",
+        "relativePath": "tests/components/api/WorkspacesApi.ts",
+        "atcs": []
       }
     ],
     "ui": [
-      {
-        "name": "ExamplePage",
-        "file": "ExamplePage.ts",
-        "relativePath": "tests/components/ui/ExamplePage.ts",
-        "atcs": [
-          {
-            "id": "PROJ-131",
-            "method": "submitFormWithValidData",
-            "line": 99
-          },
-          {
-            "id": "PROJ-132",
-            "method": "submitFormWithInvalidEmail",
-            "line": 122
-          }
-        ]
-      },
       {
         "name": "LoginPage",
         "file": "LoginPage.ts",
         "relativePath": "tests/components/ui/LoginPage.ts",
         "atcs": [
           {
-            "id": "PROJ-111",
+            "id": "BK-313",
             "method": "loginSuccessfully",
-            "line": 84
+            "line": 85
           },
           {
-            "id": "PROJ-112",
+            "id": "BK-314",
             "method": "loginWithInvalidCredentials",
-            "line": 101
+            "line": 103
           }
         ]
       }
@@ -82,21 +96,20 @@
   },
   "steps": [
     {
-      "name": "ExampleSteps",
-      "file": "ExampleSteps.ts",
-      "relativePath": "tests/components/steps/ExampleSteps.ts",
+      "name": "WorkspaceExportSteps",
+      "file": "WorkspaceExportSteps.ts",
+      "relativePath": "tests/components/steps/WorkspaceExportSteps.ts",
       "methods": [
-        "authenticateUser",
-        "createTestResource",
-        "navigateAsAuthenticatedUser"
+        "prepareCompletedExport",
+        "seedWorkspaceContent"
       ]
     }
   ],
   "summary": {
-    "totalComponents": 4,
-    "totalATCs": 9,
-    "apiComponents": 2,
-    "uiComponents": 2,
+    "totalComponents": 9,
+    "totalATCs": 6,
+    "apiComponents": 8,
+    "uiComponents": 1,
     "stepsModules": 1
   }
 }

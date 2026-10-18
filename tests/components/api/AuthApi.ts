@@ -1,21 +1,23 @@
 /**
  * KATA Architecture - Layer 3: Auth API Component
  *
- * API component for authentication operations.
- * Handles login, token management, and user info retrieval.
+ * API component for Bunkai authentication.
  *
  * ATCs follow flow-based design: each ATC is an ACTION + VERIFICATION,
  * not a simple GET. Read-only operations are helpers (no @atc).
  *
- * TODO: Replace 'PROJ' in @atc IDs with your Jira project key (e.g., @atc('UPEX-101'))
+ * Bunkai issues two credentials from one sign-in call:
+ * - a Supabase session cookie, stored in the Playwright request context
+ *   (cookie-only routes such as workspace data export need it)
+ * - a Personal Access Token (`bk_pat_*`), sent as `Authorization: Bearer`
  *
  * Endpoints:
- * - POST /api/auth/login - Authenticate and get JWT token
- * - GET /api/auth/me - Get current user info (requires auth)
+ * - POST /api/v1/auth/signin - Headless password sign-in + auto-minted PAT
+ * - GET  /api/v1/me          - Introspect the authenticated principal
  */
 
 import type { APIResponse } from '@playwright/test';
-import type { AuthErrorResponse, LoginPayload, TokenResponse, UserInfoResponse } from '@schemas/auth.types';
+import type { ErrorEnvelope, MeResponse, SignInPayload, SignInResponse } from '@schemas/auth.types';
 import type { TestContextOptions } from '@TestContext';
 
 import { ApiBase } from '@api/ApiBase';
@@ -23,7 +25,7 @@ import { expect } from '@playwright/test';
 import { atc, step } from '@utils/decorators';
 
 // Re-export types for consumers that import from AuthApi
-export type { AuthErrorResponse, LoginPayload, TokenResponse, UserInfoResponse } from '@schemas/auth.types';
+export type { ErrorEnvelope, MeResponse, SignInPayload, SignInResponse } from '@schemas/auth.types';
 
 // ============================================
 // Auth API Component
@@ -39,17 +41,15 @@ export class AuthApi extends ApiBase {
   // ============================================
 
   /**
-   * Helper: Get current authenticated user info.
+   * Helper: Introspect the authenticated principal (GET /me).
    *
-   * Read-only GET — used as a verification step inside ATCs
-   * or for test-level assertions. Not an ATC because it's
-   * just a data retrieval, not a complete action flow.
+   * Read-only GET used as the verification step inside ATCs.
    *
-   * @returns Tuple with response and user info
+   * @returns Tuple with response and principal
    */
   @step
-  async getCurrentUser(): Promise<[APIResponse, UserInfoResponse]> {
-    const [response, body] = await this.apiGET<UserInfoResponse>(this.config.auth.meEndpoint);
+  async getCurrentUser(): Promise<[APIResponse, MeResponse]> {
+    const [response, body] = await this.apiGET<MeResponse>(this.config.auth.meEndpoint);
     return [response, body];
   }
 
@@ -58,81 +58,79 @@ export class AuthApi extends ApiBase {
   // ============================================
 
   /**
-   * ATC: Authenticate with valid credentials - expects success (200)
+   * ATC: Sign in with valid credentials - expects success (200)
    *
    * Complete flow:
-   * 1. POST credentials to /auth/login (ACTION)
-   * 2. GET /auth/me to confirm session is valid (VERIFICATION)
-   * 3. Validate token response and user info
+   * 1. POST credentials to /auth/signin (ACTION) - the response also sets the
+   *    session cookie on this request context
+   * 2. GET /me with the minted PAT to confirm it authenticates (VERIFICATION)
    *
-   * The token is automatically set for subsequent API requests.
+   * The PAT is set as the Bearer token for subsequent requests.
    *
-   * @param credentials - Email and password
-   * @returns Tuple with response, token data, and sent payload
+   * @param credentials - Email and password, optionally PAT name / scopes / TTL
+   * @returns Tuple with response, sign-in body, and sent payload
    */
-  @atc('PROJ-101')
+  @atc('BK-311')
   async authenticateSuccessfully(
-    credentials: LoginPayload,
-  ): Promise<[APIResponse, TokenResponse, LoginPayload]> {
-    // ACTION: POST login credentials
-    const [response, body, sentPayload] = await this.apiPOST<TokenResponse, LoginPayload>(
+    credentials: SignInPayload,
+  ): Promise<[APIResponse, SignInResponse, SignInPayload]> {
+    // ACTION: POST sign-in
+    const [response, body, sentPayload] = await this.apiPOST<SignInResponse, SignInPayload>(
       this.config.auth.loginEndpoint,
       credentials,
     );
 
     // Fixed assertions - validates successful authentication
     expect(response.status()).toBe(200);
-    expect(body.access_token).toBeDefined();
-    expect(body.token_type).toBe('Bearer');
-    expect(body.expires_in).toBeGreaterThan(0);
+    expect(body.user.email).toBe(credentials.email);
+    expect(body.session.access_token).toBeTruthy();
+    expect(body.pat.token).toMatch(/^bk_pat_/);
+    expect(response.headersArray().some(h => h.name.toLowerCase() === 'set-cookie')).toBe(true);
 
-    // Store token for subsequent requests
-    this.setAuthToken(body.access_token);
+    // Store the PAT for subsequent Bearer requests
+    this.setAuthToken(body.pat.token);
 
-    // VERIFICATION: Confirm the session is valid via GET /auth/me
+    // VERIFICATION: the PAT authenticates as the same user
     const [meResponse, meBody] = await this.getCurrentUser();
     expect(meResponse.status()).toBe(200);
-    expect(meBody.user).toBeDefined();
     expect(meBody.user.email).toBe(credentials.email);
 
     return [response, body, sentPayload];
   }
 
   /**
-   * ATC: Login with invalid credentials - expects error (401)
+   * ATC: Sign in with invalid credentials - expects error (401)
    *
    * Complete flow:
-   * 1. POST invalid credentials to /auth/login (ACTION)
-   * 2. GET /auth/me to confirm NO session was created (VERIFICATION)
-   * 3. Validate error response and unauthorized access
+   * 1. POST invalid credentials to /auth/signin (ACTION)
+   * 2. Confirm NO credential was issued: no session cookie, no PAT (VERIFICATION)
+   *
+   * The verification reads the response itself rather than GET /me, because the
+   * shared request context may already carry a cookie from an earlier sign-in.
    *
    * @param credentials - Invalid email or password
    * @returns Tuple with error response and sent payload
    */
-  @atc('PROJ-102')
+  @atc('BK-312')
   async loginWithInvalidCredentials(
-    credentials: LoginPayload,
-  ): Promise<[APIResponse, AuthErrorResponse, LoginPayload]> {
+    credentials: SignInPayload,
+  ): Promise<[APIResponse, ErrorEnvelope, SignInPayload]> {
     // ACTION: POST invalid credentials
-    const [response, body, sentPayload] = await this.apiPOST<AuthErrorResponse, LoginPayload>(
+    const [response, body, sentPayload] = await this.apiPOST<ErrorEnvelope, SignInPayload>(
       this.config.auth.loginEndpoint,
       credentials,
     );
 
-    // Fixed assertions - validates error response (UPEX Dojo returns 401)
+    // Fixed assertions - Bunkai answers 401 with the canonical error envelope
     expect(response.status()).toBe(401);
-    expect(response.ok()).toBe(false);
-    expect(body.error).toBeDefined();
+    expect(body.error.code).toBe('unauthorized');
 
-    // VERIFICATION: Confirm no session was created via GET /auth/me → 401
-    const savedToken = this.authToken;
-    this.clearAuthToken();
-    const [meResponse] = await this.getCurrentUser();
-    expect(meResponse.status()).toBe(401);
-    // Restore token if one existed before this ATC
-    if (savedToken) {
-      this.setAuthToken(savedToken);
-    }
+    // VERIFICATION: neither a session cookie nor a PAT was issued
+    const setsAuthCookie = response
+      .headersArray()
+      .some(h => h.name.toLowerCase() === 'set-cookie' && /sb-[^=]+-auth-token=[^;]+/.test(h.value));
+    expect(setsAuthCookie).toBe(false);
+    expect(body).not.toHaveProperty('pat');
 
     return [response, body, sentPayload];
   }
