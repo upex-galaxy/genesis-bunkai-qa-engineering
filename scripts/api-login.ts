@@ -1,11 +1,24 @@
+#!/usr/bin/env bun
 /**
- * API Login - entry point of `bun run api:login`.
+ * API Login CLI - entry point for `bun run api:login`.
  *
- * Wires the synced CLI (scripts/lib/api-login-core.ts) to this project's auth
- * adapter (scripts/api-login.project.ts). Adapt the adapter, never this file.
+ * This file is deliberately 10 lines: it only wires the two halves together.
+ *   - scripts/lib/api-login-core.ts   SYNCED   generic CLI (args, --role,
+ *                                              --profile, storage, --help).
+ *                                              Upstream improvements arrive
+ *                                              through `bun sync`.
+ *   - scripts/api-login.project.ts    PROJECT  the auth adapter. Shipped once,
+ *                                              never overwritten by the sync.
+ *                                              THIS is the file to adapt.
+ *
+ * Add no logic here: behaviour belongs in the core, adaptation in the adapter.
+ * Usage and token-storage details: `bun run api:login --help`.
  */
 
-import * as projectAdapter from './api-login.project';
+import * as adapter from './api-login.project';
 import { runApiLogin } from './lib/api-login-core';
 
-process.exit(await runApiLogin(projectAdapter));
+const exitCode = await runApiLogin(adapter);
+if (exitCode !== 0) {
+  process.exit(exitCode);
+}

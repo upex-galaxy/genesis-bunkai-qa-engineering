@@ -137,7 +137,7 @@ qa:
 # (bootstrapOnly), so each project keeps its own. Filled by git-flow-master, NOT by
 # `agents:setup`. These leaves are read directly (not {{VAR}} template vars) → skipped by vars:check.
 git_strategy:
-  strategy: solo-main # DEFAULT, not a decision — see meta.strategy_source (currently `inherited`: Strategy Setup's Q4 was answered but the questionnaire never formally stamped `chosen`). One of: solo-main | main-integration | enterprise | trunk-based | gitflow | github-flow | gitlab-flow | sdet
+  strategy: solo-main # CHOSEN by the maintainer on 2026-10-18 (see meta.strategy_source). One of: solo-main | main-integration | enterprise | trunk-based | gitflow | github-flow | gitlab-flow | sdet
   description: >
     Single long-lived branch (main); single maintainer (this repo, genesis-bunkai-qa-engineering,
     is a consumer of the agentic-qa-boilerplate template, scaffolded to QA-test the Bunkai
@@ -183,7 +183,7 @@ git_strategy:
     # Did anyone actually CHOOSE this strategy, or is it just the shipped default?
     # `strategy:` above is never null, so its value alone cannot answer that. Strategy
     # Setup flips this to `chosen` when the questionnaire actually runs.
-    strategy_source: inherited # inherited | chosen
+    strategy_source: chosen # inherited | chosen — confirmed solo-main by the maintainer on 2026-10-18
 
 # NEW in 1.0.0 — added by `bun run up`, unset. See .agents/README.md.
 # Defaults for multi-session orchestration (supervised worker fleets via Orca —
@@ -236,7 +236,7 @@ orchestration:
 # ignored. Empty by default. Read directly by the updater (not a {{VAR}} source): the
 # nested list is skipped by vars:check like git_strategy and qa.qa_epics.
 updater:
-  protected_paths: [] # e.g. [scripts/lint-vars.ts, .agents/skills/acli/SKILL.md]
+  protected_paths: [.env.example] # keeps the Bunkai workspace-role block across syncs
   # NEW in 1.0.0 — added by `bun run up`, unset. See .agents/README.md.
   # Upstream deny rules this project does NOT want appended to `.claude/settings.json`.
   # `bun run up` appends every upstream `permissions.deny` entry the project lacks (after a
