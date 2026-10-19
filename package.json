@@ -138,7 +138,7 @@
     "openapi-typescript": "^7.10.1",
     "prettier": "^3.7.4",
     "typescript": "^5.8.3",
-    "varlock": "1.20.0"
+    "varlock": "1.23.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
