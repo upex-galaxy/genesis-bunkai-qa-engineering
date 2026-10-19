@@ -2,7 +2,7 @@
   "browser": {
     "browserName": "chromium",
     "launchOptions": {
-      "headless": false
+      "headless": true
     },
     "contextOptions": {
       "viewport": {
@@ -11,7 +11,7 @@
       }
     }
   },
-  "outputDir": ".context/PBI/epics/EPIC-BK-85-account-settings/stories/STORY-BK-508-settings-request-an-export-of-my-workspace-data/evidence",
+  "outputDir": ".playwright/output",
   "outputMode": "file",
   "console": {
     "level": "warning"
