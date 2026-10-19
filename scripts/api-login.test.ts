@@ -23,6 +23,11 @@
  *
  * No network: the auth request is a stubbed `fetchImpl`. No writes outside a
  * temp dir: `authDir` + `apiStatePath` are redirected per test.
+ *
+ * PROJECT-ADAPTED (protected in `updater.protected_paths`): the stub answers
+ * with Bunkai's sign-in shape (`{ user, session, pat, warning }`) and the
+ * expectations follow scripts/api-login.project.ts, which names a short-lived
+ * PAT in the request and reads `pat.token`, never `session.access_token`.
  */
 
 import type { ApiLoginAdapter, ApiLoginContext } from './lib/api-login-core';
@@ -67,11 +72,21 @@ function scratch(): string {
 
 interface FetchCall { url: string, body: Record<string, unknown> | null, headers: Record<string, string> }
 
-function stubFetch(calls: FetchCall[], status = 200, payload: Record<string, unknown> = {
-  access_token: 'tok-123',
-  token_type: 'Bearer',
-  expires_in: 3600,
-}): typeof fetch {
+// Bunkai sign-in response. `session.access_token` is the Supabase JWT behind the
+// browser cookie: it is present so a regression that reads it as the Bearer fails.
+function bunkaiSignin(token: string): Record<string, unknown> {
+  return {
+    user: { id: 'u-1' },
+    session: { access_token: 'supabase-jwt-not-a-bearer' },
+    pat: { token, scopes: [] },
+    warning: null,
+  };
+}
+
+/** The PAT lifetime the Bunkai adapter requests, in seconds. */
+const PAT_TTL_SECONDS = 86400;
+
+function stubFetch(calls: FetchCall[], status = 200, payload: Record<string, unknown> = bunkaiSignin('tok-123')): typeof fetch {
   return (async (input: unknown, init?: RequestInit) => {
     calls.push({
       url: String(input),
@@ -177,18 +192,23 @@ describe('runApiLogin', () => {
 
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe(`${config.apiUrl}${config.auth.loginEndpoint}`);
-    expect(calls[0]?.body).toEqual({ email: config.testUser.email, password: config.testUser.password });
+    expect(calls[0]?.body).toEqual({
+      email: config.testUser.email,
+      password: config.testUser.password,
+      pat_name: 'qa-agent-user',
+      pat_expires_in_days: 1,
+    });
 
     expect(readFileSync(join(root, 'tokens.env'), 'utf-8')).toBe(`export API_TOKEN_USER_${ENV_UPPER}='tok-123'\n`);
     const meta = JSON.parse(readFileSync(join(root, 'tokens.json'), 'utf-8')) as Record<string, { var: string, profile: string | null, expiresIn: number }>;
-    expect(meta[`USER_${ENV_UPPER}`]).toMatchObject({ var: `API_TOKEN_USER_${ENV_UPPER}`, profile: null, expiresIn: 3600 });
+    expect(meta[`USER_${ENV_UPPER}`]).toMatchObject({ var: `API_TOKEN_USER_${ENV_UPPER}`, profile: null, expiresIn: PAT_TTL_SECONDS });
     expect(JSON.parse(readFileSync(join(root, 'api-state.json'), 'utf-8')) as { token: string, source: string }).toMatchObject({ token: 'tok-123', source: 'api-login' });
   });
 
   test('--profile before the environment isolates the pair and leaves the default untouched', async () => {
     const root = scratch();
     expect(await run([], root, [])).toBe(0);
-    expect(await run(['--profile', 'W1'], root, [], {}, 200, { access_token: 'tok-w1', token_type: 'Bearer', expires_in: 60 })).toBe(0);
+    expect(await run(['--profile', 'W1'], root, [], {}, 200, bunkaiSignin('tok-w1'))).toBe(0);
 
     expect(readFileSync(join(root, 'profiles', 'W1', 'tokens.env'), 'utf-8')).toContain('\'tok-w1\'');
     expect(readFileSync(join(root, 'tokens.env'), 'utf-8')).toContain('\'tok-123\'');
@@ -225,7 +245,12 @@ describe('runApiLogin', () => {
       delete process.env[`${ENV_UPPER}_ADMIN_EMAIL`];
       delete process.env[`${ENV_UPPER}_ADMIN_PASSWORD`];
     }
-    expect(calls[0]?.body).toEqual({ email: 'qa-admin@example.com', password: 'qa-admin-password' });
+    expect(calls[0]?.body).toEqual({
+      email: 'qa-admin@example.com',
+      password: 'qa-admin-password',
+      pat_name: 'qa-agent-admin',
+      pat_expires_in_days: 1,
+    });
     expect(readFileSync(join(root, 'tokens.env'), 'utf-8')).toContain(`export API_TOKEN_ADMIN_${ENV_UPPER}=`);
     expect(existsSync(join(root, 'api-state.json'))).toBe(false);
   });
