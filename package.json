@@ -111,7 +111,9 @@
     "instructions:audit": "bun scripts/instructions-audit.ts",
     "instructions:check": "bun scripts/lint-instructions.ts",
     "tests:explain:render": "bun scripts/tests-explain-render.ts",
-    "worktree:audit": "bun scripts/worktree-audit.ts"
+    "worktree:audit": "bun scripts/worktree-audit.ts",
+    "shared:check": "bun scripts/shared-check.ts",
+    "sync": "bun cli/update-boilerplate.ts"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",

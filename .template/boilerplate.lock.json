@@ -3,23 +3,23 @@
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
   "templateCommit": "89f4602822ea74826fc01abb8949e34030d01a6a",
   "perComponentCommit": {
-    "skills": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
+    "skills": "869e4200e340a4cf38968aee786327fceb222d6d",
     "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "scripts": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "docs": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
+    "scripts": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "docs": "869e4200e340a4cf38968aee786327fceb222d6d",
     "cli": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
     "vscode": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
     "husky": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "agents-docs": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
+    "agents-docs": "869e4200e340a4cf38968aee786327fceb222d6d",
     "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "tooling": "42b8949659a435e76d807cded5ec033b4205189a",
-    "env-template": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "agent-compatibility": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
+    "tooling": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "env-template": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "agent-compatibility": "869e4200e340a4cf38968aee786327fceb222d6d",
     "codex-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
     "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "config-core": "42b8949659a435e76d807cded5ec033b4205189a",
-    "env-schema": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "instructions": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
+    "config-core": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "env-schema": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "instructions": "869e4200e340a4cf38968aee786327fceb222d6d",
     "worktree-include": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
     "orca-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
     "playwright-cli-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1"
@@ -82,7 +82,7 @@
   "packageJsonSync": {
     "package.json": {
       "scripts": {
-        "lastSyncedSha": "e61a440de623e69f5583be64a2e689f5874be310",
+        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
         "appliedKeys": [
           "context:hydrate",
           "jira:components",
@@ -108,26 +108,32 @@
           "instructions:audit",
           "instructions:check",
           "tests:explain:render",
-          "worktree:audit"
-        ]
+          "worktree:audit",
+          "shared:check",
+          "sync"
+        ],
+        "keptKeys": {
+          "repo:check": "bun run format:check && bun run lint:check && bun run types:check && bun run vars:check && bun run vars:schema:check && bun run skills:check && bun run instructions:check && bun run skills:registry:check && bun run docs:check && bun run shared:check && bun run agents:compat:check && bun run agents:schema:check && bun run kata:manifest:check && bun run vars:env:check && bun run git:policy verify",
+          "setup": "bun cli/preflight.ts --for setup --gate && bun cli/install.ts"
+        }
       },
       "devDependencies": {
-        "lastSyncedSha": "e61a440de623e69f5583be64a2e689f5874be310",
+        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
         "appliedKeys": [
           "varlock"
         ]
       },
       "dependencies": {
-        "lastSyncedSha": "e61a440de623e69f5583be64a2e689f5874be310",
+        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
         "appliedKeys": []
       },
       "lint-staged": {
-        "lastSyncedSha": "e61a440de623e69f5583be64a2e689f5874be310",
+        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
         "appliedKeys": []
       }
     }
   },
   "cliVersion": "8.5",
-  "lastSyncedAt": "2026-10-09T22:03:39.158Z",
+  "lastSyncedAt": "2026-10-18T22:48:00.471Z",
   "variableSystemVersion": 1
 }
