@@ -76,7 +76,7 @@ Custom-field content (ACs, ATP/ATR, scope, business rules, comments) is **only**
 
 > Produced by `/project-discovery` Phase 4 (Specification). This section is the project-specific complement to the generic sync mechanics documented above — it never duplicates ticket content, only how to reach it.
 
-**Header** — PM tool: Jira Cloud · Project: **Bunkai TMS** (`BK`) · Board: `Bunkai Board` (id 6, Scrum) · Access: `/acli` (primary) · Last updated: 2026-08-19.
+**Header** — PM tool: Jira Cloud · Project: **Bunkai TMS** (`BK`) · Board: `Bunkai Board` (id 6, Scrum) · Access: `/acli` (primary).
 
 ### Backlog Location
 
@@ -184,5 +184,5 @@ stateDiagram-v2
 ### Discovery Gaps
 
 - [ ] Full custom-field requirement matrix per issue type (create-meta) not exhaustively enumerated here — `.agents/jira-fields.json` + `.agents/jira-required.yaml` are the living catalogs, consult them directly rather than trusting a static copy in this doc.
-- [ ] Active sprint (`Bunkai (70) Sprint 3`) end date (`2026-08-04`) is in the past relative to today (`2026-08-19`) but still shows `state: active` — sprint may be overdue for close-out; not verified whether this is a workflow issue or an intentional extended sprint.
+- [ ] Active sprint (`Bunkai (70) Sprint 3`) end date (`2026-08-04`) was already past at the 2026-08-19 discovery check but still shows `state: active` — sprint may be overdue for close-out; not verified whether this is a workflow issue or an intentional extended sprint.
 - [ ] Whether QA has permission to transition tickets through every state above was not tested live (would require a mutating call, out of scope for read-only discovery).
