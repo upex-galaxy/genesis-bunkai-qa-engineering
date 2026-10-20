@@ -79,6 +79,64 @@ export function generateAllureFilename(args: AllureFilenameArgs): string {
 }
 
 // ============================================
+// Secret Redaction
+// ============================================
+
+/**
+ * Keys whose values never reach an attachment. Compared normalized: lowercase,
+ * separators dropped, so `apiKey`, `api_key` and `api-key` all read `apikey`.
+ */
+const SECRET_KEYS = new Set([
+  'password',
+  'passwd',
+  'pwd',
+  'secret',
+  'authorization',
+  'cookie',
+  'setcookie',
+  'apikey',
+  'accepturl',
+  'inviteurl',
+  'magiclink',
+]);
+
+/** Secret-shaped string values, whatever their key: a Bunkai PAT or a JWT. */
+const SECRET_VALUE = /^(?:bk_pat_|eyJ[\w-]+\.eyJ)/;
+
+function isSecretKey(key: string): boolean {
+  const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return SECRET_KEYS.has(normalized)
+    || normalized.endsWith('token') // token, access_token, refreshToken, any *_token / *Token
+    || normalized.includes('password')
+    || normalized.includes('secret');
+}
+
+/**
+ * Return a deep copy of `data` with every secret value replaced by `"***"`:
+ * any secret-named key (case- and separator-insensitive: password-like,
+ * secret-like, authorization, cookie, set-cookie, api key, accept_url, invite
+ * URL, magic link, anything ending in token) and any string that looks like a
+ * PAT or a JWT. The input is never mutated, so the body handed back to callers
+ * keeps its real values.
+ */
+export function redactSecrets(data: unknown): unknown {
+  if (typeof data === 'string') {
+    return SECRET_VALUE.test(data) ? '***' : data;
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => redactSecrets(item));
+  }
+  if (data !== null && typeof data === 'object') {
+    return Object.fromEntries(
+      Object.entries(data as Record<string, unknown>).map(([key, value]) =>
+        [key, isSecretKey(key) ? '***' : redactSecrets(value)],
+      ),
+    );
+  }
+  return data;
+}
+
+// ============================================
 // Attachment Functions
 // ============================================
 
@@ -131,9 +189,14 @@ export async function attachJsonToAllure(args: AttachJsonArgs): Promise<void> {
 export async function attachRequestResponseToAllure(
   args: AttachRequestResponseArgs,
 ): Promise<void> {
-  const { url, method, responseBody, requestBody } = args;
+  const { url, method } = args;
 
   try {
+    // Every request/response attachment is redacted here, so no caller can leak a secret.
+    // Inside the try: a redaction error skips the attachment, never the test (and never attaches raw).
+    const responseBody = redactSecrets(args.responseBody);
+    const requestBody = redactSecrets(args.requestBody);
+
     // Attach response body if exists
     if (responseBody !== undefined && responseBody !== null) {
       const isNonEmpty = typeof responseBody !== 'object' || Object.keys(responseBody).length > 0;

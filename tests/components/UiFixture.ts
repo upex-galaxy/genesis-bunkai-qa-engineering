@@ -16,6 +16,7 @@
 
 import type { TestContextOptions } from '@TestContext';
 
+import { DataExportPage } from '@ui/DataExportPage';
 import { LoginPage } from '@ui/LoginPage';
 import { UiBase } from '@ui/UiBase';
 
@@ -27,10 +28,14 @@ export class UiFixture extends UiBase {
   /** Login page component - handles authentication flows */
   readonly login: LoginPage;
 
+  /** Settings > Data export (BK-508) */
+  readonly dataExport: DataExportPage;
+
   constructor(options: TestContextOptions) {
     super(options);
 
     // All components receive the same options (same page context)
     this.login = new LoginPage(options);
+    this.dataExport = new DataExportPage(options);
   }
 }

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-10-19T22:30:23.945Z",
+  "generatedAt": "2026-10-20T21:37:14.564Z",
   "components": {
     "api": [
       {
@@ -119,6 +119,33 @@
     ],
     "ui": [
       {
+        "name": "DataExportPage",
+        "file": "DataExportPage.ts",
+        "relativePath": "tests/components/ui/DataExportPage.ts",
+        "atcs": [
+          {
+            "id": "BK-1001",
+            "method": "verifySectionHiddenForNonOwner",
+            "line": 261
+          },
+          {
+            "id": "BK-994",
+            "method": "openDataExportSectionAsOwner",
+            "line": 112
+          },
+          {
+            "id": "BK-995",
+            "method": "requestExportAcknowledged",
+            "line": 152
+          },
+          {
+            "id": "BK-996",
+            "method": "downloadReadyArchive",
+            "line": 209
+          }
+        ]
+      },
+      {
         "name": "LoginPage",
         "file": "LoginPage.ts",
         "relativePath": "tests/components/ui/LoginPage.ts",
@@ -145,16 +172,17 @@
       "methods": [
         "cleanupSyntheticWorkspace",
         "createSyntheticWorkspace",
+        "grantRoleInWorkspace",
         "prepareCompletedExport",
         "seedWorkspaceContent"
       ]
     }
   ],
   "summary": {
-    "totalComponents": 11,
-    "totalATCs": 12,
+    "totalComponents": 12,
+    "totalATCs": 16,
     "apiComponents": 10,
-    "uiComponents": 1,
+    "uiComponents": 2,
     "stepsModules": 1
   }
 }

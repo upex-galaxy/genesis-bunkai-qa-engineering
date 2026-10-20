@@ -76,11 +76,14 @@ export class TokensApi extends ApiBase {
 
   /**
    * Helper: Revoke a PAT. Idempotent cleanup: 204 (revoked) and 404 (already
-   * revoked, e.g. by a workspace soft-delete) both count as success.
+   * revoked, e.g. by a workspace soft-delete) both count as success. With
+   * `requireRevoked` (a PAT just minted, nothing else could revoke it), only
+   * 204 counts.
    */
   @step
-  async revokeToken(tokenId: string): Promise<void> {
+  async revokeToken(tokenId: string, options: { requireRevoked?: boolean } = {}): Promise<void> {
     const [response] = await this.apiDELETE(this.endpoints.byId(tokenId), { cookieOnly: true });
-    expect([204, 404], 'token revocation').toContain(response.status());
+    const accepted = options.requireRevoked ? [204] : [204, 404];
+    expect(accepted, 'token revocation').toContain(response.status());
   }
 }

@@ -4,7 +4,7 @@
 |-------|-------|
 | **Priority** | P0 (Owner-only gate, credential exclusion, tenant isolation) / P1 (lifecycle, audit) / P2 (encoding, boundaries) |
 | **Phase** | Standalone (ticket-driven, three coding waves) |
-| **Items** | 22 TCs -> 23 ATCs (BK-1001 is split across UI + API, justified below) |
+| **Items** | 22 TCs -> 22 ATCs (BK-1001 covers UI + API in one ATC, justified below) |
 | **Dependencies** | None upstream. Needs the cookie-only request option and the archive utility from `automation-plan.md` §2 before Wave 1 code starts |
 | **Requires** | Owner account (`config.testUser`), synthetic workspace per test, non-Owner role accounts for BK-1001, a zip reader dev dependency for Wave 3, a decision on forced-state mechanism for BK-1002 / BK-1000 / BK-1010 |
 | **Source** | Story: BK-508 (Epic BK-85). ATS BK-1022, ATP BK-1023, ATR BK-1024, Defect BK-1025 |
@@ -32,7 +32,7 @@ Layer: `API` = `tests/integration/workspace-export/`, `UI` = `tests/e2e/workspac
 | BK-994 | TC01 | should show the Data export section to the Owner | Positive / smoke | P0 | 2 | UI | `{ test }` | `DataExportPage.openDataExportSectionAsOwner` |
 | BK-995 | TC02 | should acknowledge an export request immediately | Positive | P1 | 2 | UI | `{ test }` | `DataExportPage.requestExportAcknowledged` |
 | BK-996 | TC03 | should offer a single-archive download once ready | Positive | P1 | 2 | UI | `{ test }` | `DataExportPage.downloadReadyArchive` |
-| BK-1001 | TC08 | should not show the Data export section to non-Owner roles | Negative / security | P0 | 2 | UI + API | `{ test }` | `DataExportPage.verifySectionHiddenForNonOwner` + `WorkspaceExportApi.rejectNonOwnerOnExportEndpoints` (parameterized: admin, member, viewer) |
+| BK-1001 | TC08 | should not show the Data export section to non-Owner roles | Negative / security | P0 | 2 | UI + API | `{ test }` | `DataExportPage.verifySectionHiddenForNonOwner({ workspaceId, ownerExportId, readOwnerLatestExportId })`: API refusals + UI absence in one ATC (parameterized: admin, member, viewer) |
 | BK-999 | TC06 | should produce a valid archive for an empty workspace | Boundary | P2 | 3 | API | `{ api }` | `WorkspaceExportApi.downloadEmptyWorkspaceArchive` |
 | BK-1014 | TC21 | should include a manifest.json with workspace id, generated-at and counts | Integration | P1 | 3 | API | `{ api }` | `WorkspaceExportApi.downloadArchiveWithConsistentManifest` |
 | BK-1015 | TC22 | should encode Run snapshots as NDJSON while other entities stay JSON | Integration / regression guard | P2 | 3 | API | `{ api }` | `WorkspaceExportApi.downloadArchiveWithNdjsonRunSnapshots` (regression guard for BK-1025, closed) |
@@ -45,13 +45,13 @@ Layer: `API` = `tests/integration/workspace-export/`, `UI` = `tests/e2e/workspac
 | BK-1003 | TC10 | should not allow download via an expired link | Negative / state | P1 | 3 | UI | `{ test }` | `DataExportPage.verifyExpiredArchiveNotOffered` |
 | BK-1006 | TC13 | should mark the archive expired exactly at the window boundary | Boundary (BVA) | P1 | 3 | UI | `{ test }` | `DataExportPage.verifyStateAtExpiryBoundary` (parameterized: -1 s, 0, +1 s) |
 
-**Wave totals**: Wave 1 = 7 TCs (6 new ATCs + 1 reused) · Wave 2 = 4 TCs (5 ATCs) · Wave 3 = 11 TCs (11 ATCs). 22 TCs, 23 ATC methods, 22 new.
+**Wave totals**: Wave 1 = 7 TCs (6 new ATCs + 1 reused) · Wave 2 = 4 TCs (4 ATCs) · Wave 3 = 11 TCs (11 ATCs). 22 TCs, 22 ATC methods, 21 new.
 
 ### Multi-layer split (justified)
 
 | TC | ATCs | Why one TC becomes two ATCs |
 |----|------|-----------------------------|
-| BK-1001 (TC08) | UI `DataExportPage.verifySectionHiddenForNonOwner` + API `WorkspaceExportApi.rejectNonOwnerOnExportEndpoints` | AC-02 says the section is absent AND unreachable "by any route". Nav absence is a UI fact; the security boundary is the route's inline Owner check (`assertExportAuthorized`). ATP Risk #1 is exactly "nav hidden, API open": a single UI ATC would stay green while the API leaks. Different layer, different failure mode, same TMS ID (`className` disambiguates per `atc-tracing.md`). |
+| BK-1001 (TC08) | One ATC `DataExportPage.verifySectionHiddenForNonOwner(args)` covering API + UI | AC-02 says the section is absent AND unreachable "by any route". Nav absence is a UI fact; the security boundary is the route's inline Owner check (`assertExportAuthorized`). ATP Risk #1 is exactly "nav hidden, API open": a single UI ATC would stay green while the API leaks. Different layer, different failure mode, same TMS ID. Implementation (revised 2026-10-20): `kata:manifest:check` refuses a duplicate `@atc` id, and a check run outside the ATC that fails writes no row (the other roles' PASS rows would then sync as PASSED). So the single `@atc('BK-1001')` method runs every verification itself: the API refusals on the role page's own cookie session (`page.request`), the Owner-side "no job enqueued" re-read through a reader callback, then the UI checks. Any failure writes a FAIL row for BK-1001. |
 
 Every other TC whose truth spans two layers is already split across two TMS IDs, so no second ATC is needed: TC02 (UI) / TC24 (API) for the request, TC03 (UI) / TC26 (API) for the download, TC10 (UI) / TC17 (API) for expiry.
 
@@ -113,7 +113,7 @@ None remain. BK-1015 was planned as expected-fail on BK-1025; the defect was fix
 
 | Check | Result |
 |-------|--------|
-| P1 risk beyond AC | YES. Added beyond the ACs: PAT rejection on the GET poll route too (BK-1004 third row); credential exclusion checked for the raw value AND its SHA-256 hash (the form the server stores) (BK-1011, BK-1012); refused download writes no `export.downloaded` audit row (BK-1010 test-level); manifest counts must equal real file line/array lengths (BK-1014); non-Owner API refusal, not just nav absence (BK-1001 API ATC); 202 job id must match the next poll's id (BK-1017). |
+| P1 risk beyond AC | YES. Added beyond the ACs: PAT rejection on the GET poll route too (BK-1004 third row); credential exclusion checked for the raw value AND its SHA-256 hash (the form the server stores) (BK-1011, BK-1012); refused download writes no `export.downloaded` audit row (BK-1010 test-level); manifest counts must equal real file line/array lengths (BK-1014); non-Owner API refusal, not just nav absence (BK-1001, API half of the ATC); 202 job id must match the next poll's id (BK-1017). |
 | P2 AC as floor | YES. Contract (TC24-26), boundary (TC13 three points), isolation (TC07, TC20) go above AC wording. |
 | P3 concrete exploration | YES. Each ATC names its data: synthetic workspace, minted PAT, issued invite, seeded Run. |
 | P4 1:N per AC | YES. AC-02 -> 3 roles x 2 layers; AC-07 -> UI expired (TC10), server expired (TC17), boundary (TC13); AC-15 -> 3 endpoints; AC-10 -> PAT vs invite partitions. No AC collapsed to one case. |
@@ -137,7 +137,7 @@ None remain. BK-1015 was planned as expected-fail on BK-1025; the defect was fix
 
 ## Acceptance Criteria
 
-- [ ] 22 TCs automated as 23 ATCs across 3 waves, each test on its own synthetic workspace with cleanup
+- [ ] 22 TCs automated as 22 ATCs across 3 waves, each test on its own synthetic workspace with cleanup
 - [ ] BK-1015 runs as a regular regression guard for BK-1025 (closed, no expected-fail markers)
 - [ ] No fixed sleeps: every async wait is `expect.poll` / web-first assertion with a bounded timeout
 - [ ] Tests pass on staging (and local when the local stack has the export worker)

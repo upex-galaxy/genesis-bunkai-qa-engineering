@@ -9,6 +9,8 @@
  * - GET/DELETE return: [APIResponse, TBody]
  * - POST/PUT/PATCH return: [APIResponse, TBody, TPayload]
  * - Always specify response_model (and payload_model for mutations) for type safety
+ * - Every Allure attachment goes through `attachRequestResponseToAllure`, which
+ *   redacts secret-named keys (`redactSecrets`); callers still get the real body
  */
 
 import type { APIRequestContext, APIResponse } from '@playwright/test';

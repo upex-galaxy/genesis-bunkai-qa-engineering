@@ -94,11 +94,10 @@ Note: TC03's Jira design says the window is stated as "168 hours"; the shipped c
 | BK-997 | 1 | ActivityApi | `verifyExportRequestedRecorded({ workspaceId, actorId, since })` | `GET /activity?workspace_id=` contains exactly one `export.requested` with actor = Owner, `created_at >= since`, payload `{}` |
 | BK-998 | 1 | ActivityApi | `verifyExportDownloadedRecorded({ workspaceId, actorId, since, count })` | Same for `export.downloaded`; one row per successful download (test downloads twice, `count: 2`; exact-count re-read after the poll) |
 | BK-1009 | 1 | WorkspaceExportApi | `supersedePriorArchiveWithNewest({ workspaceId, priorExport })` | Request a fresh export after a completed one; settles `completed`; poll returns the NEW id with `expires_at` later than the prior's; download manifest `generated_at` is after the prior `completed_at` |
-| BK-994 | 2 | DataExportPage | `openDataExportSectionAsOwner()` | Settings nav lists Data export; page shows the explanation card (entities, no credential, 7 days) |
-| BK-995 | 2 | DataExportPage | `requestExportAcknowledged()` | Click Request export; preparing text with a requested-at timestamp appears without waiting for completion; reload + navigate away and back shows the same state |
-| BK-996 | 2 | DataExportPage | `downloadReadyArchive()` | Ready text + `Downloadable until`; click Download archive -> Playwright `download` event; suggested filename `workspace-export-*.zip`; saved file non-empty |
-| BK-1001 | 2 | DataExportPage | `verifySectionHiddenForNonOwner()` | Role session: nav has no Data export link; direct `/settings/data-export` shows no lifecycle text and no download link |
-| BK-1001 | 2 | WorkspaceExportApi | `rejectNonOwnerOnExportEndpoints(workspaceId)` | Role cookie session: POST, GET poll and download all 403 |
+| BK-994 | 2 | DataExportPage | `openDataExportSectionAsOwner()` | Settings nav lists Data export; page shows the explanation card (entities, no credential, 7 days); on the never-exported synthetic workspace the status card shows `No export has been requested yet` and an enabled Request export (inside the ATC since 2026-10-20, so it reaches the TMS row) |
+| BK-995 | 2 | DataExportPage | `requestExportAcknowledged(): WorkspaceExportJob` | Click Request export; the view re-reads the job (`queued`/`running`) and shows the preparing text with its requested-at time (formatted in the browser like the view) without waiting for completion; reload + navigate away and back still shows the request (preparing or ready), never never-requested. Needs a seeded workspace: an empty one can export before the re-read (measured on staging, 3 of 5 runs). Residual race (2026-10-20): the job still completes before the re-read on some seeded runs. The view renders "being prepared" ONLY from that re-read (the 202 sets no state; `DataExportView.requestExport` -> `load()`), and the job runs server-side right after the 202, so no honest test-side hold exists: a `page.route` hold on the re-read widens the race, a `route.fulfill` would fabricate the state. The final API re-read (latest export id = the job the UI requested) runs inside the ATC (2026-10-20). **Status: `test.fixme`** (2026-10-20), so the body never runs and no TMS row is written: with one seed chain the job won the re-read race 1 time in 20 (`--repeat-each=20`); 3 seed rounds (the ceiling: staging caps projects per workspace) are not yet measured. Unblock: a product-side test hook that holds the job `queued` on staging |
+| BK-996 | 2 | DataExportPage | `downloadReadyArchive(workspaceId, expectedBytes): { suggestedFilename, sizeBytes }` | Ready text + `Downloadable until`; click Download archive -> Playwright `download` event; suggested filename `workspace-export-<workspaceId>-<YYYY-MM-DD>.zip`; saved file non-empty and its size equals `expectedBytes` (the settled export's `archive_bytes`), inside the ATC since 2026-10-20 so it reaches the TMS row |
+| BK-1001 | 2 | DataExportPage | `verifySectionHiddenForNonOwner({ workspaceId, ownerExportId, readOwnerLatestExportId })` | Every BK-1001 check inside the ATC (revised 2026-10-20), in order: (1) role cookie session (`page.request`): POST, GET poll and download all 403 with the Owner-gate message (`^Only the workspace Owner can`), no ZIP; (2) Owner-side re-read via the reader callback: latest export is still `ownerExportId` (no job enqueued); (3) role session: nav has no Data export link (positive control: Account link); direct `/settings/data-export`: the view reads THIS workspace (guard) and gets 403, shows `Could not load the export status.`, no lifecycle text, no request button, no download link. Every wait has an explicit timeout (worst case ~121 s, budget in the JSDoc) and the test sets `test.setTimeout(240_000)`, so slowness throws inside the ATC (FAIL row) before the test timeout could abandon it |
 | BK-999 | 3 | WorkspaceExportApi | `downloadEmptyWorkspaceArchive(workspaceId)` | Archive parses; `manifest.json` present; every content entity (projects ... bugs) is `[]` with count 0; `memberships` = 1 (Owner) and `activity` >= 1 (the `export.requested` row) are expected non-zero |
 | BK-1014 | 3 | WorkspaceExportApi | `downloadArchiveWithConsistentManifest({ workspaceId, requestedAt })` | `manifest.workspace_id`, ISO `generated_at` within [requestedAt, completed_at], `counts` keys = entity files present, each count = parsed record count |
 | BK-1015 | 3 | WorkspaceExportApi | `downloadArchiveWithNdjsonRunSnapshots(workspaceId)` | `runs.ndjson` is NDJSON (one JSON object per non-empty line, no enclosing array) and `runs.json` is absent; every other entity file is a JSON array. Regression guard for BK-1025 (closed) |
@@ -124,9 +123,9 @@ Note: TC03's Jira design says the window is stated as "168 hours"; the shipped c
 | WorkspacesApi | `deleteWorkspace({ workspaceId, confirmName })` | `DeleteWorkspaceResponse` | Cookie-only soft-delete; expects 200 |
 | WorkspacesApi | `setActiveWorkspace(workspaceId)` | `void` | `POST /me/active-workspace`, cookie-only; in `{ test }` it runs on `page.request` so the browser gets the `bk_active_ws` cookie |
 | WorkspacesApi | `createInvite({ workspaceId, email, role })` | `{ inviteId, token }` | Raw token returned once |
-| WorkspacesApi | `acceptInvite(token)` | `void` | Called on the invitee's context (BK-1001) |
+| WorkspacesApi | `acceptInvite({ token })` | `AcceptInviteResponse` | Called on the invitee's context (BK-1001). Object param so the step title masks the token (positional args are not masked) |
 | TokensApi | `issueToken({ name, scopes, workspaceId?, expiresInDays? })` | `{ id, token }` | Cookie-only; `expiresInDays` maps to `expires_in_days` (1..365); token masked in the attachment |
-| TokensApi | `revokeToken(id)` | `void` | Cookie-only; 404 tolerated |
+| TokensApi | `revokeToken(id, { requireRevoked? })` | `void` | Cookie-only; 404 tolerated unless `requireRevoked` (a PAT just minted: only 204 counts) |
 | ActivityApi | `listActivity({ workspaceId, limit? })` | `[APIResponse, ActivityPage]` | Cookie |
 | AuthApi | `getCurrentUser()` | exists already (used by `dashboard.test.ts`) | Supplies the Owner's user id for actor checks |
 | ProjectsApi / UserStoriesApi / AtcsApi / TestsApi / RunsApi | `create*`, `startRun`, `finishRun` | ids | Seeding only, §4 |
@@ -137,10 +136,11 @@ Note: TC03's Jira design says the window is stated as "168 hours"; the shipped c
 
 | Method | Composes | Used by |
 |--------|----------|---------|
-| `createSyntheticWorkspace()` | `WorkspacesApi.createWorkspace` (Wave 2 adds `{ makeActive? }` + `setActiveWorkspace`) | every TC |
+| `createSyntheticWorkspace({ makeActive? })` | `WorkspacesApi.createWorkspace` + (`makeActive`) `setActiveWorkspace` on `page.request` (needs the Steps built with a `page`) | every TC |
+| `grantRoleInWorkspace({ workspaceId, email, role, memberRequest })` | Owner `createInvite` -> member `acceptInvite` + `setActiveWorkspace` on `memberRequest` (the role page's `page.request`) | BK-1001 |
 | `cleanupSyntheticWorkspace(workspace)` | best-effort wait (`EXPORT_CLEANUP_SETTLE_TIMEOUT_MS`) for an in-flight export to go idle, then `WorkspacesApi.deleteWorkspace` | every `afterEach` |
 | `prepareCompletedExport(workspaceId)` | Helpers `WorkspaceExportApi.requestExport` (expects 202) + `waitForExportToSettle` (never the BK-1017 ATC: an ATC is not a precondition) | BK-1019, BK-998, BK-1009, BK-996, Wave 3 |
-| `seedWorkspaceContent(workspaceId, { withRunHistory })` | project -> module -> user story -> AC -> ATC -> test -> environment -> run -> finish | BK-1015, BK-1013, BK-1014 |
+| `seedWorkspaceContent(workspaceId, { withRunHistory, round? })` (a distinct `round` per extra chain: project names are unique per workspace) | project -> module -> user story -> AC -> ATC -> test -> environment -> run -> finish | BK-1015, BK-1013, BK-1014 |
 
 ## 4. Test Data Strategy
 
@@ -152,7 +152,7 @@ Note: TC03's Jira design says the window is stated as "168 hours"; the shipped c
 | Completed export | Generate (real path) | request + poll | dies with the workspace; ZIP stays in the bucket (R2) |
 | PAT with `workspace:admin` (BK-1004, BK-1011) | Generate | `POST /api/v1/tokens` with `workspace_id` = synthetic | revoked in `afterEach` (also revoked by the workspace delete) |
 | Invite (BK-1012) | Generate | `POST /workspaces/{id}/invites`, email `qa-auto-bk508+<rand>@example.com` (never delivered: MVP sends no email) | revoked by the workspace delete |
-| Non-Owner memberships (BK-1001) | Generate | invite role account -> accept from role session | removed by the workspace delete |
+| Non-Owner memberships (BK-1001) | Generate | invite role account -> accept from role session | the role leaves on its own session (`WorkspacesApi.leaveWorkspace`, `DELETE /workspaces/{id}/membership`, 404 tolerated) in `finally`, before the soft-delete: a soft-delete emails every active member, and the product has no Owner-side member removal |
 | Run history (BK-1015) | Generate | seeding chain via `WorkspaceExportSteps.seedWorkspaceContent` | dies with the workspace |
 | Expired state (UI) | Real data + browser clock | completed export + `page.clock.setFixedTime` | no residue |
 | Expired state (server, BK-1010) | OUT OF AUTOMATION (Q2: no DB writes from tests) | `UPDATE public.workspace_exports SET expires_at = now() - interval '1 second' WHERE id = $exportId AND workspace_id = $syntheticId AND status = 'completed'` | row dies with the workspace |
@@ -215,8 +215,8 @@ Every file: `beforeEach` creates its synthetic workspace(s) through `WorkspaceEx
 
 #### File: `tests/e2e/workspace-export/requestDataExport.test.ts` · Fixture `{ test }`
 
-- `BK-995: should show the export as being prepared with its request time when the owner requests it` -> `DataExportPage.requestExportAcknowledged`.
-- `BK-996: should offer the archive as a single download when the export is ready` -> `prepareCompletedExport` + `DataExportPage.downloadReadyArchive`.
+- `BK-995: should show the export as being prepared with its request time when the owner requests it` -> 3 x `seedWorkspaceContent({ withRunHistory, round })` + `DataExportPage.requestExportAcknowledged`. **`test.fixme`** (writes no TMS row): 1 lost race in 20 with one seed chain; 3 seed rounds not yet measured; unblock = a product test hook that holds the job `queued` on staging.
+- `BK-996: should offer the archive as a single download when the export is ready` -> `prepareCompletedExport` + `DataExportPage.downloadReadyArchive(workspaceId, archive_bytes)`.
 
 #### File: `tests/e2e/workspace-export/hideDataExportFromNonOwners.test.ts` · Fixture `{ test }` · tag `@critical` · unblocked (Q1): needs `config.roleUsers` + `roles-setup`
 
@@ -252,16 +252,16 @@ Every file: `beforeEach` creates its synthetic workspace(s) through `WorkspaceEx
 **Wave 1**
 - [x] `ApiBase` `cookieOnly` request option (D1) + ADR draft (ADR-0018, Proposed; 0014 is taken by an upstream ADR)
 - [ ] Type facades: `@schemas/activity.types`, `@schemas/tokens.types`, workspace create/invite types (after `bun run api:sync`, Q5). Wave 1 part done: activity + tokens facades, `WorkspaceExportJob`; create types pre-existing. Open: invite types (Wave 3, BK-1012); `bun run api:sync` not run (OpenAPI MCP down, local spec used)
-- [ ] `DataFactory` + `constants.ts` additions. Wave 1 part done: `createTokenName` (`createWorkspacePayload` pre-existing); `EXPORT_SETTLE_TIMEOUT_MS` 30s + `EXPORT_CLEANUP_SETTLE_TIMEOUT_MS` 10s. Open: `createInviteEmail`, `EXPORT_DOWNLOAD_WINDOW_MS`, `EXPORT_CONTENT_ENTITIES` (Wave 2/3)
-- [ ] `WorkspacesApi` helpers, `TokensApi`, `ActivityApi` + fixture registration. Wave 1 part done: `TokensApi`, `ActivityApi` registered in `ApiFixture`; create/delete pre-existing. Open: `setActiveWorkspace`, `createInvite`, `acceptInvite` (Wave 2/3)
+- [ ] `DataFactory` + `constants.ts` additions. Wave 1 part done: `createTokenName` (`createWorkspacePayload` pre-existing); `EXPORT_SETTLE_TIMEOUT_MS` 30s + `EXPORT_CLEANUP_SETTLE_TIMEOUT_MS` 10s. Open: `createInviteEmail` (not needed by BK-1001, which invites the real role email; Wave 3 BK-1012), `EXPORT_DOWNLOAD_WINDOW_MS`, `EXPORT_CONTENT_ENTITIES` (Wave 2/3)
+- [ ] `WorkspacesApi` helpers, `TokensApi`, `ActivityApi` + fixture registration. Wave 1 part done: `TokensApi`, `ActivityApi` registered in `ApiFixture`; create/delete pre-existing. Wave 2: `setActiveWorkspace`, `createInvite`, `acceptInvite` done (+ invite/active-workspace type facades)
 - [x] `WorkspaceExportApi` helpers + Wave 1 ATCs; `WorkspaceExportSteps` (create/cleanup/prepareCompletedExport)
 - [x] `tests/utils/archive.ts` + `fflate` devDependency (needed by BK-1019 body check) (pre-existing)
 - [x] Wave 1 test files; run; `bun run kata:manifest`
 
 **Wave 2**
-- [ ] `DataExportPage` + `UiFixture` registration
-- [ ] `viewDataExportSection` + `requestDataExport` test files
-- [ ] `config.roleUsers`, `roles-setup` project, BK-1001 ATCs + test file
+- [x] `DataExportPage` + `UiFixture` registration
+- [x] `viewDataExportSection` + `requestDataExport` test files (BK-995 is `test.fixme` until the product test hook exists; the BK-994 / BK-996 verdict assertions run inside their ATCs, 2026-10-20)
+- [x] `config.roleUsers`, `roles-setup` project, BK-1001 ATC + test file (`bun run test:e2e:roles`). The API refusals and the Owner-side re-read run inside the single BK-1001 ATC (a failure outside it would write no row: false PASS risk), revised 2026-10-20
 
 **Wave 3**
 - [ ] Seeding components + `WorkspaceExportSteps.seedWorkspaceContent`
@@ -278,9 +278,9 @@ Every file: `beforeEach` creates its synthetic workspace(s) through `WorkspaceEx
 | `tests/components/ApiFixture.ts` | register `activity: ActivityApi`, `tokens: TokensApi`, `projects`, `userStories`, `atcs`, `tests`, `runs`; propagate `setAuthToken` / `clearAuthToken` to each |
 | `tests/components/UiFixture.ts` | register `dataExport: DataExportPage` |
 | `tests/components/TestFixture.ts` | no change (inherits through `ApiFixture` / `UiFixture`) |
-| `playwright.config.ts` | (BK-1001 only) `roles-setup` project producing `.auth/role-<role>.json`, dependency of `e2e` |
+| `playwright.config.ts` | (BK-1001 only) `roles-setup` project producing `.auth/role-<role>.json`; new `e2e-roles` project (only `hideDataExportFromNonOwners.test.ts`) depends on it; both exist only when `--project=e2e-roles` is passed (script `test:e2e:roles`) or `RUN_ROLE_TESTS=1`, and `e2e` and `smoke-ui` ignore that file, so a default run never needs role creds. `roles-setup` signs in with a raw cookieless POST (no Owner PAT, not the BK-311 ATC) and revokes the minted PAT |
 | `config/variables.ts` | (BK-1001 only) optional `config.roleUsers.{admin,member,viewer}` from `STAGING_ADMIN_*` / `STAGING_MEMBER_*` / `STAGING_VIEWER_*` (and `LOCAL_*` twins), failing by name when used and absent |
-| `package.json` | devDependency `fflate` (Q8) |
+| `package.json` | devDependency `fflate` (Q8); script `test:e2e:roles` (`--project=e2e-roles`, BK-1001) |
 
 ### Complexity per ATC
 
@@ -294,7 +294,7 @@ Every file: `beforeEach` creates its synthetic workspace(s) through `WorkspaceEx
 | BK-994 | Low | navigation + text |
 | BK-995 | Medium | async state, reload persistence |
 | BK-996 | Medium | browser download event |
-| BK-1001 (x2) | High | second identity, invite/accept, 3 roles, blocked on accounts |
+| BK-1001 | High | second identity, invite/accept, 3 roles |
 | BK-999 | Medium | archive parse |
 | BK-1014 | Medium | manifest vs file cross-check |
 | BK-1015 | High | full seeding chain + NDJSON |

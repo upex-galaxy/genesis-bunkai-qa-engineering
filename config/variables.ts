@@ -75,6 +75,31 @@ const userCredentialVarNames: Record<Environment, { email: string, password: str
 };
 
 // ============================================
+// Non-Owner Role Accounts (variables from .env)
+// Real accounts that the suites invite into synthetic workspaces as admin,
+// member or viewer (BK-1001). Read only by the `roles-setup` project and the
+// tests that depend on it, so a run that never touches roles needs none of
+// them. Each pair is validated at the point of use, by name.
+// ============================================
+
+export type RoleUserName = 'admin' | 'member' | 'viewer';
+
+export const ROLE_USER_NAMES: readonly RoleUserName[] = ['admin', 'member', 'viewer'];
+
+const roleCredentialVarNames: Record<Environment, Record<RoleUserName, { email: string, password: string }>> = {
+  local: {
+    admin: { email: 'LOCAL_ADMIN_EMAIL', password: 'LOCAL_ADMIN_PASSWORD' },
+    member: { email: 'LOCAL_MEMBER_EMAIL', password: 'LOCAL_MEMBER_PASSWORD' },
+    viewer: { email: 'LOCAL_VIEWER_EMAIL', password: 'LOCAL_VIEWER_PASSWORD' },
+  },
+  staging: {
+    admin: { email: 'STAGING_ADMIN_EMAIL', password: 'STAGING_ADMIN_PASSWORD' },
+    member: { email: 'STAGING_MEMBER_EMAIL', password: 'STAGING_MEMBER_PASSWORD' },
+    viewer: { email: 'STAGING_VIEWER_EMAIL', password: 'STAGING_VIEWER_PASSWORD' },
+  },
+};
+
+// ============================================
 // Environment Detection
 // ============================================
 
@@ -141,6 +166,24 @@ function readTestUser(): { email: string, password: string } {
   );
 }
 
+/**
+ * A non-Owner role account for the active environment, read at the point of
+ * use. Throws a NAMED error when either half is empty.
+ */
+function readRoleUser(role: RoleUserName): { email: string, password: string } {
+  const names = roleCredentialVarNames[env.current][role];
+  const email = process.env[names.email] ?? '';
+  const password = process.env[names.password] ?? '';
+  if (email !== '' && password !== '') { return { email, password }; }
+  const missing = [email === '' ? names.email : null, password === '' ? names.password : null]
+    .filter((n): n is string => n !== null);
+  throw new Error(
+    `The ${role} role account for TEST_ENV=${env.current} is not set: ${missing.join(', ')} `
+    + '(declared in config/variables.ts roleCredentialVarNames, values in .env). '
+    + 'Only the roles-setup project and the tests that depend on it need it.',
+  );
+}
+
 // ============================================
 // Main Configuration Object
 // ============================================
@@ -160,11 +203,20 @@ export const config = {
     storageStatePath: '.auth/user.json',
     apiStatePath: '.auth/api-state.json',
     apiSessionPath: '.auth/api-session.json', // Session cookie from headless sign-in (integration storageState)
+    // Session cookie per non-Owner role (roles-setup), e.g. .auth/role-admin.json
+    roleStatePath: (role: RoleUserName): string => `.auth/role-${role}.json`,
   },
 
   // Test User (configure in .env). A getter: validated on first read, by name.
   get testUser(): { email: string, password: string } {
     return readTestUser();
+  },
+
+  // Non-Owner role accounts (configure in .env). Getters: validated on first read, by name.
+  roleUsers: {
+    get admin(): { email: string, password: string } { return readRoleUser('admin'); },
+    get member(): { email: string, password: string } { return readRoleUser('member'); },
+    get viewer(): { email: string, password: string } { return readRoleUser('viewer'); },
   },
 
   // TMS / Browser / Reporting — synced (config/variables.core.ts)

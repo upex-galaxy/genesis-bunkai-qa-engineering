@@ -69,6 +69,7 @@
     "test:clean": "rm -rf test-results playwright-report allure-results allure-report reports",
     "test:debug": "bun --no-env-file scripts/launch.ts --warn playwright test --debug",
     "test:e2e": "bun --no-env-file scripts/launch.ts --warn playwright test --project=e2e",
+    "test:e2e:roles": "bun --no-env-file scripts/launch.ts --warn playwright test --project=e2e-roles",
     "test:env:check": "bun --no-env-file scripts/launch.ts --warn bun config/validateTestEnv.ts",
     "test:headed": "bun --no-env-file scripts/launch.ts --warn playwright test --headed",
     "test:integration": "bun --no-env-file scripts/launch.ts --warn playwright test --project=integration",

@@ -53,3 +53,36 @@ export interface DeleteWorkspacePayload {
 
 /** 200 body: soft-delete receipt (`workspaceId`, `purgeDeadline`, ...). */
 export type DeleteWorkspaceResponse = DeleteWorkspacePath['responses']['200']['content']['application/json'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/me/active-workspace (cookie-only)
+// ============================================================================
+
+/** Body: `{ workspace_id }`. */
+export type SetActiveWorkspacePayload = components['schemas']['ActiveWorkspaceBody'];
+
+/** 200 body: the now-active workspace plus the caller's role in it. Sets `bk_active_ws`. */
+export type SetActiveWorkspaceResponse = components['schemas']['ActiveWorkspaceResponse'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/workspaces/{id}/invites (admin/owner)
+// ============================================================================
+
+/** Role an invite grants (never `owner`). */
+export type InviteRole = components['schemas']['WorkspaceInviteCreateBody']['role'];
+
+/** Body: `{ email, role }`. */
+export type CreateInvitePayload = components['schemas']['WorkspaceInviteCreateBody'];
+
+/** 201 body: `{ invite, token, accept_url, warning }`. The raw token is returned once. */
+export type CreateInviteResponse = components['schemas']['WorkspaceInviteCreateResponse'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/invites/accept (invitee)
+// ============================================================================
+
+/** Body: `{ token }`. */
+export type AcceptInvitePayload = components['schemas']['InviteAcceptBody'];
+
+/** 200 body: `{ ok, workspace_id, role }`. */
+export type AcceptInviteResponse = components['schemas']['InviteAcceptResponse'];

@@ -7,16 +7,21 @@
  *   -> ATC -> test -> runs (finished), so the archive has real content and run history
  * - prepareCompletedExport: request an export and poll until it completes
  *   (helpers only: never the BK-1017 ATC, an ATC is not a precondition)
+ * - grantRoleInWorkspace: invite a second identity with a role and accept it
+ *   from that identity's own session (BK-1001)
  *
- * Not a fixture: instantiate directly in the test with `{ request }`.
+ * Not a fixture: instantiate directly in the test with `{ request }` (add
+ * `page` in E2E, so `makeActive` switches the browser's active workspace).
  * Every component used here is cookie-only (no Bearer PAT).
  */
 
+import type { APIRequestContext } from '@playwright/test';
 import type { Run, RunVerdict, Test } from '@schemas/workspace-content.types';
 import type { WorkspaceExportJob } from '@schemas/workspace-export.types';
-import type { Workspace } from '@schemas/workspaces.types';
+import type { InviteRole, Workspace } from '@schemas/workspaces.types';
 import type { TestContextOptions } from '@TestContext';
 
+import { WorkspacesApi } from '@api/WorkspacesApi';
 import { ApiFixture } from '@ApiFixture';
 import { EXPORT_CLEANUP_SETTLE_TIMEOUT_MS, EXPORT_POLL_INTERVALS_MS } from '@data/constants';
 import { expect } from '@playwright/test';
@@ -38,13 +43,16 @@ export class WorkspaceExportSteps extends TestContext {
   /**
    * Seed a workspace with the full content chain. With `withRunHistory`, three
    * runs are started and two are finished (passed, failed); one stays open.
-   * The ATC step content and the test title are multiline on purpose.
+   * The ATC step content and the test title are multiline on purpose. Pass a
+   * distinct `round` to seed several chains in one workspace (project names
+   * are unique per workspace).
    */
   async seedWorkspaceContent(
     workspaceId: string,
-    options: { withRunHistory: boolean } = { withRunHistory: true },
+    options: { withRunHistory: boolean, round?: number } = { withRunHistory: true },
   ): Promise<SeededWorkspaceContent> {
-    const project = await this.api.projects.createProject(workspaceId, { name: 'QA Auto Export Project' });
+    const projectName = options.round ? `QA Auto Export Project ${options.round}` : 'QA Auto Export Project';
+    const project = await this.api.projects.createProject(workspaceId, { name: projectName });
     const environment = await this.api.projects.createEnvironment(project.id, { name: 'staging' });
     const module = await this.api.projects.createModule(project.id, { name: 'Export' });
     const story = await this.api.userStories.createUserStory(module.id, { title: 'QA Auto export story' });
@@ -90,13 +98,62 @@ export class WorkspaceExportSteps extends TestContext {
 
   /**
    * Create a synthetic workspace owned by the caller (`qa-auto-bk508-*` slug).
+   * With `makeActive`, also make it the caller's active workspace. The switch
+   * runs on the page's own request context, so the browser receives the
+   * `bk_active_ws` cookie; it needs the Steps built with a `page`. When the
+   * switch fails, the just-created workspace is soft-deleted (best effort)
+   * before the error is rethrown, so it never leaks.
    */
-  async createSyntheticWorkspace(): Promise<Workspace> {
-    return this.api.workspaces.createWorkspace(this.data.createWorkspacePayload());
+  async createSyntheticWorkspace(options: { makeActive?: boolean } = {}): Promise<Workspace> {
+    if (options.makeActive && !this._page) {
+      throw new Error('createSyntheticWorkspace({ makeActive: true }) needs WorkspaceExportSteps built with a page.');
+    }
+    const workspace = await this.api.workspaces.createWorkspace(this.data.createWorkspacePayload());
+    if (options.makeActive) {
+      try {
+        await new WorkspacesApi({ request: this._page!.request }).setActiveWorkspace(workspace.id);
+      }
+      catch (error) {
+        await this.api.workspaces.deleteWorkspace({ workspaceId: workspace.id, confirmName: workspace.name })
+          .catch(() => { /* best effort: the original failure is what matters */ });
+        throw error;
+      }
+    }
+    return workspace;
   }
 
   /**
-   * Soft-delete a synthetic workspace (also revokes its PATs and invites).
+   * Give a second identity a role in a workspace the caller owns: the caller
+   * invites the identity's email, the identity accepts on its own request
+   * context, then makes the workspace its active one there (pass the role
+   * page's `page.request`, so its browser gets the `bk_active_ws` cookie).
+   * Fails fast when the accepted role differs from the invited one.
+   */
+  async grantRoleInWorkspace(args: {
+    workspaceId: string
+    email: string
+    role: InviteRole
+    memberRequest: APIRequestContext
+  }): Promise<void> {
+    const { token } = await this.api.workspaces.createInvite({
+      workspaceId: args.workspaceId,
+      email: args.email,
+      role: args.role,
+    });
+
+    const member = new WorkspacesApi({ request: args.memberRequest });
+    const accepted = await member.acceptInvite({ token });
+    expect(accepted.workspace_id, 'invite acceptance: the invited workspace').toBe(args.workspaceId);
+    expect(accepted.role, 'invite acceptance: the invited role').toBe(args.role);
+
+    await member.setActiveWorkspace(args.workspaceId);
+  }
+
+  /**
+   * Soft-delete a synthetic workspace (also revokes its PATs and invites). It
+   * does NOT end memberships quietly: the product emails every active member,
+   * so a test that granted a role ends it first (`WorkspacesApi.leaveWorkspace`
+   * on the member's own session).
    * First waits (best effort, bounded) for an in-flight export to settle, so the
    * worker never runs against a deleted workspace.
    */

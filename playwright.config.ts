@@ -14,6 +14,24 @@ import { config, env } from '@variables';
 // Use values from centralized config (no direct process.env access)
 const baseURL = config.baseUrl;
 
+// Tests that need the non-Owner role sessions from roles-setup (BK-1001). They
+// run ONLY in the e2e-roles project, so e2e and smoke-ui never need role creds.
+const roleSessionTests = /hideDataExportFromNonOwners\.test\.ts$/;
+
+// roles-setup + e2e-roles exist only when asked for, so a plain run never needs
+// the role accounts. Asked for = RUN_ROLE_TESTS=1, or `--project=e2e-roles` on
+// the command line (what the `test:e2e:roles` script passes). The argv match is
+// written back to the env flag so worker processes, which inherit the env but
+// not the argv, load the same project list.
+// Case-insensitive, like Playwright's own --project filter.
+const roleProjectRequested = process.argv.some((arg, i, argv) =>
+  arg.toLowerCase() === '--project=e2e-roles'
+  || (arg === '--project' && argv[i + 1]?.toLowerCase() === 'e2e-roles'));
+if (roleProjectRequested) {
+  process.env.RUN_ROLE_TESTS = '1';
+}
+const includeRoleProjects = process.env.RUN_ROLE_TESTS === '1';
+
 /**
  * See https://playwright.dev/docs/test-configuration
  */
@@ -120,6 +138,18 @@ export default defineConfig({
       testDir: './tests/setup',
       dependencies: ['global-setup'],
     },
+    // Non-Owner role sessions (.auth/role-<role>.json); needs the role accounts in .env.
+    // Only when the role projects are requested (see includeRoleProjects above).
+    ...(includeRoleProjects
+      ? [{
+          name: 'roles-setup',
+          testMatch: /roles-auth\.setup\.ts/,
+          testDir: './tests/setup',
+          dependencies: ['global-setup'],
+          // The sign-in carries role passwords and mints PATs: record nothing a CI artifact could keep
+          use: { trace: 'off' as const, video: 'off' as const, screenshot: 'off' as const },
+        }]
+      : []),
 
     // ============================================
     // E2E Tests - UI + API with authenticated session
@@ -131,9 +161,26 @@ export default defineConfig({
         storageState: config.auth.storageStatePath,
       },
       testMatch: '**/e2e/**/*.test.ts',
+      testIgnore: roleSessionTests,
       // api-setup too: E2E tests also call the API with the stored PAT
       dependencies: ['ui-setup', 'api-setup'],
     },
+
+    // ============================================
+    // E2E Tests with a second, non-Owner identity (role sessions from roles-setup)
+    // Usage: the `test:e2e:roles` script in package.json
+    // ============================================
+    ...(includeRoleProjects
+      ? [{
+          name: 'e2e-roles',
+          use: {
+            ...devices['Desktop Chrome'],
+            storageState: config.auth.storageStatePath,
+          },
+          testMatch: roleSessionTests,
+          dependencies: ['ui-setup', 'api-setup', 'roles-setup'],
+        }]
+      : []),
 
     // ============================================
     // Integration Tests - API only. The request context carries the session
@@ -156,6 +203,7 @@ export default defineConfig({
       name: 'smoke-ui',
       grep: /@critical/,
       testMatch: '**/e2e/**/*.test.ts',
+      testIgnore: roleSessionTests, // runs in e2e-roles (needs roles-setup)
       // api-setup too: E2E tests also call the API with the stored PAT
       dependencies: ['ui-setup', 'api-setup'],
       use: {
