@@ -25,6 +25,12 @@ export interface RequestOptions {
   headers?: Record<string, string>
   params?: Record<string, string>
   timeout?: number
+  /**
+   * Send the request WITHOUT the Bearer PAT, so only the session cookie of the
+   * request context authenticates it. Cookie-only routes answer 403 when a
+   * Bearer header is present. See ADR-0018.
+   */
+  cookieOnly?: boolean
 }
 
 // ============================================
@@ -140,7 +146,7 @@ export class ApiBase extends TestContext {
     options: RequestOptions = {},
   ): Promise<[APIResponse, TBody]> {
     const url = this.apiEndpoint(endpoint);
-    const headers = this.buildHeaders(options.headers);
+    const headers = this.buildHeaders(options.headers, options.cookieOnly);
 
     const response = await this.request.get(url, {
       headers,
@@ -176,7 +182,7 @@ export class ApiBase extends TestContext {
     options: RequestOptions = {},
   ): Promise<[APIResponse, TBody, TPayload]> {
     const url = this.apiEndpoint(endpoint);
-    const headers = this.buildHeaders(options.headers);
+    const headers = this.buildHeaders(options.headers, options.cookieOnly);
 
     const response = await this.request.post(url, {
       headers,
@@ -218,7 +224,7 @@ export class ApiBase extends TestContext {
     options: RequestOptions = {},
   ): Promise<[APIResponse, TBody, TPayload]> {
     const url = this.apiEndpoint(endpoint);
-    const headers = this.buildHeaders(options.headers);
+    const headers = this.buildHeaders(options.headers, options.cookieOnly);
 
     const response = await this.request.put(url, {
       headers,
@@ -260,7 +266,7 @@ export class ApiBase extends TestContext {
     options: RequestOptions = {},
   ): Promise<[APIResponse, TBody, TPayload]> {
     const url = this.apiEndpoint(endpoint);
-    const headers = this.buildHeaders(options.headers);
+    const headers = this.buildHeaders(options.headers, options.cookieOnly);
 
     const response = await this.request.patch(url, {
       headers,
@@ -304,7 +310,7 @@ export class ApiBase extends TestContext {
     // Support absolute URLs (for endpoints outside /api/)
     const url = endpoint.startsWith('http') ? endpoint : this.apiEndpoint(endpoint);
     const headers = {
-      ...this.buildHeaders(options.headers),
+      ...this.buildHeaders(options.headers, options.cookieOnly),
       'Content-Type': 'application/x-www-form-urlencoded',
     };
 
@@ -347,7 +353,7 @@ export class ApiBase extends TestContext {
     options: RequestOptions = {},
   ): Promise<[APIResponse, TBody]> {
     const url = this.apiEndpoint(endpoint);
-    const headers = this.buildHeaders(options.headers);
+    const headers = this.buildHeaders(options.headers, options.cookieOnly);
 
     const response = await this.request.delete(url, {
       headers,
@@ -381,18 +387,28 @@ export class ApiBase extends TestContext {
   }
 
   /**
-   * Build request headers with auth token if available
+   * Build request headers with auth token if available.
+   * With `cookieOnly`, the Bearer token is left out (session cookie only).
    */
-  buildHeaders(customHeaders?: Record<string, string>) {
+  buildHeaders(customHeaders?: Record<string, string>, cookieOnly = false) {
     const headers: Record<string, string> = {
       ...this.requestHeaders,
       ...customHeaders,
     };
 
-    if (this.authToken) {
+    if (this.authToken && !cookieOnly) {
       headers.Authorization = `Bearer ${this.authToken}`;
     }
 
     return headers;
+  }
+
+  /**
+   * Default headers without the Bearer PAT: the session cookie carried by the
+   * request context is the only credential. For raw `this.request.*` calls on
+   * cookie-only routes (see ADR-0018).
+   */
+  protected cookieOnlyHeaders(customHeaders?: Record<string, string>): Record<string, string> {
+    return this.buildHeaders(customHeaders, true);
   }
 }

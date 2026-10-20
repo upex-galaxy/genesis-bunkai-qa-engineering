@@ -16,12 +16,14 @@
 
 import type { TestContextOptions } from '@TestContext';
 
+import { ActivityApi } from '@api/ActivityApi';
 import { ApiBase } from '@api/ApiBase';
 import { AtcsApi } from '@api/AtcsApi';
 import { AuthApi } from '@api/AuthApi';
 import { ProjectsApi } from '@api/ProjectsApi';
 import { RunsApi } from '@api/RunsApi';
 import { TestsApi } from '@api/TestsApi';
+import { TokensApi } from '@api/TokensApi';
 import { UserStoriesApi } from '@api/UserStoriesApi';
 import { WorkspaceExportApi } from '@api/WorkspaceExportApi';
 import { WorkspacesApi } from '@api/WorkspacesApi';
@@ -55,6 +57,12 @@ export class ApiFixture extends ApiBase {
   /** Content seeding helpers (cookie-only): runs */
   readonly runs: RunsApi;
 
+  /** Activity Stream component - audit entries (cookie-only reads) */
+  readonly activity: ActivityApi;
+
+  /** Personal Access Tokens helpers (cookie-only): issue / revoke */
+  readonly tokens: TokensApi;
+
   constructor(options: TestContextOptions) {
     super(options);
 
@@ -67,6 +75,8 @@ export class ApiFixture extends ApiBase {
     this.atcs = new AtcsApi(options);
     this.tests = new TestsApi(options);
     this.runs = new RunsApi(options);
+    this.activity = new ActivityApi(options);
+    this.tokens = new TokensApi(options);
   }
 
   // ============================================
@@ -87,6 +97,8 @@ export class ApiFixture extends ApiBase {
     this.atcs.setAuthToken(token);
     this.tests.setAuthToken(token);
     this.runs.setAuthToken(token);
+    this.activity.setAuthToken(token);
+    this.tokens.setAuthToken(token);
   }
 
   /**
@@ -102,5 +114,7 @@ export class ApiFixture extends ApiBase {
     this.atcs.clearAuthToken();
     this.tests.clearAuthToken();
     this.runs.clearAuthToken();
+    this.activity.clearAuthToken();
+    this.tokens.clearAuthToken();
   }
 }

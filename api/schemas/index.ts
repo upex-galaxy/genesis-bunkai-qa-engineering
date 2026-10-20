@@ -10,7 +10,9 @@
  *   import type { SignInPayload, WorkspaceExport } from '@schemas';            // cross-domain
  */
 
+export type * from './activity.types';
 export type * from './auth.types';
+export type * from './tokens.types';
 export type * from './workspace-content.types';
 export type * from './workspace-export.types';
 export type * from './workspaces.types';

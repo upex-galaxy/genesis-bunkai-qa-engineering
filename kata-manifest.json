@@ -1,8 +1,25 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-10-18T20:25:44.729Z",
+  "generatedAt": "2026-10-19T22:30:23.945Z",
   "components": {
     "api": [
+      {
+        "name": "ActivityApi",
+        "file": "ActivityApi.ts",
+        "relativePath": "tests/components/api/ActivityApi.ts",
+        "atcs": [
+          {
+            "id": "BK-997",
+            "method": "verifyExportRequestedRecorded",
+            "line": 74
+          },
+          {
+            "id": "BK-998",
+            "method": "verifyExportDownloadedRecorded",
+            "line": 87
+          }
+        ]
+      },
       {
         "name": "AtcsApi",
         "file": "AtcsApi.ts",
@@ -45,6 +62,12 @@
         "atcs": []
       },
       {
+        "name": "TokensApi",
+        "file": "TokensApi.ts",
+        "relativePath": "tests/components/api/TokensApi.ts",
+        "atcs": []
+      },
+      {
         "name": "UserStoriesApi",
         "file": "UserStoriesApi.ts",
         "relativePath": "tests/components/api/UserStoriesApi.ts",
@@ -56,14 +79,34 @@
         "relativePath": "tests/components/api/WorkspaceExportApi.ts",
         "atcs": [
           {
+            "id": "BK-1004",
+            "method": "rejectPatOnExportEndpoint",
+            "line": 255
+          },
+          {
+            "id": "BK-1009",
+            "method": "supersedePriorArchiveWithNewest",
+            "line": 303
+          },
+          {
             "id": "BK-1015",
             "method": "downloadArchiveWithNdjsonRunSnapshots",
-            "line": 135
+            "line": 376
+          },
+          {
+            "id": "BK-1017",
+            "method": "requestExportSuccessfully",
+            "line": 180
           },
           {
             "id": "BK-1018",
             "method": "getExportStatusSuccessfully",
-            "line": 101
+            "line": 339
+          },
+          {
+            "id": "BK-1019",
+            "method": "downloadArchiveSuccessfully",
+            "line": 213
           }
         ]
       },
@@ -100,15 +143,17 @@
       "file": "WorkspaceExportSteps.ts",
       "relativePath": "tests/components/steps/WorkspaceExportSteps.ts",
       "methods": [
+        "cleanupSyntheticWorkspace",
+        "createSyntheticWorkspace",
         "prepareCompletedExport",
         "seedWorkspaceContent"
       ]
     }
   ],
   "summary": {
-    "totalComponents": 9,
-    "totalATCs": 6,
-    "apiComponents": 8,
+    "totalComponents": 11,
+    "totalATCs": 12,
+    "apiComponents": 10,
     "uiComponents": 1,
     "stepsModules": 1
   }

@@ -16,6 +16,9 @@ import type { components, paths } from '@openapi';
 /** Latest export request, or null when none was ever requested. */
 export type WorkspaceExport = components['schemas']['WorkspaceExport'];
 
+/** One export job (a non-null `WorkspaceExport`). */
+export type WorkspaceExportJob = NonNullable<WorkspaceExport>;
+
 /** Export lifecycle: queued -> running -> completed | failed. */
 export type WorkspaceExportStatus = NonNullable<WorkspaceExport>['status'];
 

@@ -13,6 +13,7 @@
  * Create and delete are sent WITHOUT the Bearer PAT the fixture propagates: the
  * delete route is session-only, and the seeding chain was proven on staging with
  * the session cookie alone. The list helper keeps the default headers.
+ * Cookie-only headers come from ApiBase (`cookieOnlyHeaders`, ADR-0018).
  */
 
 import type { APIResponse } from '@playwright/test';
@@ -114,10 +115,5 @@ export class WorkspacesApi extends ApiBase {
 
     expect(response.status(), 'workspace soft-delete').toBe(200);
     return body;
-  }
-
-  /** Default headers without the Bearer PAT (session cookie rides the request context). */
-  private cookieOnlyHeaders(): Record<string, string> {
-    return { ...this.requestHeaders };
   }
 }

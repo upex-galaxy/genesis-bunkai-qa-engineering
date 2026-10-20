@@ -2,8 +2,16 @@
  * Shared test constants.
  */
 
-/** Upper bound for an export job to settle (completed | failed) on staging. */
-export const EXPORT_SETTLE_TIMEOUT_MS = 60_000;
+/**
+ * Upper bound for an export job to settle (completed | failed) on staging.
+ * Kept well under the 60 s test timeout, so a slow export fails with the poll's
+ * own message instead of a generic "Test timeout exceeded". afterEach shares
+ * that budget: settle + cleanup settle + setup/teardown calls must fit in 60 s.
+ */
+export const EXPORT_SETTLE_TIMEOUT_MS = 30_000;
+
+/** Best-effort wait for an in-flight export before cleanup deletes its workspace. */
+export const EXPORT_CLEANUP_SETTLE_TIMEOUT_MS = 10_000;
 
 /** Back-off between export status polls. */
 export const EXPORT_POLL_INTERVALS_MS = [500, 1_000, 2_000];

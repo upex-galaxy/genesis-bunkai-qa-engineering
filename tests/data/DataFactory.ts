@@ -82,6 +82,13 @@ export class DataFactory {
   }
 
   /**
+   * Label for a PAT minted by the BK-508 suite: `qa-auto-bk508-<rand6>`.
+   */
+  static createTokenName(): string {
+    return `${SYNTHETIC_WORKSPACE_SLUG_PREFIX}${faker.string.alphanumeric({ length: 6, casing: 'lower' })}`;
+  }
+
+  /**
    * Genera un ID único para identificar datos de test
    * Útil para cleanup y trazabilidad
    */
