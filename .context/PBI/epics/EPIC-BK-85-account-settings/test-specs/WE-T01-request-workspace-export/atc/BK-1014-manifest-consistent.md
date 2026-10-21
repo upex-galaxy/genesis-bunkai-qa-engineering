@@ -48,3 +48,7 @@ async downloadArchiveWithConsistentManifest(
 ## 9. Checklist
 
 - [x] naming · [x] object param · [x] tuple return · [x] encoding-agnostic counting (no coupling to BK-1025)
+
+## 10. Implemented (Wave 3, 2026-10-20)
+
+Signature: `downloadArchiveWithConsistentManifest({ workspaceId, completedExport })`. Lower bound of `generated_at` is the job's `started_at`, not `created_at`: `started_at`, `generated_at` and `completed_at` are all stamped by the export worker, `created_at` by the DB (cross-clock skew could fail a correct archive). The test-level `counts.projects >= 1` and `counts.runs >= 1` moved INSIDE the ATC, so they reach the TMS row. `ExportManifest` lives in `tests/data/types.ts`.

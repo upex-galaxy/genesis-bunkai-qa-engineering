@@ -87,13 +87,24 @@ export class WorkspaceExportSteps extends TestContext {
 
   /**
    * Request an export and poll (bounded, condition-based) until it settles.
-   * Fails fast when the job ends `failed` or does not settle in time.
+   * Fails fast when the job ends `failed` or does not settle in time. With
+   * `requestTimeoutMs`, the request and each poll read are bounded by it
+   * (default: the config's request timeout); the poll as a whole is always
+   * bounded by EXPORT_SETTLE_TIMEOUT_MS.
    */
-  async prepareCompletedExport(workspaceId: string): Promise<WorkspaceExportJob> {
-    const [requestResponse, requestBody] = await this.api.workspaceExport.requestExport(workspaceId);
+  async prepareCompletedExport(
+    workspaceId: string,
+    options: { requestTimeoutMs?: number } = {},
+  ): Promise<WorkspaceExportJob> {
+    const { requestTimeoutMs } = options;
+    const [requestResponse, requestBody] = await this.api.workspaceExport.requestExport(workspaceId, requestTimeoutMs);
     expect(requestResponse.status(), 'export request').toBe(202);
 
-    return this.api.workspaceExport.waitForExportToSettle({ workspaceId, exportId: requestBody.export_job_id });
+    return this.api.workspaceExport.waitForExportToSettle({
+      workspaceId,
+      exportId: requestBody.export_job_id,
+      requestTimeoutMs,
+    });
   }
 
   /**
@@ -102,16 +113,20 @@ export class WorkspaceExportSteps extends TestContext {
    * runs on the page's own request context, so the browser receives the
    * `bk_active_ws` cookie; it needs the Steps built with a `page`. When the
    * switch fails, the just-created workspace is soft-deleted (best effort)
-   * before the error is rethrown, so it never leaks.
+   * before the error is rethrown, so it never leaks. With `requestTimeoutMs`,
+   * the creation and the switch are each bounded by it (default: the request
+   * context's timeout).
    */
-  async createSyntheticWorkspace(options: { makeActive?: boolean } = {}): Promise<Workspace> {
+  async createSyntheticWorkspace(
+    options: { makeActive?: boolean, requestTimeoutMs?: number } = {},
+  ): Promise<Workspace> {
     if (options.makeActive && !this._page) {
       throw new Error('createSyntheticWorkspace({ makeActive: true }) needs WorkspaceExportSteps built with a page.');
     }
-    const workspace = await this.api.workspaces.createWorkspace(this.data.createWorkspacePayload());
+    const workspace = await this.api.workspaces.createWorkspace(this.data.createWorkspacePayload(), options.requestTimeoutMs);
     if (options.makeActive) {
       try {
-        await new WorkspacesApi({ request: this._page!.request }).setActiveWorkspace(workspace.id);
+        await new WorkspacesApi({ request: this._page!.request }).setActiveWorkspace(workspace.id, options.requestTimeoutMs);
       }
       catch (error) {
         await this.api.workspaces.deleteWorkspace({ workspaceId: workspace.id, confirmName: workspace.name })
@@ -160,6 +175,30 @@ export class WorkspaceExportSteps extends TestContext {
   async cleanupSyntheticWorkspace(workspace: Workspace): Promise<void> {
     await this.waitForInFlightExportBestEffort(workspace.id);
     await this.api.workspaces.deleteWorkspace({ workspaceId: workspace.id, confirmName: workspace.name });
+  }
+
+  /**
+   * Soft-delete several synthetic workspaces. Every one is attempted even when
+   * an earlier one fails, so one failed delete never leaves the others alive.
+   * After all attempts: a single error is rethrown as is; several are thrown
+   * together as an AggregateError (none is hidden).
+   */
+  async cleanupSyntheticWorkspaces(workspaces: Workspace[]): Promise<void> {
+    const errors: unknown[] = [];
+    for (const workspace of workspaces) {
+      try {
+        await this.cleanupSyntheticWorkspace(workspace);
+      }
+      catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length === 1) {
+      throw errors[0];
+    }
+    if (errors.length > 1) {
+      throw new AggregateError(errors, `${errors.length} synthetic workspace cleanups failed`);
+    }
   }
 
   /**

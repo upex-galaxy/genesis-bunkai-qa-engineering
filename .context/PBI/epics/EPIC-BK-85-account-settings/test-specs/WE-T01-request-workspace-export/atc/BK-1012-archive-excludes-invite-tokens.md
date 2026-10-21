@@ -48,3 +48,7 @@ Merge candidate with BK-1011 (one parameterized ATC) is listed in `spec.md`; kep
 ## 9. Checklist
 
 - [x] naming · [x] object param · [x] tuple return · [x] token never logged
+
+## 10. Implemented (Wave 3, 2026-10-20)
+
+Signature: `downloadArchiveExcludingInviteTokens({ workspaceId, token })`. Forms: raw `bk_inv_<secret>` token, the secret part, SHA-256(token) hex (`workspace_invites.token_hash`, per `lib/api/invite-tokens.ts`). `accept_url` is `.../invites/accept?token=<encodeURIComponent(token)>` and base64url is URL-safe, so the raw-token scan covers it; `acceptUrls` was dropped (`createInvite` does not return the URL). Invitee: `DataFactory.createInviteEmail()` (`qa-auto-bk508+<rand>@example.com`).

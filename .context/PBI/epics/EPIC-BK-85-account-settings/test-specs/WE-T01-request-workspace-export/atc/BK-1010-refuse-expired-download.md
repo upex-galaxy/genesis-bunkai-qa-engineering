@@ -69,3 +69,7 @@ Requirements (Q2): a DB client in the runner (`pg` or `@supabase/supabase-js` wi
 ## 9. Checklist
 
 - [x] naming · [x] 1 positional param · [x] tuple return · [x] fixed vs test-level split · [x] SEED: real-path sibling exists (BK-1006 on real `expires_at`)
+
+## 10. Status (2026-10-20)
+
+OUT OF AUTOMATION (Q2: no DB writes from the test runner). Not coded in Wave 3; stays Manual. Automatable only with a staging-only export TTL override from dev.

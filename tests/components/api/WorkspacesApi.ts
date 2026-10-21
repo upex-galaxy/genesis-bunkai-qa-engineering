@@ -100,12 +100,14 @@ export class WorkspacesApi extends ApiBase {
 
   /**
    * Helper: Create a workspace owned by the caller. Fails fast unless 201.
+   * `timeoutMs` bounds the request (default: the request context's timeout).
    */
   @step
-  async createWorkspace(payload: CreateWorkspacePayload): Promise<Workspace> {
+  async createWorkspace(payload: CreateWorkspacePayload, timeoutMs?: number): Promise<Workspace> {
     const response = await this.request.post(this.apiEndpoint(this.endpoints.list), {
       headers: this.cookieOnlyHeaders(),
       data: payload,
+      timeout: timeoutMs,
     });
     const body = await this.getResponseJsonObject<CreateWorkspaceResponse>(response);
     await attachRequestResponseToAllure({ url: this.endpoints.list, method: 'POST', responseBody: body, requestBody: payload });
@@ -137,14 +139,16 @@ export class WorkspacesApi extends ApiBase {
    * Helper: Make a workspace the caller's active one. Cookie-only route: it
    * answers by setting the `bk_active_ws` cookie on the request context that
    * sent it, so in a browser test call it on `page.request` (the page's own
-   * cookie jar). Fails fast unless 200.
+   * cookie jar). Fails fast unless 200. `timeoutMs` bounds the request
+   * (default: the request context's timeout).
    */
   @step
-  async setActiveWorkspace(workspaceId: string): Promise<void> {
+  async setActiveWorkspace(workspaceId: string, timeoutMs?: number): Promise<void> {
     const payload: SetActiveWorkspacePayload = { workspace_id: workspaceId };
     const response = await this.request.post(this.apiEndpoint(this.endpoints.activeWorkspace), {
       headers: this.cookieOnlyHeaders(),
       data: payload,
+      timeout: timeoutMs,
     });
     const body = await this.getResponseJsonObject<SetActiveWorkspaceResponse>(response);
     await attachRequestResponseToAllure({

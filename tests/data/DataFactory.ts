@@ -89,6 +89,14 @@ export class DataFactory {
   }
 
   /**
+   * Synthetic invitee for a BK-508 pending invite: `qa-auto-bk508+<rand8>@example.com`
+   * (reserved domain, never a real person; the MVP sends no invite email).
+   */
+  static createInviteEmail(): string {
+    return `qa-auto-bk508+${faker.string.alphanumeric({ length: 8, casing: 'lower' })}@example.com`;
+  }
+
+  /**
    * Genera un ID único para identificar datos de test
    * Útil para cleanup y trazabilidad
    */

@@ -57,3 +57,7 @@ The "active workspace" wording of AC-09 is a UI notion; the API exports the path
 ## 9. Checklist
 
 - [x] naming · [x] object param · [x] tuple return · [x] positive control against vacuous pass
+
+## 10. Implemented (Wave 3, 2026-10-20)
+
+Signature: `downloadArchiveScopedToWorkspace({ workspaceId, ownMarkers, foreignMarkers })`. The positive control moved INSIDE the ATC (`ownMarkers`: exported workspace id, its test id, its run ids; not its name/slug, since no workspace row is exported). Foreign markers: other workspace id, name, slug, test id, run ids. The second workspace is created in the test body and registered for the same cleanup (`cleanupSyntheticWorkspaces`).

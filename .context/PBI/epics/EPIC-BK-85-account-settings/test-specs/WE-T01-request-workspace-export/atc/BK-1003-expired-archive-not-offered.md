@@ -47,3 +47,7 @@ As BK-1006 (synthetic active workspace, real completed export, browser clock).
 ## 9. Checklist
 
 - [x] naming · [x] 1 positional param · [x] void return · [x] not duplicating BK-1006 (mid-partition vs boundary)
+
+## 10. Implemented (Wave 3, 2026-10-20)
+
+Signature: `verifyExpiredArchiveNotOffered(completedExport)` (the whole job, so the page-open guard checks the view read THIS export id and `expires_at`). Clock + side-effect guard as in BK-1006 §10. Product source re-verified on `origin/staging` (`DataExportView.deriveState`: `new Date(expires_at).getTime() > Date.now()`, client-side; the GET route comment confirms "Expired is never a persisted status").

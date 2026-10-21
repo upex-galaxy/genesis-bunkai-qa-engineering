@@ -41,3 +41,18 @@ export interface ApiState {
   source: 'ui-login' | 'api-login'
   createdAt: string
 }
+
+// ============================================
+// Workspace Export Archive Types (BK-508)
+// ============================================
+
+/**
+ * `manifest.json` inside a workspace export ZIP. The archive is not described
+ * by the OpenAPI, so this shape mirrors the product's archive builder.
+ */
+export interface ExportManifest {
+  workspace_id: string
+  generated_at: string
+  /** Entity name (file name without extension) -> record count */
+  counts: Record<string, number>
+}

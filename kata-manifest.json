@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-10-20T21:37:14.564Z",
+  "generatedAt": "2026-10-21T21:34:54.773Z",
   "components": {
     "api": [
       {
@@ -79,34 +79,69 @@
         "relativePath": "tests/components/api/WorkspaceExportApi.ts",
         "atcs": [
           {
+            "id": "BK-1000",
+            "method": "requestExportWhileOtherWorkspaceExporting",
+            "line": 917
+          },
+          {
+            "id": "BK-1002",
+            "method": "requestExportWhileOneInFlightRefused",
+            "line": 823
+          },
+          {
             "id": "BK-1004",
             "method": "rejectPatOnExportEndpoint",
-            "line": 255
+            "line": 370
           },
           {
             "id": "BK-1009",
             "method": "supersedePriorArchiveWithNewest",
-            "line": 303
+            "line": 418
+          },
+          {
+            "id": "BK-1011",
+            "method": "downloadArchiveExcludingPatSecrets",
+            "line": 622
+          },
+          {
+            "id": "BK-1012",
+            "method": "downloadArchiveExcludingInviteTokens",
+            "line": 669
+          },
+          {
+            "id": "BK-1013",
+            "method": "downloadArchiveScopedToWorkspace",
+            "line": 708
+          },
+          {
+            "id": "BK-1014",
+            "method": "downloadArchiveWithConsistentManifest",
+            "line": 574
           },
           {
             "id": "BK-1015",
             "method": "downloadArchiveWithNdjsonRunSnapshots",
-            "line": 376
+            "line": 491
           },
           {
             "id": "BK-1017",
             "method": "requestExportSuccessfully",
-            "line": 180
+            "line": 295
           },
           {
             "id": "BK-1018",
             "method": "getExportStatusSuccessfully",
-            "line": 339
+            "line": 454
           },
           {
             "id": "BK-1019",
             "method": "downloadArchiveSuccessfully",
-            "line": 213
+            "line": 328
+          },
+          {
+            "id": "BK-999",
+            "method": "downloadEmptyWorkspaceArchive",
+            "line": 538
           }
         ]
       },
@@ -126,22 +161,32 @@
           {
             "id": "BK-1001",
             "method": "verifySectionHiddenForNonOwner",
-            "line": 261
+            "line": 320
+          },
+          {
+            "id": "BK-1003",
+            "method": "verifyExpiredArchiveNotOffered",
+            "line": 380
+          },
+          {
+            "id": "BK-1006",
+            "method": "verifyStateAtExpiryBoundary",
+            "line": 417
           },
           {
             "id": "BK-994",
             "method": "openDataExportSectionAsOwner",
-            "line": 112
+            "line": 171
           },
           {
             "id": "BK-995",
             "method": "requestExportAcknowledged",
-            "line": 152
+            "line": 211
           },
           {
             "id": "BK-996",
             "method": "downloadReadyArchive",
-            "line": 209
+            "line": 268
           }
         ]
       },
@@ -171,6 +216,7 @@
       "relativePath": "tests/components/steps/WorkspaceExportSteps.ts",
       "methods": [
         "cleanupSyntheticWorkspace",
+        "cleanupSyntheticWorkspaces",
         "createSyntheticWorkspace",
         "grantRoleInWorkspace",
         "prepareCompletedExport",
@@ -180,7 +226,7 @@
   ],
   "summary": {
     "totalComponents": 12,
-    "totalATCs": 16,
+    "totalATCs": 25,
     "apiComponents": 10,
     "uiComponents": 2,
     "stepsModules": 1

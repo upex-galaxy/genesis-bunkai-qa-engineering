@@ -14,12 +14,13 @@
  * based, inline (shared ones extracted below at 2+ uses).
  */
 
-import type { APIResponse, Download, Response } from '@playwright/test';
+import type { APIResponse, Download, Response, Route } from '@playwright/test';
 import type { ErrorEnvelope } from '@schemas/auth.types';
 import type { WorkspaceExportJob } from '@schemas/workspace-export.types';
 import type { TestContextOptions } from '@TestContext';
 
 import { statSync } from 'node:fs';
+import { EXPORT_DOWNLOAD_WINDOW_MS } from '@data/constants';
 import { expect } from '@playwright/test';
 import { UiBase } from '@ui/UiBase';
 import { atc, step } from '@utils/decorators';
@@ -47,6 +48,21 @@ const NEVER_REQUESTED_TEXT = 'No export has been requested yet';
 const EXPIRED_TEXT = 'The last export has expired';
 const FAILED_TEXT = 'The export failed to prepare';
 
+/** Browser clock offset for the BK-1003 expired partition: mid-partition, well past the boundary BK-1006 owns. */
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+/** State of a completed export the status card shows for a given browser clock. */
+export type CompletedExportState = 'ready' | 'expired';
+
+/** Input of the BK-1006 ATC: one BVA row on the window end. */
+export interface ExpiryBoundaryCheck {
+  /** The real completed export of the active workspace (its `expires_at` and `completed_at` are the worker's) */
+  completedExport: WorkspaceExportJob
+  /** Browser clock relative to `expires_at`, in ms (negative = before the instant) */
+  offsetMs: number
+  expectedState: CompletedExportState
+}
+
 export class DataExportPage extends UiBase {
   private readonly route = '/settings/data-export';
 
@@ -65,6 +81,8 @@ export class DataExportPage extends UiBase {
   private readonly requestButton = () => this.page.getByRole('button', { name: 'Request export', exact: true });
   private readonly preparingText = () => this.page.getByText(PREPARING_TEXT);
   private readonly readyText = () => this.page.getByText(READY_TEXT);
+  private readonly expiredText = () => this.page.getByText(EXPIRED_TEXT);
+  private readonly requestNewExportButton = () => this.page.getByRole('button', { name: 'Request a new export' });
 
   /** The view's export API call (`/api/v1/workspaces/{id}/data-export`), not the page or the download route. */
   private isExportApiCall(response: Response, method: 'GET' | 'POST'): boolean {
@@ -72,9 +90,50 @@ export class DataExportPage extends UiBase {
       && /^\/api\/v1\/workspaces\/[^/]+\/data-export$/.test(new URL(response.url()).pathname);
   }
 
+  /** The browser Supabase client's refresh-token call (side-effect guard of openAtBrowserTime). */
+  private readonly isRefreshTokenCall = (url: URL): boolean =>
+    url.pathname.endsWith('/auth/v1/token') && url.searchParams.get('grant_type') === 'refresh_token';
+
+  /** One handler instance, so openAtBrowserTime can unroute it before routing it again. */
+  private readonly abortRefreshTokenCall = async (route: Route): Promise<void> => route.abort();
+
   /** Matches the view's own poll (`GET /api/v1/workspaces/{id}/data-export`). */
   private isExportPoll(response: Response): boolean {
     return this.isExportApiCall(response, 'GET');
+  }
+
+  /**
+   * Open the page with the browser clock pinned at `instantMs` and verify the
+   * view read THIS completed export (guard against a stale or foreign row).
+   *
+   * The view derives ready / expired client-side (`expires_at > Date.now()`),
+   * so pinning `Date.now()` (`clock.setFixedTime`, timers keep running) reaches
+   * those states on the real data path, with no DB write and no faked response.
+   * Side-effect guard, not a state fake: with the clock days ahead, the
+   * browser's Supabase client would see its access token as expired and rotate
+   * the shared session's refresh token; the refresh call is aborted (a
+   * retryable network error to the client, which keeps its session). The page
+   * and the export API authenticate on the server clock, so they are unaffected.
+   *
+   * Safe to call several times on the same page (BK-1006 opens it once per BVA
+   * row): the abort route is the same matcher + handler pair, unrouted before it
+   * is routed again (never stacked), and every call re-pins the clock before a
+   * fresh navigation, so each row reads its own instant.
+   *
+   * Budget: navigation and the view's read run in parallel, 15 s each.
+   */
+  private async openAtBrowserTime(completedExport: WorkspaceExportJob, instantMs: number): Promise<void> {
+    await this.page.unroute(this.isRefreshTokenCall, this.abortRefreshTokenCall);
+    await this.page.route(this.isRefreshTokenCall, this.abortRefreshTokenCall);
+    await this.page.clock.setFixedTime(new Date(instantMs));
+
+    const read = this.page.waitForResponse(response => this.isExportPoll(response), { timeout: 15_000 });
+    await this.page.goto(this.route, { timeout: 15_000 });
+    const response = await read;
+    expect(response.status(), 'the view reads the export').toBe(200);
+    const job = ((await response.json()) as { export: WorkspaceExportJob | null }).export;
+    expect(job?.id, 'the view reads the completed export under test').toBe(completedExport.id);
+    expect(job?.expires_at, 'the view reads the worker\'s expires_at').toBe(completedExport.expires_at);
   }
 
   /** Format an ISO instant the way the view does (`toLocaleString()` in the browser). */
@@ -296,7 +355,84 @@ export class DataExportPage extends UiBase {
       await expect(this.page.getByText(text), `no lifecycle text: ${text}`).toHaveCount(0, { timeout: 2_000 });
     }
     await expect(this.requestButton()).toHaveCount(0, { timeout: 2_000 });
-    await expect(this.page.getByRole('button', { name: 'Request a new export' })).toHaveCount(0, { timeout: 2_000 });
+    await expect(this.requestNewExportButton()).toHaveCount(0, { timeout: 2_000 });
     await expect(this.downloadLink()).toHaveCount(0, { timeout: 2_000 });
+  }
+
+  /**
+   * ATC: Owner opens Data export after the window lapsed - expects "expired" and
+   * a fresh request offered instead of a download
+   *
+   * Precondition: the active workspace has a real completed export.
+   * 1. Pin the browser clock one day past `expires_at` and open the page (ACTION;
+   *    mid-partition value, the boundary itself is BK-1006)
+   * 2. Verify the expired text, an enabled "Request a new export" button, no
+   *    "Download archive" link, no anchor to the download route, no ready text
+   *
+   * Server-side refusal of an expired download is BK-1010 (out of automation):
+   * the browser clock cannot expire the archive for the server.
+   *
+   * Time budget: page open ~15 s (see openAtBrowserTime), 2 x 5 s visible
+   * checks, 3 x 2 s absence checks: ~31 s worst case, every wait bounded.
+   *
+   * @param completedExport - The active workspace's completed export (real `expires_at`)
+   */
+  @atc('BK-1003')
+  async verifyExpiredArchiveNotOffered(completedExport: WorkspaceExportJob): Promise<void> {
+    const expiresAt = Date.parse(completedExport.expires_at ?? '');
+    expect(Number.isNaN(expiresAt), 'precondition: a completed export with an expires_at').toBe(false);
+
+    await this.openAtBrowserTime(completedExport, expiresAt + ONE_DAY_MS);
+
+    await expect(this.expiredText()).toContainText('no longer downloadable', { timeout: 5_000 });
+    await expect(this.requestNewExportButton()).toBeEnabled({ timeout: 5_000 });
+    await expect(this.downloadLink()).toHaveCount(0, { timeout: 2_000 });
+    await expect(this.page.locator('a[href$="/data-export/download"]')).toHaveCount(0, { timeout: 2_000 });
+    await expect(this.readyText()).toHaveCount(0, { timeout: 2_000 });
+  }
+
+  /**
+   * ATC: Owner opens Data export with the browser clock at a point around the
+   * expiry instant - expects the state that matches it (BVA on the window end)
+   *
+   * Precondition: the active workspace has a real completed export.
+   * 1. Verify the window is exactly 168 h (`expires_at - completed_at`)
+   * 2. Pin the browser clock at `expires_at + offsetMs` and open the page (ACTION)
+   * 3. Verify the state: `ready` -> ready text and one "Download archive" link,
+   *    no expired text; `expired` -> expired text, an enabled "Request a new
+   *    export" button, no download link, no ready text. The view uses a strict
+   *    `expires_at > now`, so the instant itself is already expired.
+   *
+   * Rows (shared testId): -1000 ms -> ready, 0 -> expired, +1000 ms -> expired.
+   * The caller runs the rows SEQUENTIALLY in one test, on one completed export
+   * and one page (the ATC re-pins the clock and re-opens the page per call), so
+   * a failing row throws (FAIL row) and stops the later ones. A test timeout
+   * mid-row would write no row at all; the per-call bounds below plus the
+   * caller's budget (worst case + 25 %) keep that from happening under them.
+   * Time budget per call: page open ~15 s (see openAtBrowserTime), 2 x 5 s
+   * visible checks, up to 2 x 2 s absence checks: ~29 s worst case (~31 s with
+   * the window check and route setup), every wait bounded, so a slow env throws
+   * HERE (FAIL row) well before the test timeout.
+   */
+  @atc('BK-1006')
+  async verifyStateAtExpiryBoundary(args: ExpiryBoundaryCheck): Promise<void> {
+    const { completedExport, offsetMs, expectedState } = args;
+    const expiresAt = Date.parse(completedExport.expires_at ?? '');
+    const completedAt = Date.parse(completedExport.completed_at ?? '');
+    expect(expiresAt - completedAt, 'the download window is exactly 168 h').toBe(EXPORT_DOWNLOAD_WINDOW_MS);
+
+    await this.openAtBrowserTime(completedExport, expiresAt + offsetMs);
+
+    if (expectedState === 'ready') {
+      await expect(this.readyText()).toBeVisible({ timeout: 5_000 });
+      await expect(this.downloadLink()).toHaveCount(1, { timeout: 5_000 });
+      await expect(this.expiredText()).toHaveCount(0, { timeout: 2_000 });
+    }
+    else {
+      await expect(this.expiredText()).toBeVisible({ timeout: 5_000 });
+      await expect(this.requestNewExportButton()).toBeEnabled({ timeout: 5_000 });
+      await expect(this.downloadLink()).toHaveCount(0, { timeout: 2_000 });
+      await expect(this.readyText()).toHaveCount(0, { timeout: 2_000 });
+    }
   }
 }

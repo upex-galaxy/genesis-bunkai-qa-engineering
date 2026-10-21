@@ -55,3 +55,7 @@ The raw token is held only in memory, never logged or attached to Allure (Critic
 ## 9. Checklist
 
 - [x] naming · [x] object param · [x] tuple return · [x] whole-archive scan, not one file
+
+## 10. Implemented (Wave 3, 2026-10-20)
+
+Signature: `downloadArchiveExcludingPatSecrets({ workspaceId, token })`: the raw PAT travels under the `token` key (masked by the step decorator) and every form is derived inside the ATC. Forms scanned (content and file names): raw token, secret part after the dot, full secret `prefix + secret` (what `POST /tokens` hashes, per the product source), SHA-256 hex of the full secret (stored in `access_token_secrets.hash`) and of the secret part. Failure output lists `<file>: <form label>` only, never a value. The PAT carries `workspace:admin` only and is revoked in afterEach with `requireRevoked`.
