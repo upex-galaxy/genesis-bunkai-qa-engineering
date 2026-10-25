@@ -528,6 +528,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/storage-cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sweep the storage cleanup queue (cron entry point)
+         * @description Internal - system/cron principal only (ADR-0017), not part of the public consumer surface. The verb Vercel Cron invokes on the schedule declared in `vercel.json`. Requires `Authorization: Bearer <CRON_SECRET>`. Expires stale pending evidence uploads, deletes queued Storage objects, purges old finished queue rows (ADR-0019).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sweep completed. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StorageCleanupResponse"];
+                    };
+                };
+                /** @description Missing or invalid CRON_SECRET. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The sweep could not read or update the cleanup queue. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Sweep the storage cleanup queue (manual retry)
+         * @description Internal - system/cron principal only (ADR-0017). Same handler as the GET cron entry point, kept for manual same-day retries and for staging, where no cron runs. Requires `Authorization: Bearer <CRON_SECRET>`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sweep completed. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StorageCleanupResponse"];
+                    };
+                };
+                /** @description Missing or invalid CRON_SECRET. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The sweep could not read or update the cleanup queue. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/atcs": {
         parameters: {
             query?: never;
@@ -544,7 +642,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description Required. 8–128 chars, [a-zA-Z0-9_-]. A replay with the same key and payload returns the stored success snapshot; the same key with a different payload returns 409 `conflict`; a concurrent request with the same key while the first is still in flight also returns 409 `conflict`. Window: 24h. */
+                    "Idempotency-Key": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -565,7 +666,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Malformed body. */
+                /** @description Malformed body or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -601,7 +702,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description Slug collision (`slug_collision`). */
+                /** @description Slug collision (`slug_collision`), or: Idempotency-Key reused with a different request payload, or a request with the same key is still in flight (`conflict`). */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -736,7 +837,111 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Read one ATC by id (expandable)
+         * @description Bearer `atc:read` (or cookie session). Lean by default: the header fields only (no steps, assertions or acceptance criteria). `expand` is a comma-separated, case-insensitive list of `steps`, `assertions`, `acceptance_criteria`, `used_in` (repeated params are merged, duplicates and empty segments ignored); an unrecognised value is a 400 naming it. `acceptance_criteria` adds the anchored criteria rows; `used_in` adds the chaining Tests (empty array when none). A nonexistent, archived, or inaccessible ATC returns the same 404 (no existence leak). Read-only: no version bump, no event. Responses are `Cache-Control: private, no-store`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma-separated: `steps,assertions,acceptance_criteria,used_in`. */
+                    expand?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The ATC (header only unless expanded). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            atc: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                project_id: string;
+                                /** Format: uuid */
+                                module_id: string;
+                                /** Format: uuid */
+                                user_story_id: string;
+                                /** @description `<module-slug>/atc-<8 hex>`. Computed once at creation, immutable across edits. */
+                                slug: string;
+                                title: string;
+                                /** @enum {string} */
+                                layer: "UI" | "API" | "Unit";
+                                /**
+                                 * @description BK-399 — test-design technique that produced this ATC. `null` means "not specified"; it is never defaulted to a real value.
+                                 * @enum {string|null}
+                                 */
+                                technique: "Equivalence Partitioning" | "Boundary Value Analysis" | "State Transition" | "Decision Table" | "Pairwise" | null;
+                                /**
+                                 * @description BK-399 — ATC priority (distinct from Bug severity). `null` means "not specified".
+                                 * @enum {string|null}
+                                 */
+                                priority: "Critical" | "High" | "Medium" | "Low" | null;
+                                /** @description Monotonic per ATC. Starts at 1, +1 per edit. */
+                                version: number;
+                                /** @enum {string} */
+                                status: "pass" | "fail" | "blocked" | "skipped" | "running" | "unrun";
+                                tags: string[];
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                                /** Format: date-time */
+                                archived_at: string | null;
+                                steps?: components["schemas"]["AtcStep"][];
+                                assertions?: components["schemas"]["AtcAssertion"][];
+                                acceptance_criterion_ids?: string[];
+                            };
+                        };
+                    };
+                };
+                /** @description Malformed id or unrecognised `expand` value. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Token lacks the `atc:read` scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description ATC not found (or archived, or not visible to the caller). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -1041,7 +1246,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description Rate limited. */
+                /** @description Rate limited: more than 10 checks per 60 s or 60 per hour from one network source. Carries a `Retry-After` header (seconds) and `error.details.retry_after_seconds`; identical for every submitted address. */
                 429: {
                     headers: {
                         [name: string]: unknown;
@@ -1496,7 +1701,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description Required. 8–128 chars, [a-zA-Z0-9_-]. A replay with the same key and payload returns the stored success snapshot; the same key with a different payload returns 409 `conflict`; a concurrent request with the same key while the first is still in flight also returns 409 `conflict`. Window: 24h. */
+                    "Idempotency-Key": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -1517,7 +1725,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Malformed body. */
+                /** @description Malformed body or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1546,6 +1754,15 @@ export interface paths {
                 };
                 /** @description Project, module, or run step not found (non-disclosing). */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Idempotency-Key reused with a different request payload, or a request with the same key is still in flight (`conflict`). */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2882,7 +3099,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description Required. 8–128 chars, [a-zA-Z0-9_-]. A replay with the same key and payload returns the stored success snapshot; the same key with a different payload returns 409 `conflict`; a concurrent request with the same key while the first is still in flight also returns 409 `conflict`. Window: 24h. */
+                    "Idempotency-Key": string;
+                };
                 path: {
                     id: string;
                 };
@@ -2905,7 +3125,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Malformed id or body. */
+                /** @description Malformed id or body, or: Malformed body or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -2941,7 +3161,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description Jira key already linked in this project. */
+                /** @description Jira key already linked in this project, or: Idempotency-Key reused with a different request payload, or a request with the same key is still in flight (`conflict`). */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3854,6 +4074,328 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{id}/saved-views/{viewId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a saved view
+         * @description Removes only the saved view. Another member's view and a nonexistent id return the same 404.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    viewId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Saved view deleted. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Malformed id. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:write scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description No such saved view for the caller in this project. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Rename a saved view and/or replace the filters it holds
+         * @description Send `name`, `state`, or both; the surface cannot be changed. Another member's view, another project's view and a nonexistent id all return the same 404.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    viewId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SavedViewPatchBody"];
+                };
+            };
+            responses: {
+                /** @description Saved view updated. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SavedViewPatchResponse"];
+                    };
+                };
+                /** @description Malformed id or invalid JSON body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:write scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description No such saved view for the caller in this project. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The new name is already used on this surface. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Validation failed (name length, empty body, invalid or empty state). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my saved views for one surface of a project
+         * @description Returns only the caller's own views; another member's views are never visible. A project the caller is not a member of returns an empty list.
+         */
+        get: {
+            parameters: {
+                query: {
+                    view_kind: "traceability" | "run_history" | "bugs" | "workbench";
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Saved views listed. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SavedViewListResponse"];
+                    };
+                };
+                /** @description Malformed project id. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:read scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description view_kind is missing or unknown. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Save the filters currently applied under a name
+         * @description Requires at least one filter. The name is unique per member, project and surface (case-insensitive, trimmed); a duplicate returns 409 saved_view_name_taken. A member may keep up to 25 views per surface and project; the 26th returns 409 saved_view_limit_reached. A project the caller is not a member of returns 404.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SavedViewCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Saved view created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SavedViewCreateResponse"];
+                    };
+                };
+                /** @description Malformed project id or invalid JSON body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:write scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Project not found (or the caller is not a member). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Name already used on this surface, or the 25-view limit is reached. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Validation failed (name length, empty or invalid state, inverted date range, unknown surface). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{id}/test-plans": {
         parameters: {
             query?: never;
@@ -3867,7 +4409,10 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Filter by status, applied on the server before any paging. Omit for all plans. */
+                    status?: "open" | "closed";
+                };
                 header?: never;
                 path: {
                     id: string;
@@ -3885,7 +4430,7 @@ export interface paths {
                         "application/json": components["schemas"]["TestPlanListResponse"];
                     };
                 };
-                /** @description Malformed project id. */
+                /** @description Malformed project id, or a status other than open / closed. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -4079,6 +4624,274 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/tracker-settings/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check the Jira destination of a Project
+         * @description Owner or admin only (scope `workspace:admin` plus a live role check): the check asks the shared Jira site whether a key exists, so members and viewers are refused with no request to Jira. One read-only call, a 5 second budget, no retry. One check at a time per person: a concurrent second call answers 429 (`details.reason` `check_in_progress`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTrackerCheckBody"];
+                };
+            };
+            responses: {
+                /** @description The check ran. `ok: false` carries the reason; it is not an HTTP error. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectTrackerCheckResponse"];
+                    };
+                };
+                /** @description Malformed project id or invalid JSON body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing workspace:admin scope, a token scoped to another workspace, or the caller is not an owner or admin (`details.reason` `admin_required`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Project not found, or not visible to the caller. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Malformed key or issue type (`invalid_destination_key`, `destination_required`, `invalid_issue_type`). No request was sent to Jira. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description A check by the same person is already running (`details.reason` `check_in_progress`). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/tracker-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a Project's Jira defect-sync settings
+         * @description Any workspace member or viewer. A Project that was never configured answers sync off, no destination key and issue type "Bug". A Project the caller cannot see answers the same 404 as a missing one.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Settings (or the defaults). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectTrackerSettingsResponse"];
+                    };
+                };
+                /** @description Malformed project id. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:read scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Project not found, or not visible to the caller. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        /**
+         * Save a Project's Jira defect-sync settings
+         * @description Owner or admin only (scope `workspace:admin` plus a live role check). With `enabled: true` the connection check runs first and nothing is saved when it fails (422, `details.reason` `connection_check_failed`). Switching on, or changing the key or issue type while on, queues the Project's unsent defects; when that number is above 0 the call answers 409 (`details.reason` `queue_confirmation_required`, `details.queue_count` N) until `confirm_queue_count` equals N. A save that changes nothing writes and queues nothing. Last write wins. The check-on-save counts as the person's one running check: an overlapping check or save answers 429.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProjectTrackerSettingsPutBody"];
+                };
+            };
+            responses: {
+                /** @description Saved; the stored values and the number of defects queued. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectTrackerSettingsPutResponse"];
+                    };
+                };
+                /** @description Malformed project id or invalid JSON body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing workspace:admin scope, a token scoped to another workspace, or the caller is not an owner or admin (`details.reason` `admin_required`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Project not found, or not visible to the caller. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The save would queue defects and the confirmation is missing or stale (`queue_confirmation_required`, `queue_count_mismatch`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Validation failed. `details.reason` is `invalid_destination_key`, `destination_required`, `invalid_issue_type` or `connection_check_failed` (with `details.check` `{ kind, message }`). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Only with `enabled: true`: a connection check by the same person is already running (`details.reason` `check_in_progress`). Nothing was saved. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -4330,6 +5143,305 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs/{id}/steps/{stepId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start an evidence upload for a run step
+         * @description Bearer `run:execute` (or cookie session); member+ write access; the Run must be `running`. Step 1 of 3: init -> PUT the raw bytes to `upload.url` with `upload.headers` -> `POST .../attachments/{attachmentId}/commit`. Limits (inclusive): PNG, JPEG or WebP only; 10 MiB per file; 10 images and 50 MiB per step; 250 MiB per Run. The attachment stays `pending` and invisible until commit; an upload that is never committed is discarded by the sweep after 3 hours. A step of any status accepts evidence; attaching never changes the step outcome.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Required. 8-128 chars, [a-zA-Z0-9_-]. A retry with the same key and payload returns the stored answer and creates no second attachment; the same key with a different payload returns 409 `conflict`. The same image attached twice on purpose uses two different keys. */
+                    "Idempotency-Key": string;
+                };
+                path: {
+                    id: string;
+                    stepId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RunStepAttachmentInitBody"];
+                };
+            };
+            responses: {
+                /** @description Pending attachment created. PUT the bytes to `upload`, then commit. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            attachment: components["schemas"]["RunStepAttachment"];
+                            upload: components["schemas"]["RunStepAttachmentUploadTarget"];
+                        };
+                    };
+                };
+                /** @description Malformed ids, malformed JSON, or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing run:execute scope, or a viewer (`forbidden`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Run step not found: missing, of another Run, or in a workspace the caller is not a member of (non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The Run is already closed (`conflict`, reason `run_not_open`), or the Idempotency-Key was reused with a different payload / is still in flight. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The file is larger than 10 MiB (`file_too_large`). Copy: "Images must be 10 MiB or smaller." */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not PNG, JPEG or WebP (`unsupported_media_type`). Copy: "Only PNG, JPEG or WebP images are accepted." */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Empty file or invalid name (`validation_failed`, reasons `empty_file`, `invalid_filename`), or a quota is full (`attachment_limit_exceeded`, reasons `step_count`, `step_bytes`, `run_bytes`). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description File storage is temporarily unavailable (`storage_unavailable`). Safe to retry with the same Idempotency-Key. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the evidence images of a Run
+         * @description Bearer `atc:read` (or cookie session); any member of the owning workspace. Committed attachments of every step, oldest first. Metadata only: no storage path and no URL; open an image through `.../attachments/{attachmentId}/content`. A pending upload is never listed. Kept separate from `GET /runs/{id}` on purpose so abort, finish, mark and compare responses do not change.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The committed attachments. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            attachments: components["schemas"]["RunStepAttachment"][];
+                        };
+                    };
+                };
+                /** @description Malformed run id (`bad_request`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:read scope (`forbidden`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Run not found, or in a workspace the caller is not a member of (non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Compare a Run against the previous Run of the same Test and Environment
+         * @description Bearer `atc:read` (or cookie session). Any active workspace member, viewer included. The Previous run is the latest passed, failed or aborted Run of the same Test and Environment that finished strictly before this Run started. Steps are paired by ATC occurrence plus exact step text; a reworded step appears as Removed and Added. Branch on `state`: `compared`, `no_previous`, `in_progress` and `unreliable` are all HTTP 200, and only `compared` carries a verdict. **A non-compared 200 means "no verdict", never "no new failures".** Read-only: nothing is written. Non-disclosing: a missing Run, a Run in another workspace and a non-member all return an identical 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id of the VIEWED Run (This run). The Previous run is resolved by the server. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The comparison, or the reason there is none. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RunComparison"];
+                    };
+                };
+                /** @description Malformed id (not a UUID). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:read scope. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Run not found (missing, not visible, or foreign workspace; non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The comparison could not be read. Fixed text; the database error is logged server-side only. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runs/{id}/finish": {
         parameters: {
             query?: never;
@@ -4496,6 +5608,295 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{id}/steps/{stepId}/attachments/{attachmentId}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit an evidence upload
+         * @description Bearer `run:execute` (or cookie session); only the person who started the upload. Reads what actually arrived in Storage: the size from the object metadata and the type from its first 64 KiB. The bytes must be a real, still PNG, JPEG or WebP image of the declared type, within the limits; otherwise the pending attachment and its object are discarded and the request is refused. On success the attachment becomes visible to every workspace member. Nothing commits after the Run closed (the first terminal outcome wins). Always safe to retry: an already committed attachment answers 200 with the same body.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    stepId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Committed (or already committed). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            attachment: components["schemas"]["RunStepAttachment"];
+                        };
+                    };
+                };
+                /** @description Malformed ids (`bad_request`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing run:execute scope, or no longer a member with write access (`forbidden`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Attachment not found, or not yours (non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The Run is already closed (`conflict`, reason `run_not_open`), the upload window lapsed (reason `pending_expired`), or the file was never uploaded (reason `upload_missing`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The uploaded object is larger than 10 MiB (`file_too_large`). The attachment is discarded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The bytes are not a valid image of the declared type (`validation_failed`, reasons `content_mismatch`, `empty_file`, `animated_image`; the attachment is discarded), or a quota is full (`attachment_limit_exceeded`). */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description File storage is temporarily unavailable (`storage_unavailable`). Retry. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{id}/steps/{stepId}/attachments/{attachmentId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open an evidence image
+         * @description Bearer `atc:read` (or cookie session); any member of the owning workspace, viewers included. Answers 302 with a `Location` that is a signed URL valid for 60 seconds, `Cache-Control: private, no-store`. There is no anonymous read path and a stored reference alone is never enough. Do not store or log the `Location`: fetch the image and drop it. Missing, foreign-workspace and still-pending attachments all answer the same 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    stepId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirect to the signed URL of the image (60 seconds). */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Malformed ids (`bad_request`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:read scope (`forbidden`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Attachment not found (non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description File storage is temporarily unavailable (`storage_unavailable`). */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{id}/steps/{stepId}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an evidence image from a run step
+         * @description Bearer `run:execute` (or cookie session). Only the person who attached the image can remove it (an admin or owner cannot remove somebody else's), and only while the Run is `running`: once it is finished or aborted its evidence is fixed. The check runs under the Run row lock, so a removal racing finish or abort has exactly one winner. Works on a still-`pending` upload too (a cancelled upload). The stored object is deleted afterwards on a best-effort basis and retried by the daily cleanup sweep.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    stepId: string;
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Malformed ids (`bad_request`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing run:execute scope, a viewer, or somebody else's attachment (`forbidden`, reason `not_uploader`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Attachment not found under these ids, or in a workspace the caller is not a member of (non-disclosing). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The Run is already closed (`conflict`, reason `run_not_open`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -4672,6 +6073,191 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-plans/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close a test plan
+         * @description Closes an open plan with a required verdict (passed or failed) and an optional outcome summary. Allowed for the plan's creator (while they still hold write access) and for workspace admins and owners, re-checked live on every call; a plain member who did not create the plan and a viewer receive 403. Verdict, summary, closer, close time and a frozen copy of the plan's progress are written together, and the plan becomes read-only: edits and membership changes return 409. Closing a plan that is not open returns 409; two simultaneous closes resolve to exactly one success and one 409. A missing verdict is 422 (verdict_required), a verdict outside passed / failed is 422 (verdict_invalid). Non-members receive a non-disclosing 404.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TestPlanCloseBody"];
+                };
+            };
+            responses: {
+                /** @description Test plan closed. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TestPlanClosureResponse"];
+                    };
+                };
+                /** @description Malformed test plan id or invalid JSON body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:write scope, or the caller is neither the plan's creator nor an admin / owner. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Test plan not found (or not visible to the caller). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The plan is already closed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Verdict missing or invalid, or summary longer than 4000 characters. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-plans/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reopen a closed test plan
+         * @description Returns a closed plan to open. Same permission rule as close (creator or admin / owner). Verdict, summary, closer, close time and the progress snapshot are cleared so the plan returns fully open; the close and reopen entries remain in the plan's history. Reopening a plan that is open returns 409.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Test plan reopened. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TestPlanClosureResponse"];
+                    };
+                };
+                /** @description Malformed test plan id. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller is not signed in. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Missing atc:write scope, or the caller is neither the plan's creator nor an admin / owner. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Test plan not found (or not visible to the caller). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The plan is already open. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -5418,14 +7004,18 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Tests carrying a tag
-         * @description Bearer `atc:read` (or cookie session). Returns the actor's workspace Tests that carry the given `tag` via a GIN containment match. Results are restricted to the actor's active workspace memberships — caller scope is ignored, cross-workspace Tests never leak. Zero matches return `{ items: [] }`, never a 404. The MVP exposes single-tag filtering only.
+         * List Tests carrying a tag (one page)
+         * @description Bearer `atc:read` (or cookie session). Returns the actor's workspace Tests that carry the given `tag` via a GIN containment match. Results are restricted to the actor's active workspace memberships — caller scope is ignored, cross-workspace Tests never leak. Newest first (ties broken by id). Returns ONE page of at most `limit` Tests (default 20, max 50) plus `next_cursor`: non-null if and only if more Tests remain, so a caller stops when it is null. A walk over the cursors yields every matching Test exactly once. Zero matches return `{ items: [], next_cursor: null }`, never a 404. The MVP exposes single-tag filtering only (a `tag` is always required).
          */
         get: {
             parameters: {
                 query: {
                     /** @description Required. The single tag to filter by. Normalized like stored tags (reserved tags lowercased), so `Smoke` matches `smoke`. An unused tag returns an empty list, never a 404. */
                     tag: string;
+                    /** @description Page size, 1..50 (default 20). Out of range is refused with 422, never clamped. */
+                    limit?: number;
+                    /** @description Opaque page token: pass back a previous response's `next_cursor` unchanged. A token this endpoint did not issue is refused with 400, never treated as page one. */
+                    cursor?: string;
                 };
                 header?: never;
                 path?: never;
@@ -5433,7 +7023,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The matching Tests (possibly empty). */
+                /** @description One page of the matching Tests (possibly empty). */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -5441,7 +7031,17 @@ export interface paths {
                     content: {
                         "application/json": {
                             items: components["schemas"]["FilteredTest"][];
+                            next_cursor: string | null;
                         };
+                    };
+                };
+                /** @description The `cursor` is not a token this endpoint issued (`bad_request`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
                 /** @description Not authenticated. */
@@ -5462,7 +7062,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description Missing `tag` query parameter (`validation_failed`). */
+                /** @description Missing `tag`, or `limit` outside 1..50 / not an integer (`validation_failed`). */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -6411,6 +8011,567 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/{id}/chat/entities/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve ATC / Test / Run references into rich-card data
+         * @description Cookie session or Bearer PAT, no scope. Read-only. Returns the CURRENT state per reference, keyed `{type}:{id}`. An entity outside the channel workspace is `restricted` (no metadata); a missing or archived one is `unavailable`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        refs: {
+                            /** @enum {string} */
+                            type: "atc" | "test" | "run";
+                            /** Format: uuid */
+                            id: string;
+                            project_slug: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Card data keyed by `{type}:{id}`. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cards: {
+                                [key: string]: components["schemas"]["ChatEntityCard"];
+                            };
+                        };
+                    };
+                };
+                /** @description Workspace id not a UUID or body not JSON. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Workspace not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Malformed `refs`. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{id}/chat/entities/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search ATCs, Tests and Runs to insert as a chat reference
+         * @description Cookie session or Bearer PAT, no scope. Matches title (or a full id / ATC slug); an empty `q` lists the most recent. At most 5 per entity type.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matching entities. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                type: "atc" | "test" | "run";
+                                /** Format: uuid */
+                                id: string;
+                                code: string;
+                                title: string;
+                                project_name: string;
+                                project_slug: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Workspace id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Workspace not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{id}/chat/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List messages of the workspace general channel
+         * @description Cookie session or Bearer PAT, no scope: visibility is active workspace membership (RLS). Default returns the newest `limit` messages; `before_seq` pages back through history; `after_seq` returns everything newer (reconnect catch-up, capped at 200). `before_seq` and `after_seq` are mutually exclusive.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    before_seq?: number;
+                    after_seq?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of messages. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatMessagesPage"];
+                    };
+                };
+                /** @description Workspace id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Workspace not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid `limit` / `before_seq` / `after_seq`. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Send a message to the workspace general channel
+         * @description Members, admins and owners can write; viewers are read-only (403, reason `viewer_read_only`). The body is trimmed and must be 1..4000 characters.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SendChatMessageBody"];
+                };
+            };
+            responses: {
+                /** @description The created message. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatMessage"];
+                    };
+                };
+                /** @description Malformed JSON or workspace id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Caller has the viewer role (`viewer_read_only`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Workspace not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Empty (`message_empty`) or over-long (`message_too_long`) body. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{id}/chat/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a message (own, or any as admin/owner)
+         * @description Replaces the message with a tombstone (body scrubbed, `deleted_at` set). The author may delete at any time; admins and owners may moderate any message. Idempotent. The tombstone never reveals who deleted it.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    messageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The tombstone. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatMessage"];
+                    };
+                };
+                /** @description Id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not the author and not an admin/owner (`not_allowed`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Message not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Edit my own message
+         * @description Author only, live message only, within 15 minutes of sending (BK-219). Sets `edited_at`. Admins cannot edit others' messages.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    messageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EditChatMessageBody"];
+                };
+            };
+            responses: {
+                /** @description The edited message. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatMessage"];
+                    };
+                };
+                /** @description Malformed JSON or id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not the author (`not_author`), read-only role (`viewer_read_only`) or window closed (`edit_window_closed`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Message not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description The message was already deleted (`message_deleted`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Empty or over-long body. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/workspaces/{id}/chat/roster": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the active members of the workspace with their role
+         * @description Cookie session or Bearer PAT, no scope. Presence is not part of this response: it is live Realtime Presence on the client.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active members, oldest membership first. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            members: components["schemas"]["ChatMember"][];
+                        };
+                    };
+                };
+                /** @description Workspace id not a UUID. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not authenticated. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Workspace not found or caller is not an active member. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/{id}/coverage": {
         parameters: {
             query?: never;
@@ -7245,7 +9406,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description Required. 8–128 chars, [a-zA-Z0-9_-]. A replay with the same key and payload returns the stored success snapshot; the same key with a different payload returns 409 `conflict`; a concurrent request with the same key while the first is still in flight also returns 409 `conflict`. Window: 24h. */
+                    "Idempotency-Key": string;
+                };
                 path: {
                     id: string;
                 };
@@ -7266,7 +9430,7 @@ export interface paths {
                         "application/json": components["schemas"]["ProjectCreateResponse"];
                     };
                 };
-                /** @description Malformed workspace id or invalid JSON body. */
+                /** @description Malformed workspace id or invalid JSON body, or: Malformed body or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -7293,7 +9457,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description A project with this slug already exists in the workspace. */
+                /** @description A project with this slug already exists in the workspace, or: Idempotency-Key reused with a different request payload, or a request with the same key is still in flight (`conflict`). */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -7542,7 +9706,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description Required. 8–128 chars, [a-zA-Z0-9_-]. A replay with the same key and payload returns the stored success snapshot; the same key with a different payload returns 409 `conflict`; a concurrent request with the same key while the first is still in flight also returns 409 `conflict`. Window: 24h. */
+                    "Idempotency-Key": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -7561,6 +9728,15 @@ export interface paths {
                         "application/json": components["schemas"]["WorkspaceCreateResponse"];
                     };
                 };
+                /** @description Malformed body or missing/invalid Idempotency-Key (`bad_request`, `idempotency_key_required`, `idempotency_key_invalid`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
                 /** @description Caller is not signed in. */
                 401: {
                     headers: {
@@ -7570,7 +9746,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorEnvelope"];
                     };
                 };
-                /** @description Slug already in use. */
+                /** @description Slug already in use (`conflict`), or: Idempotency-Key reused with a different request payload, or a request with the same key is still in flight (`conflict`). */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -7792,7 +9968,7 @@ export interface components {
                  * @description Machine-readable error code. Branch on this value, not on `message`.
                  * @enum {string}
                  */
-                code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "method_not_allowed" | "conflict" | "idempotency_key_required" | "idempotency_key_invalid" | "rate_limited" | "ac_outside_user_story" | "module_outside_project_subtree" | "steps_position_invalid" | "slug_collision" | "chain_empty" | "chain_mismatch" | "chain_invalid" | "no_executable_steps" | "environment_invalid" | "test_outside_plan_project" | "internal_error" | "upstream_error";
+                code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "method_not_allowed" | "conflict" | "idempotency_key_required" | "idempotency_key_invalid" | "rate_limited" | "ac_outside_user_story" | "module_outside_project_subtree" | "steps_position_invalid" | "slug_collision" | "chain_empty" | "chain_mismatch" | "chain_invalid" | "no_executable_steps" | "environment_invalid" | "test_outside_plan_project" | "file_too_large" | "unsupported_media_type" | "attachment_limit_exceeded" | "storage_unavailable" | "internal_error" | "upstream_error";
                 /** @description Human-readable error description. */
                 message: string;
                 /** @description Optional structured details. For validation errors this is the ZodError issues array. */
@@ -7800,6 +9976,32 @@ export interface components {
                 /** @description Echoed `x-request-id`. Quote this in bug reports. */
                 request_id?: string;
             };
+        };
+        /** @description Metadata of one image attached to a run step. Never carries a storage path or a URL. */
+        RunStepAttachment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            run_step_id: string;
+            /** @description The name the uploader gave the file. Display only: never used to decide the type or build a path. */
+            filename: string;
+            /** @enum {string} */
+            content_type: "image/png" | "image/jpeg" | "image/webp";
+            /** @description Declared size while `pending`; the size measured in Storage once `committed`. */
+            byte_size: number;
+            /**
+             * @description Only `committed` attachments are visible to anyone else, and only they are listed.
+             * @enum {string}
+             */
+            status: "pending" | "committed";
+            /** Format: uuid */
+            created_by: string | null;
+            created_at: string;
+            committed_at: string | null;
+            /** @description End of the upload window of a `pending` attachment; null once committed. */
+            expires_at: string | null;
         };
         AcceptanceCriterion: {
             /** Format: uuid */
@@ -7836,7 +10038,7 @@ export interface components {
             /** @description Opaque token for the next (older) page, or null when this is the last page. base64url — echo it back verbatim as `?cursor=`; never construct or parse one. */
             next_cursor: string | null;
         };
-        ActivityItem: components["schemas"]["ActivityItemModuleRenamed"] | components["schemas"]["ActivityItemModuleDescriptionUpdated"] | components["schemas"]["ActivityItemModuleMoved"] | components["schemas"]["ActivityItemModuleArchived"] | components["schemas"]["ActivityItemAtcCreated"] | components["schemas"]["ActivityItemTestCreated"] | components["schemas"]["ActivityItemRunFinished"] | components["schemas"]["ActivityItemRunAborted"] | components["schemas"]["ActivityItemBugAssigned"] | components["schemas"]["ActivityItemBugReassigned"] | components["schemas"]["ActivityItemBugUnassigned"] | components["schemas"]["ActivityItemBugStatusChanged"];
+        ActivityItem: components["schemas"]["ActivityItemModuleRenamed"] | components["schemas"]["ActivityItemModuleDescriptionUpdated"] | components["schemas"]["ActivityItemModuleMoved"] | components["schemas"]["ActivityItemModuleArchived"] | components["schemas"]["ActivityItemAtcCreated"] | components["schemas"]["ActivityItemAtcUpdated"] | components["schemas"]["ActivityItemTestCreated"] | components["schemas"]["ActivityItemRunFinished"] | components["schemas"]["ActivityItemRunAborted"] | components["schemas"]["ActivityItemBugAssigned"] | components["schemas"]["ActivityItemBugReassigned"] | components["schemas"]["ActivityItemBugUnassigned"] | components["schemas"]["ActivityItemBugStatusChanged"];
         ActivityItemModuleRenamed: {
             /**
              * Format: uuid
@@ -7973,6 +10175,36 @@ export interface components {
         };
         ActivityPayloadAtcCreated: {
             title: string | null;
+        };
+        ActivityItemAtcUpdated: {
+            /**
+             * Format: uuid
+             * @description activity_log row id — stable React key.
+             */
+            id: string;
+            /** @enum {string} */
+            entity_type: "atc";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "atc.updated";
+            /** @description Server-rendered, from ACTION_LABELS — never re-derived client-side. */
+            action_label: string;
+            actor: components["schemas"]["ActivityActor"];
+            item: components["schemas"]["ActivityItemLabel"];
+            payload: components["schemas"]["ActivityPayloadAtcUpdated"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        ActivityPayloadAtcUpdated: {
+            title: string | null;
+            affected_test_count: number | null;
+            affected_tests: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            }[] | null;
         };
         ActivityItemTestCreated: {
             /**
@@ -8165,6 +10397,18 @@ export interface components {
             failed: number;
             /** @description Already claimed for today (same-day re-invocation) — not a failure. */
             skipped: number;
+        };
+        StorageCleanupResponse: {
+            /** @description Pending uploads whose window lapsed, deleted this run (their objects are queued). */
+            expired_pending: number;
+            /** @description Queued objects removed from Storage this run. */
+            deleted: number;
+            /** @description Queued objects whose removal failed this run; retried by the next sweep. */
+            failed: number;
+            /** @description Finished outbox rows older than 7 days, deleted. */
+            purged: number;
+            /** @description Outbox rows parked after 10 failed attempts. Anything above zero needs a human. */
+            stuck: number;
         };
         Atc: {
             /** Format: uuid */
@@ -9064,6 +11308,13 @@ export interface components {
             /** @description The page, ordered newest first (started_at desc, id desc). */
             items: components["schemas"]["RunReportItem"][];
             totals: components["schemas"]["RunReportTotals"];
+            /** @description Project-level context independent of the active filters; lets clients pick the right empty state. */
+            scope: {
+                /** @description The Project has at least one Run (filter-invariant). */
+                has_runs: boolean;
+                /** @description The Project has at least one Automated (agent/ci) Run (filter-invariant). */
+                has_automated: boolean;
+            };
             /** @description Opaque token for the next (older) page, or null when this is the last page. base64url, so it is URL-safe as-is: echo it back verbatim as `?cursor=`; never construct or parse one. */
             next_cursor: string | null;
         };
@@ -9100,6 +11351,72 @@ export interface components {
         RunReportTotals: {
             passed: number;
             failed: number;
+            /** @description Passed + failed Runs with executor `human` (Manual) in the filtered set. Manual + Automated = Passed + Failed. */
+            manual: number;
+            /** @description Passed + failed Runs with executor `agent` or `ci` (Automated) in the filtered set. */
+            automated: number;
+        };
+        SavedViewPatchResponse: {
+            item: components["schemas"]["SavedViewItem"];
+        };
+        SavedViewItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            project_id: string;
+            /** @enum {string} */
+            view_kind: "traceability" | "run_history" | "bugs" | "workbench";
+            name: string;
+            state: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SavedViewPatchBody: {
+            /** @description New name; same rules as on create. Renaming to its own current name is accepted. */
+            name?: string;
+            /** @description Replaces the whole stored filter set; same rules as on create. */
+            state?: {
+                [key: string]: string;
+            };
+        };
+        SavedViewListResponse: {
+            /** @description The caller's own views for the requested surface, at most 25, ordered by case-folded name then id. */
+            items: components["schemas"]["SavedView"][];
+        };
+        SavedView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            project_id: string;
+            /** @enum {string} */
+            view_kind: "traceability" | "run_history" | "bugs" | "workbench";
+            /** @description 1–80 characters (code points), trimmed. Unique per member, project and surface, case-insensitive. */
+            name: string;
+            /** @description The surface's own URL query parameters, e.g. { "severity": "P1,P2", "module": "<uuid>" }. Never empty. */
+            state: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        SavedViewCreateResponse: {
+            item: components["schemas"]["SavedView"];
+        };
+        SavedViewCreateBody: {
+            /** @enum {string} */
+            view_kind: "traceability" | "run_history" | "bugs" | "workbench";
+            /** @description 1–80 characters after trimming; no control characters. */
+            name: string;
+            /** @description At least one filter; keys and values must be valid for the surface. */
+            state: {
+                [key: string]: string;
+            };
         };
         TestPlanListResponse: {
             /** @description Ordered by created_at descending, id descending. */
@@ -9117,7 +11434,7 @@ export interface components {
             /** @description 0–100 chars after normalize. Optional short target/release label, e.g. "Release 2.4". */
             goal: string;
             /**
-             * @description A new plan is always "open". Closing is a separate capability and is not exposed by this API.
+             * @description A new plan is always "open". A plan is closed with POST /api/v1/test-plans/{id}/close and returned to "open" with POST /api/v1/test-plans/{id}/reopen.
              * @enum {string}
              */
             status: "open" | "closed";
@@ -9125,6 +11442,23 @@ export interface components {
             created_by: string | null;
             /** Format: date-time */
             created_at: string;
+            /**
+             * @description Final verdict recorded at close. Null while the plan is open. Not returned by create or edit.
+             * @enum {string|null}
+             */
+            verdict?: "passed" | "failed" | null;
+            /** @description Optional plain-text outcome summary recorded at close (at most 4000 characters, trimmed). Null when none was given or the plan is open. */
+            summary?: string | null;
+            /**
+             * Format: uuid
+             * @description User who closed the plan. Null while open.
+             */
+            closed_by?: string | null;
+            /**
+             * Format: date-time
+             * @description When the plan was closed. Null while open.
+             */
+            closed_at?: string | null;
         };
         TestPlanCreateResponse: {
             test_plan: components["schemas"]["TestPlan"];
@@ -9215,6 +11549,55 @@ export interface components {
             run_id: string | null;
             /** Format: uuid */
             run_step_id: string | null;
+        };
+        ProjectTrackerCheckResponse: {
+            ok: boolean;
+            reason: components["schemas"]["ProjectTrackerCheckReason"];
+        };
+        /** @description Null when ok. */
+        ProjectTrackerCheckReason: {
+            /**
+             * @description Closed list. 404 and 403 from Jira share `project_inaccessible` so existence is not disclosed.
+             * @enum {string}
+             */
+            kind: "not_set_up" | "credential_rejected" | "project_inaccessible" | "issue_type_missing" | "unreachable" | "jira_busy";
+            /** @description Fixed copy; only the key and the typed issue type name are interpolated. */
+            message: string;
+        } | null;
+        ProjectTrackerCheckBody: {
+            /** @description Trimmed and upper-cased (ASCII) by the server; validated before any request to Jira. */
+            destination_project_key: string;
+            /** @description Trimmed, 1-60 characters. Defaults to "Bug". */
+            issue_type_name?: string;
+        };
+        ProjectTrackerSettingsResponse: {
+            tracker_settings: components["schemas"]["ProjectTrackerSettings"];
+        };
+        ProjectTrackerSettings: {
+            /** @description Jira project key, 2-10 characters, ^[A-Z][A-Z0-9_]{1,9}$. Null when the Project was never configured. */
+            destination_project_key: string | null;
+            /** @description Jira issue type name, 1-60 characters. "Bug" until configured. */
+            issue_type_name: string;
+            /** @description Whether the Project's defects are synced to Jira. */
+            enabled: boolean;
+            /** @description False when no settings row exists yet (defaults are returned). */
+            configured: boolean;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ProjectTrackerSettingsPutResponse: {
+            tracker_settings: components["schemas"]["ProjectTrackerSettings"];
+            /** @description Defects queued by this save (0 when none). */
+            requeued: number;
+        };
+        ProjectTrackerSettingsPutBody: {
+            /** @description Trimmed and upper-cased (ASCII) by the server before validation. Required, even with the sync off. */
+            destination_project_key: string;
+            /** @description Trimmed, 1-60 characters. Defaults to "Bug". With the sync ON the stored value is Jira's own spelling. */
+            issue_type_name?: string;
+            enabled: boolean;
+            /** @description The number of defects the user saw in the confirmation dialog. Required (and must equal the number the save would queue) when that number is above 0. */
+            confirm_queue_count?: number;
         };
         ApiVersionResponse: {
             /** @enum {string} */
@@ -9323,6 +11706,177 @@ export interface components {
             /** @description Why the run is being aborted. Trimmed, then required to be 3..500 characters. */
             reason: string;
         };
+        RunStepAttachmentUploadTarget: {
+            /** @enum {string} */
+            method: "PUT";
+            /** @description Storage signed upload URL for this attachment only. Valid for 2 hours. Treat it as a secret. */
+            url: string;
+            /** @description Send exactly these headers with the PUT. The body is the raw file bytes. */
+            headers: {
+                [key: string]: string;
+            };
+            expires_at: string;
+        };
+        RunStepAttachmentInitBody: {
+            /** @description Display name, 1-255 characters after trimming. */
+            filename: string;
+            /**
+             * @description Declared type. The bytes are checked against it at commit: the content decides, never the name.
+             * @enum {string}
+             */
+            content_type: "image/png" | "image/jpeg" | "image/webp";
+            /** @description Size in bytes, 1 to 10485760 (10 MiB), inclusive. */
+            byte_size: number;
+        };
+        RunComparison: components["schemas"]["RunComparisonCompared"] | components["schemas"]["RunComparisonNoPrevious"] | components["schemas"]["RunComparisonInProgress"] | components["schemas"]["RunComparisonUnreliable"];
+        RunComparisonCompared: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "compared";
+            test: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            };
+            environment: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+            };
+            run: components["schemas"]["RunComparisonRunHeader"];
+            previous: components["schemas"]["RunComparisonRunHeader"];
+            counts: components["schemas"]["RunComparisonCounts"];
+            /** @description True only with at least one shared step, nothing Added, Removed or Not comparable, and every shared step an unchanged pass or still failing. */
+            nothing_changed: boolean;
+            /** @description True when the two Runs share no step; every step is then Added or Removed. */
+            no_common_steps: boolean;
+            /** @description Every step of both Runs, already in display order: groups new_failure, still_failing, newly_fixed, not_comparable, added, removed, unchanged_pass. */
+            rows: components["schemas"]["RunComparisonRow"][];
+        };
+        RunComparisonRunHeader: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "running" | "passed" | "failed" | "aborted";
+            /** @description ISO 8601 timestamp. */
+            started_at: string;
+            /** @description null while the Run is running. */
+            finished_at: string | null;
+            /** Format: uuid */
+            environment_id: string;
+            environment_name: string | null;
+            /** @enum {string} */
+            executor_mode: "human" | "agent" | "ci";
+            /** @description Set only when the Run was aborted. */
+            abort_reason: string | null;
+            /** @description Steps in this Run. */
+            total_steps: number;
+            /** @description Steps closed as skipped. For an aborted Run this is the count of steps it never reached. */
+            skipped_steps: number;
+        };
+        RunComparisonCounts: {
+            new_failure: number;
+            still_failing: number;
+            newly_fixed: number;
+            unchanged_pass: number;
+            not_comparable: number;
+            /** @description Steps present in both Runs: the five outcomes above add up to this. */
+            shared: number;
+            /** @description Steps only in This run, counted apart from the five outcomes. */
+            added: number;
+            /** @description Steps only in the Previous run, counted apart from the five outcomes. */
+            removed: number;
+        };
+        RunComparisonRow: {
+            /** @enum {string} */
+            group: "new_failure" | "still_failing" | "newly_fixed" | "not_comparable" | "added" | "removed" | "unchanged_pass";
+            /** @description Chain position of the ATC, in This run for every group except `removed` (the Previous run). */
+            atc_position: number;
+            atc_title: string;
+            /** @description The step text, as it was in This run (the Previous run for `removed`). */
+            content: string;
+            input_data: string | null;
+            expected: string | null;
+            /**
+             * Format: uuid
+             * @description The Run step in This run; null for `removed`.
+             */
+            step_id: string | null;
+            /**
+             * Format: uuid
+             * @description The Run step in the Previous run; null for `added`.
+             */
+            previous_step_id: string | null;
+            /**
+             * @description Outcome in This run; null for `removed`.
+             * @enum {string|null}
+             */
+            status: "pending" | "passed" | "failed" | "blocked" | "skipped" | null;
+            /**
+             * @description Outcome in the Previous run; null for `added`.
+             * @enum {string|null}
+             */
+            previous_status: "pending" | "passed" | "failed" | "blocked" | "skipped" | null;
+        };
+        RunComparisonNoPrevious: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "no_previous";
+            test: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            };
+            environment: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+            };
+            run: components["schemas"]["RunComparisonRunHeader"];
+            previous: null;
+        };
+        RunComparisonInProgress: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "in_progress";
+            test: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            };
+            environment: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+            };
+            run: components["schemas"]["RunComparisonRunHeader"];
+            previous: null;
+        };
+        RunComparisonUnreliable: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "unreliable";
+            test: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            };
+            environment: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+            };
+            run: components["schemas"]["RunComparisonRunHeader"];
+            previous: components["schemas"]["RunComparisonRunHeader"];
+        };
         RunFinishBody: {
             /**
              * @description The final verdict to close the run with. `aborted` is not a finish verdict — abort is its own action (BK-36).
@@ -9363,6 +11917,24 @@ export interface components {
             project_name: string;
             /** @description Server-built destination path for this row (e.g. `/projects/{slug}/atcs/{id}`, `/projects/{slug}?module={id}`). Navigate to it verbatim — never reconstruct it client-side. */
             href: string;
+        };
+        TestPlanClosureResponse: {
+            test_plan: components["schemas"]["ClosedTestPlan"];
+        };
+        ClosedTestPlan: components["schemas"]["TestPlan"] & {
+            /** @description Progress at close time, stored verbatim from the plan-progress computation (counts, passed percentage, per-test outcomes). Null while open. */
+            progress_snapshot: {
+                [key: string]: unknown;
+            } | null;
+        };
+        TestPlanCloseBody: {
+            /**
+             * @description Required. The final verdict of the cycle.
+             * @enum {string}
+             */
+            verdict: "passed" | "failed";
+            /** @description Optional plain-text outcome summary, at most 4000 characters after trimming. Blank or whitespace-only is stored as empty (null). */
+            summary?: string | null;
         };
         TestPlanUpdateResponse: {
             test_plan: components["schemas"]["TestPlan"];
@@ -9468,6 +12040,7 @@ export interface components {
             /** @description The page, ordered newest first (started_at desc, id desc). */
             items: components["schemas"]["RunHistoryItem"][];
             totals: components["schemas"]["RunHistoryTotals"];
+            flakiness: components["schemas"]["RunHistoryFlakiness"];
             /** @description Opaque token for the next (older) page, or null when this is the last page. base64url, so it is URL-safe as-is: echo it back verbatim as `?cursor=`; never construct or parse one. */
             next_cursor: string | null;
         };
@@ -9495,6 +12068,15 @@ export interface components {
             passed: number;
             failed: number;
             aborted: number;
+        };
+        /** @description BK-554 raw flakiness counts for the Test. All-time window and filter-invariant like `totals`; below 5 verdict Runs the client shows no rate. */
+        RunHistoryFlakiness: {
+            /** @description Passed/Failed Runs in the window (the 10 most recent). */
+            sample: number;
+            /** @description Consecutive pairs in the window whose verdicts differ. Aborted Runs are skipped, not a break. */
+            flips: number;
+            /** @description Aborted Runs left out of the sample (inside the span the sample covers; every Aborted Run when there is no verdict Run). */
+            aborted_skipped: number;
         };
         TestTagsBody: {
             /** @description The COMPLETE new tag set — assigning replaces the whole set; an empty array clears all tags. Reserved tags (smoke/sanity/regression) are lowercased; custom tags preserve casing. Server normalizes (trim, dedupe) and rejects commas, >50 chars, or >20 tags. */
@@ -9684,6 +12266,88 @@ export interface components {
             project_count: number;
             /** @description Age in days of the workspace's oldest run (`now() - min(runs.created_at)`), or `null` when the workspace has no runs. This reports how much of the plan's retention WINDOW is in use — nothing in this product prunes runs, so this figure is never a countdown to deletion. */
             oldest_run_age_days: number | null;
+        };
+        ChatEntityCard: {
+            /** @enum {string} */
+            state: "ok";
+            /** @enum {string} */
+            type: "atc" | "test" | "run";
+            /** Format: uuid */
+            id: string;
+            code: string;
+            title: string;
+            status: components["schemas"]["ChatEntityStatus"];
+            project_name: string;
+            detail: string | null;
+            href: string;
+        } | {
+            /** @enum {string} */
+            state: "restricted" | "unavailable";
+            /** @enum {string} */
+            type: "atc" | "test" | "run";
+            /** Format: uuid */
+            id: string;
+        };
+        ChatEntityStatus: {
+            value: string;
+            label: string;
+            /** @enum {string} */
+            tone: "pass" | "fail" | "blocked" | "skipped" | "running" | "neutral";
+        };
+        ChatMessagesPage: {
+            /** Format: uuid */
+            channel_id: string;
+            /** @description Ascending by `seq` (oldest first, newest last). */
+            items: components["schemas"]["ChatMessage"][];
+            /** @description More older messages exist (default / `before_seq`), or more newer ones beyond the 200 catch-up cap (`after_seq`). */
+            has_more: boolean;
+        };
+        ChatMessage: {
+            /** Format: uuid */
+            id: string;
+            /** @description Monotonic total order across the workspace channel. The only ordering and pagination key. */
+            seq: number;
+            /** Format: uuid */
+            channel_id: string;
+            /** Format: uuid */
+            workspace_id: string;
+            /**
+             * Format: uuid
+             * @description null once the author account is deleted.
+             */
+            author_user_id: string | null;
+            /** @description Display name derived from the author's email; "Former member" when unknown. */
+            author_name: string;
+            /** @description 1..4000 characters; empty only on a tombstone. */
+            body: string;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description Set once the author edited the message (BK-219).
+             */
+            edited_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Set on a tombstone; `body` is then empty. Author and moderator deletions are indistinguishable.
+             */
+            deleted_at?: string | null;
+        };
+        SendChatMessageBody: {
+            /** @description 1..4000 characters after trimming; empty or whitespace-only is rejected. */
+            body: string;
+        };
+        EditChatMessageBody: {
+            /** @description New text, 1..4000 characters after trimming. */
+            body: string;
+        };
+        ChatMember: {
+            /** Format: uuid */
+            user_id: string;
+            email: string;
+            display_name: string;
+            /** @enum {string} */
+            role: "viewer" | "member" | "admin" | "owner";
         };
         /** @description A workspace-wide coverage rollup. THE ROLL-UP RULE: every acceptance criterion in the workspace counts exactly once, whichever project it belongs to (`sum(ac_bound) / sum(ac_total)` over the projects) — NOT the average of the per-project percentages, which would weight a 3-criteria project the same as a 300-criteria one. Both percentages are derived from the counts in the same payload, so a caller can recompute them instead of trusting them. */
         WorkspaceCoverage: {
