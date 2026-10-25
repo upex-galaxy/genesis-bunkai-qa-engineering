@@ -69,7 +69,7 @@ Who authors: a human QA architect / lead directly, **or** an AI workflow that de
 | [ADR-0004](./ADR-0004-naming-decisions.md) | Twelve naming conventions for QA artifacts outside the planning ladder | Accepted | — | — |
 | [ADR-0005](./ADR-0005-validation-scope.md) | The framework validates only what it owns | Proposed | ADR-0003 §Decision bullet 3 | — |
 | [ADR-0006](./ADR-0006-forensic-measurements-ledger.md) | Doctrine keeps the why; the measured figures and dates live here | Proposed | — | — |
-| [ADR-0018](./ADR-0018-cookie-only-requests-in-api-components.md) | Cookie-only requests are a request option of ApiBase, not a per-component override | Proposed | — | — |
+| [ADR-0018](./ADR-0018-cookie-only-requests-in-api-components.md) | Cookie-only requests are a request option of ApiBase, not a per-component override | Accepted | — | — |
 
 > ADR-0001 to ADR-0006 are framework decisions inherited verbatim from the agentic-qa-boilerplate upstream; the synced skills cite them. Project-specific ADRs start at ADR-0007.
 

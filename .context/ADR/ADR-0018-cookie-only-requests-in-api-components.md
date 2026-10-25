@@ -1,6 +1,6 @@
 # ADR-0018 — Cookie-only requests are a request option of ApiBase, not a per-component override
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-25)
 - **Date:** 2026-10-19
 - **Deciders:** QA framework owner (BK-508 automation, Wave 1)
 - **Tags:** auth-in-tests, api-components, kata-layer-2, fixtures
