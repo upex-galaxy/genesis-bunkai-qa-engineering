@@ -321,7 +321,7 @@ Every file: `beforeEach` creates its synthetic workspace(s) through `WorkspaceEx
 
 ## 7. Success Criteria
 
-- [ ] All in-scope ACs covered, plus the risk-beyond-AC cases in `spec.md` (checklist P1). Open (2026-10-25): AC-13 has no TC (Q9 gap); BK-995 is `test.fixme` (product test hook needed); BK-1010 stays manual (Q2). Every other Candidate is automated
+- [ ] All in-scope ACs covered, plus the risk-beyond-AC cases in `spec.md` (checklist P1). Open (2026-10-27): only BK-995, which is `test.fixme` until the product adds a test hook. AC-13 was scored Deferred (Q9); BK-1010 stays manual (Q2). Every other Candidate is automated
 - [x] BVA on the 168 h window automated (UI three points; server pending Q2). UI three points in BK-1006; the server side stays manual (BK-1010, Q2)
 - [x] KATA compliance (atomic ATCs, no ATC calling ATC, max 2 positional params, inline locators, alias imports). Checked by Judgment Day on all three waves
 - [x] Fixture choice per file as in §5
@@ -355,7 +355,7 @@ Q2 decision ---------------------------------------------------------------> BK-
 | Q6 | Which archive file(s) must be NDJSON, and with which extension? The dev plan says `run_steps`; BK-1025 says `runs.json`; the Tech Lead comment says "Run snapshots" (in the data model, `run_atcs` / `run_steps`). Also confirm the exact entity keys in `manifest.counts` | BK-1015, BK-999 entity list | ANSWERED by the BK-1025 retest (ReTest BK-1167): only `runs.ndjson` is NDJSON; `runs.json` is absent; `run_steps.json`, `run_atcs.json` and the other entity files are JSON arrays; manifest counts match the files. An empty workspace exports `runs.ndjson` as 0 bytes |
 | Q7 | Accept the residue of soft-delete cleanup on a shared project: 30-day tombstones, ZIPs left in the private bucket (no purge job), one deletion email to the Owner per test? | All tests | Proceed, report volume after the first full run |
 | Q8 | Approve `fflate` as a devDependency for reading ZIPs in tests? | Wave 3, BK-1019 body check | ANSWERED: approved, `fflate` added as a devDependency |
-| Q9 | AC-13 ("an export changes nothing") has no Candidate TC. Add one (snapshot entity counts before/after an export on a seeded workspace) via `/test-documentation`? | none (gap) | Logged as gap, not automated |
+| Q9 | AC-13 ("an export changes nothing") has no Candidate TC. Add one (snapshot entity counts before/after an export on a seeded workspace) via `/test-documentation`? | none (gap) | ANSWERED 2026-10-27 by `/test-documentation`: Deferred, ROI 0.89 (band 0.5-1.5, no prior bug). The export worker only writes its own `workspace_exports` row and the archive in storage, never an entity table. No TC created; the verdict is recorded in the "Prioritization — Deferred scenarios" comment on BK-508. Revisit if the worker starts writing to an entity table |
 | Q10 | Ask dev for `data-testid` on the status card states and the Download link? | none | Role/text locators |
 | Q11 | BK-1004 Jira design says the PAT is "held by a non-Owner user". The plan uses the Owner's own `workspace:admin` PAT (stronger: highest identity + highest scope, still refused, so the gate is the auth mode, not the role). Add the admin-held PAT as a second data row once Q1 is answered? | none | Owner PAT only |
 | Q12 | Measured export duration on staging for an empty vs seeded workspace (sets `EXPORT_SETTLE_TIMEOUT_MS` and the race window for BK-1002) | tuning | 30 s settle timeout, 10 s cleanup wait |
