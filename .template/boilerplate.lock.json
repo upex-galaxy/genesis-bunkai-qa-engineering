@@ -1,33 +1,34 @@
 {
   "schemaVersion": 7,
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
-  "templateCommit": "89f4602822ea74826fc01abb8949e34030d01a6a",
+  "templateCommit": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
   "perComponentCommit": {
-    "skills": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "skills": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
     "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "scripts": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "docs": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "cli": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "vscode": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "husky": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "agents-docs": "869e4200e340a4cf38968aee786327fceb222d6d",
+    "scripts": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "docs": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "cli": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "vscode": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "husky": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "agents-docs": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
     "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "tooling": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "env-template": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "agent-compatibility": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "codex-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "agent-root-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "config-core": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "env-schema": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "instructions": "869e4200e340a4cf38968aee786327fceb222d6d",
-    "worktree-include": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "orca-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1",
-    "playwright-cli-config": "bf4c787cc9a2998832d6bf573e8e1896576afbc1"
+    "tooling": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "env-template": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "agent-compatibility": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "codex-config": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "agent-root-config": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "config-core": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "env-schema": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "instructions": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "worktree-include": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "orca-config": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "playwright-cli-config": "682096966a5a97bb5a8e0caf0ca6823fc7306d46",
+    "tests-utils": "682096966a5a97bb5a8e0caf0ca6823fc7306d46"
   },
   "syncedComponents": [],
   "ignoreFileSync": {
     ".gitignore": {
-      "lastSyncedSha": "e3c02d9d7cce2aea351df76d057b69cd8cea93f3",
+      "lastSyncedSha": "3c8c958c485266512b91153a279a7691af0469f5",
       "appendedLines": [
         ".context/reports/*",
         "!.context/reports/README.md",
@@ -69,7 +70,8 @@
         "!.context/regression-history/",
         "!.context/reports/",
         "!.context/PBI/",
-        ".agents/skills/diagram-design/"
+        ".agents/skills/diagram-design/",
+        "!.context/sprint/"
       ]
     },
     ".prettierignore": {
@@ -82,7 +84,7 @@
   "packageJsonSync": {
     "package.json": {
       "scripts": {
-        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
+        "lastSyncedSha": "a2437fcbd9d7234155384a0d12bf201a288d2450",
         "appliedKeys": [
           "context:hydrate",
           "jira:components",
@@ -110,7 +112,13 @@
           "tests:explain:render",
           "worktree:audit",
           "shared:check",
-          "sync"
+          "sync",
+          "board",
+          "board:check",
+          "board:up",
+          "context:coverage",
+          "evidence",
+          "xray:payload"
         ],
         "keptKeys": {
           "repo:check": "bun run format:check && bun run lint:check && bun run types:check && bun run vars:check && bun run vars:schema:check && bun run skills:check && bun run instructions:check && bun run skills:registry:check && bun run docs:check && bun run shared:check && bun run agents:compat:check && bun run agents:schema:check && bun run kata:manifest:check && bun run vars:env:check && bun run git:policy verify",
@@ -118,22 +126,22 @@
         }
       },
       "devDependencies": {
-        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
+        "lastSyncedSha": "a2437fcbd9d7234155384a0d12bf201a288d2450",
         "appliedKeys": [
           "varlock"
         ]
       },
       "dependencies": {
-        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
+        "lastSyncedSha": "a2437fcbd9d7234155384a0d12bf201a288d2450",
         "appliedKeys": []
       },
       "lint-staged": {
-        "lastSyncedSha": "d63a1ef0460976a9514a284368674abf0e34a0db",
+        "lastSyncedSha": "a2437fcbd9d7234155384a0d12bf201a288d2450",
         "appliedKeys": []
       }
     }
   },
   "cliVersion": "8.5",
-  "lastSyncedAt": "2026-10-18T22:48:00.471Z",
+  "lastSyncedAt": "2026-10-28T17:59:49.351Z",
   "variableSystemVersion": 1
 }

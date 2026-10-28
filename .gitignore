@@ -207,3 +207,6 @@ storage-state-*.json
 !.context/reports/
 !.context/PBI/
 .agents/skills/diagram-design/
+
+# ----- 2026-10-28 (sync) -----
+!.context/sprint/

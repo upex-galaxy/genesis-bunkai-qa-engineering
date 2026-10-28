@@ -67,6 +67,8 @@ import {
   collectParityFindings,
   PARITY_PROMPT_PATH,
   persistArchivedSkillMarkers,
+  prerequisiteArbiterPasses,
+  prerequisiteFor,
   renderParityReport,
   RESOLVED_BY_APPLY_MARK,
   resolvedByApply,
@@ -86,7 +88,50 @@ const CLI_VERSION = '8.5';
 // clone (absolute path / file:// URL, cloned with plain git, no gh session) to
 // exercise an unpublished boilerplate branch against a consumer repo.
 const TEMPLATE_REPO = process.env.UPEX_TEMPLATE_REPO || 'upex-galaxy/agentic-qa-boilerplate';
-const TEMP_DIR = path.join(os.tmpdir(), 'kata-boilerplate-update');
+// One clone directory per process. A fixed name was shared by every `bun sync`
+// on the machine, and each clone wipes its destination first, so two concurrent
+// runs (two worktrees, two test processes) deleted each other's clone and one
+// died with CLONE_FAILED. The pid is unique among live processes. The
+// self-update children never rely on sharing it: the --dry-run preview gets the
+// parent's clone through UPDATER_UPSTREAM_DIR_ENV, the real re-exec clones its
+// own. A pid is practically never reused, so a run that ends without cleaning
+// would leave its clone forever: the entry point removes TEMP_DIR on every
+// process exit, and sweeps the dirs of dead runs at start (SIGKILL included).
+export const TEMP_DIR = path.join(os.tmpdir(), `kata-boilerplate-update-${process.pid}`);
+
+/** True while the process exists (EPERM: it exists and belongs to someone else). */
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  }
+  catch (err) {
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+/**
+ * Remove the clone dirs (`kata-boilerplate-update-<pid>`) whose run is gone:
+ * what a killed or crashed `bun sync` leaves, since no exit handler survives a
+ * SIGKILL. A live run's dir, this run's own and any other name are kept.
+ * Never throws; returns the names removed.
+ */
+export function sweepStaleCloneDirs(tmp: string = os.tmpdir()): string[] {
+  let names: string[];
+  try { names = fs.readdirSync(tmp); }
+  catch { return []; }
+  const removed: string[] = [];
+  for (const name of names) {
+    const pid = Number(/^kata-boilerplate-update-(\d+)$/.exec(name)?.[1]);
+    if (!pid || pid === process.pid || pidAlive(pid)) { continue; }
+    try {
+      fs.rmSync(path.join(tmp, name), { recursive: true, force: true });
+      removed.push(name);
+    }
+    catch { /* another sweep got there first, or no permission: leave it */ }
+  }
+  return removed;
+}
 // Where the upstream clone sits while the afterApply hooks read it: our own
 // temp dir, or the clone a parent process handed down for the --dry-run
 // preview of a pending self-update (see UPDATER_UPSTREAM_DIR_ENV).
@@ -142,6 +187,13 @@ const ENV_SCHEMA_FILES = ['.env.schema', '.env.core.schema'];
 // The hook adapter carries no project state and keeps flowing.
 const CODEX_FRAMEWORK_FILES = ['hooks.json'];
 const CLAUDE_ROOT_CONFIG_FILES = ['settings.json'];
+// The framework helpers under `tests/utils/`: pure logic every project runs as
+// is (outcome classes, the known-defect marker, the Xray JSON body) plus their
+// tests. A file-list, not the directory: `decorators.ts` and `jiraSync.ts` sit
+// beside them on PROTECTED_WATCHLIST, and every other helper there is the
+// project's own. Without this component a synced skill cites files that never
+// arrive, and `skills:check` refuses the sync's own commit.
+const TESTS_UTILS_FILES = ['testOutcomes.ts', 'testOutcomes.test.ts', 'knownDefect.ts', 'xrayResults.ts', 'xrayResults.test.ts'];
 
 // `docs/` is the human documentation site. The boilerplate owns ONLY its
 // shipped half: `docs/core/**` (the pages), `docs/assets/**` (shared css/js and
@@ -271,6 +323,7 @@ export const COMPONENTS: Component[] = [
   { name: 'agents-docs', type: 'file-list', paths: ['.agents'], files: AGENTS_DOCS_FILES },
   { name: 'tooling', type: 'file-list', paths: ['.'], files: TOOLING_FILES },
   { name: 'config-core', type: 'file-list', paths: ['config'], files: CONFIG_CORE_FILES },
+  { name: 'tests-utils', type: 'file-list', paths: ['tests/utils'], files: TESTS_UTILS_FILES },
   // `.env.example` carries NO secrets (placeholder values only) and fast-forwards
   // safely. Shipping it is the prerequisite for env-var drift detection — the
   // afterApply hook can only diff against an `.env.example` we have shipped.
@@ -929,7 +982,9 @@ function makeKataManifestHook(sink: ReportSink): (summary: RunSummary) => Promis
 // Everything the old hooks promised is kept verbatim, because those promises
 // are what make writing to a project's identity file acceptable at all:
 // INSERT-ONLY, never an edit to an existing line, idempotent, interactive
-// confirm, and `--auto` warns without mutating. One prompt per BLOCK: per-key
+// confirm. `--auto` inserts only a WHOLE missing block (nothing of the
+// project's can live in a block it lacks) and warns about the leaves missing
+// from a block the project has. One prompt per BLOCK: per-key
 // prompting on a project 46 paths behind is abusive, and a single
 // all-or-nothing prompt hides what is being accepted.
 //
@@ -947,12 +1002,13 @@ function upstreamRelease(templateDir: string): string | null {
   catch { return null; }
 }
 
-async function backfillProjectYamlFromSchema(
+export async function backfillProjectYamlFromSchema(
   templateDir: string,
   sink: ReportSink,
   nonInteractive: boolean,
+  cwd: string = process.cwd(),
 ): Promise<void> {
-  const consumerPath = path.join(process.cwd(), SCHEMA_SOURCE);
+  const consumerPath = path.join(cwd, SCHEMA_SOURCE);
   const schemaPath = path.join(templateDir, SCHEMA_FILE);
   if (!fs.existsSync(consumerPath) || !fs.existsSync(schemaPath)) { return; }
 
@@ -974,28 +1030,36 @@ async function backfillProjectYamlFromSchema(
   if (delta.gaps.length === 0) { return; }
 
   const release = upstreamRelease(templateDir);
-  const total = delta.gaps.reduce((n, g) => n + g.paths.length, 0);
 
+  // Non-interactive (`--auto`, headless, an agent run): a WHOLE missing block is
+  // inserted, copied from the schema with its blank values, because nothing of
+  // the project's can be in a block it does not have, and a shipped skill that
+  // reads the block (`CONFIG_BLOCK_READERS`) would otherwise fail at runtime.
+  // A block the project HAS stays untouched: its missing leaves are only listed.
   if (nonInteractive) {
-    sink.warn(`Tu \`${SCHEMA_SOURCE}\` no tiene ${total} clave(s) que el schema de upstream declara.`);
-    for (const gap of delta.gaps) {
-      sink.step(`  ${gap.block}${gap.wholeBlock ? ' (bloque completo)' : ''}: ${gap.paths.join(', ')}`);
+    const partial = delta.gaps.filter(g => !g.wholeBlock);
+    if (partial.length > 0) {
+      const missing = partial.reduce((n, g) => n + g.paths.length, 0);
+      sink.warn(`Tu \`${SCHEMA_SOURCE}\` no tiene ${missing} clave(s) que el schema de upstream declara dentro de bloques que ya tienes.`);
+      for (const gap of partial) { sink.step(`  ${gap.block}: ${gap.paths.join(', ')}`); }
+      sink.step('Modo --auto: un bloque existente no se modifica. Ejecuta el updater interactivo, o `bun run agents:schema --project`.');
     }
-    sink.step('Modo --auto: no se modifica nada. Ejecuta el updater interactivo, o `bun run agents:schema --project`.');
-    return;
+    if (partial.length === delta.gaps.length) { return; }
   }
 
   let current = consumer;
   const applied: string[] = [];
   for (const gap of delta.gaps) {
+    if (nonInteractive && !gap.wholeBlock) { continue; }
     const what = gap.wholeBlock
       ? `el bloque \`${gap.block}\` completo (${gap.paths.length} clave(s))`
       : `${gap.paths.length} clave(s) nueva(s) en \`${gap.block}\`: ${gap.paths.join(', ')}`;
-    const proceed = await sink.confirm(
+    const proceed = nonInteractive || await sink.confirm(
       `Tu \`${SCHEMA_SOURCE}\` no tiene ${what}. Insertarlas ahora? (insert-only — ningún valor tuyo se modifica)`,
       false,
     );
     if (!proceed) { continue; }
+    if (nonInteractive) { sink.step(`Modo --auto: insertando ${what} (valores en blanco, insert-only).`); }
 
     // A whole missing block is inserted as ONE unit, not leaf by leaf: its
     // children come with it, and asking for each would be the per-key
@@ -1256,7 +1320,9 @@ async function resolveSkillFilter(skills: string[]): Promise<Component[]> {
 // "they differ" alone would fire every run. An entry fires ONLY when the
 // UPSTREAM content changed since the last advice, tracked per entry by a
 // content hash under `.template/upstream-sha/`. One nudge per upstream change,
-// never on dry-run (markers are not persisted there).
+// never on dry-run (markers are not persisted there). The one exception is a
+// BLOCKING entry (`PATH_PREREQUISITES`): it fires every run while its arbiter
+// gate fails, because its marker says "seen", never "resolved".
 //
 // `AGENTS.md` (formerly `CLAUDE.md`, promoted by the cross-harness migration)
 // keeps the legacy `claude-md.upstream.sha` marker path so repos that already
@@ -1279,6 +1345,11 @@ const PROTECTED_WATCHLIST: ProtectedWatchEntry[] = [
   { path: 'tests/components/UiFixture.ts', reason: 'UI fixture wiring adapted per project' },
   { path: 'tests/components/api/ApiBase.ts', reason: 'KATA L2 HTTP base adapted to the target API' },
   { path: 'tests/components/ui/UiBase.ts', reason: 'KATA L2 UI base adapted to the target app' },
+  // The reporter and the two helpers that carry project wiring. Their pure
+  // neighbours sync through `tests-utils`; these get a drift row with the hunks.
+  { path: 'tests/KataReporter.ts', reason: 'the project\'s reporter: merge upstream\'s outcome records (reports/test-outcomes.json, the run id shared with atc_results.json), without which the board never shows an automated result' },
+  { path: 'tests/utils/decorators.ts', reason: 'the @atc decorator adapted per project: merge upstream\'s AtcResult.playwrightTestId and the runtime test.skip() as SKIP' },
+  { path: 'tests/utils/jiraSync.ts', reason: 'the project\'s TMS write-back: merge upstream\'s Xray body built through the synced tests/utils/xrayResults.ts and its key check before authenticating' },
   // Since the api-login split the generic CLI lives in `scripts/lib/api-login-core.ts`
   // (plainly synced) and the project's auth flow in `scripts/api-login.project.ts`
   // (bootstrapOnlyPaths below). The entry itself stays watched: a repo scaffolded
@@ -1557,8 +1628,15 @@ function makeParityHook(sink: ReportSink, priorLockSha: string, dryRun: boolean,
     // ANY first-advice entry whose upstream copy hasn't moved since the
     // project's own lock cursor, first-run noise on a migrated repo, not a
     // new upstream change to review.
+    // A BLOCKING entry (a release prerequisite) is re-judged by its arbiter
+    // gate on every run: while the gate fails, the row stays, whatever the
+    // marker says, and it is never seeded silently.
+    const arbiterFails = (entry: ProtectedWatchEntry): boolean => {
+      const prerequisite = prerequisiteFor(entry.path);
+      return prerequisite !== null && !prerequisiteArbiterPasses(prerequisite, cwd);
+    };
     const { advised: drifted, seeded, seededNoUpstreamChange } = splitFirstProjectAdvice(
-      detectProtectedDrift(watchlist, UPSTREAM_DIR, cwd),
+      detectProtectedDrift(watchlist, UPSTREAM_DIR, cwd, arbiterFails),
       { tempDir: UPSTREAM_DIR, lockCursor: priorLockSha || null },
     );
     // Markers FIRST: one nudge per upstream change even if the user ignores
@@ -1609,6 +1687,7 @@ function makeParityHook(sink: ReportSink, priorLockSha: string, dryRun: boolean,
     const findings = collectParityFindings({
       root: cwd,
       upstreamDir: UPSTREAM_DIR,
+      dryRun,
       drift: drifted.map(d => ({ path: d.path, reason: d.reason, structural: d.structural === true, source: d.source })),
       compatErrors,
       compatWarnings,
@@ -1631,6 +1710,8 @@ function makeParityHook(sink: ReportSink, priorLockSha: string, dryRun: boolean,
         backupPath: summary.backupDir ? path.join(summary.backupDir, edit.path) : null,
       })),
       packageJsonKept: summary.packageJsonKept ?? [],
+      packageJsonAppended: summary.packageJsonAppended ?? [],
+      testSiblingsHeldBack: summary.testSiblingsHeldBack ?? [],
       gates: runFacts.gates,
       pbiCache: runFacts.pbiCache,
       shadowingCommandsMoved: runFacts.shadowingCommandsMoved,
@@ -2194,6 +2275,9 @@ async function main(): Promise<void> {
       '.agents/skills/iql-context/references/project-overrides.md',
       ...watchlist.map(e => e.path),
     ],
+    // A kept protected file keeps its own test: upstream's `.test.*` sibling
+    // asserts upstream's copy (testSiblingsToHoldBack in ./lib/updater-drift.ts).
+    holdTestSiblingsOf: watchlist.map(e => e.path),
     // Files inside a synced component that must NEVER be delivered or
     // overwritten by the sync: the generated surfaces (see GENERATED_PATHS).
     // CLAUDE.md is the shim the migration / scaffold writes, REGISTRY.md is
@@ -2223,7 +2307,11 @@ async function main(): Promise<void> {
     // first install and this keeps `bun sync` from putting them back.
     //
     // `.context/ADR/` needs no entry here: `.context` is not a synced component,
-    // so ADRs only ever travel through the scaffold tarball, which prunes them.
+    // so ADRs only ever travel through the scaffold tarball, which prunes the
+    // recorded ones (`ADR-<digits>-*`) and keeps the template and the README. A
+    // prefix entry would drop those two as well, and this list has no pattern
+    // form; the component-registry test holds the invariant instead. The synced
+    // linters skip a cite of a pruned ADR outside the boilerplate.
     repoOnlyPaths: [
       'docs/reports',
       // The files of a harness this project does not use (ADR-0012): it
@@ -2365,6 +2453,16 @@ function printPreflight(pre: PreflightResult): void {
 // Guarded so tests can import COMPONENTS and the pure helpers above
 // (extractIndentedYamlBlock, insertBlockAtEndOfSection) without kicking off a sync.
 if (import.meta.main) {
+  sweepStaleCloneDirs();
+  // Every process.exit passes here (Ctrl-C at a prompt, UpdaterAbort, a throw,
+  // a terminal cancel, an empty selection), so none of them leaves the clone.
+  // rmSync is synchronous, which an exit listener requires. SIGINT / SIGTERM
+  // would kill the process without an exit event: turn them into one, with the
+  // shell's exit codes. A SIGKILL is the startup sweep's job.
+  process.on('exit', () => cleanupTempDir(TEMP_DIR));
+  for (const [signal, code] of [['SIGINT', 130], ['SIGTERM', 143]] as const) {
+    process.once(signal, () => process.exit(code));
+  }
   main().catch(async (err: unknown) => {
     if (err instanceof Error && err.name === 'ExitPromptError') {
       tui.cancel('Aborted by user.');

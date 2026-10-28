@@ -5,24 +5,32 @@
  *
  * The fixture is a local clone of this repo (`scripts/ui-up-fixture.ts`), so no
  * gh session and no network are needed. Skipped on a history too short for it
- * (a shallow CI clone).
+ * (a shallow clone); `unit-tests.yml` checks out the full history so it runs in CI.
+ * The fixture clones the COMMITTED HEAD: a working-tree change to the updater
+ * only shows here after a commit.
  */
 
 import type { JournalEntry } from '../cli/lib/ui/events.ts';
 import type { UpFixture } from './ui-up-fixture.ts';
 
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, test } from 'bun:test';
+import { afterAll, describe, expect, test } from 'bun:test';
 
+import { contractsEnforced } from './lib/doc-contracts.ts';
 import { buildUpFixture } from './ui-up-fixture.ts';
 
 const REPO = resolve(import.meta.dir, '..');
-const deep = spawnSync('git', ['-C', REPO, 'rev-parse', '--verify', '-q', 'HEAD~30']).status === 0;
-const SECRET = 'fixture-secret-value-9f3a';
+// The fixture rolls THIS repo back 30 commits and syncs it forward from itself:
+// it needs that much history, and it means something only in the boilerplate's
+// own checkout (a scaffolded project is not an upstream of anything).
+const deep = contractsEnforced(REPO) && spawnSync('git', ['-C', REPO, 'rev-parse', '--verify', '-q', 'HEAD~30']).status === 0;
+// Built at runtime so this file never holds the literal: the fixture syncs
+// `scripts/`, and a hunk of this very file in the summary would read as a leak.
+const SECRET = ['fixture', 'secret', 'value-9f3a'].join('-');
 
 interface Run { exit: number, out: string, events: JournalEntry[] }
 
@@ -103,8 +111,14 @@ function normalize(out: string): string {
     .join('\n');
 }
 
+// Every fixture of this file sits under one temp root: two full clones of the
+// repo per test, hundreds of MB a run. Left behind, a day of fleet runs filled
+// the disk. Created only when the suite runs, removed in afterAll, which fires
+// whether the tests passed or failed.
+const root = deep ? mkdtempSync(join(tmpdir(), 'ui-up-e2e-')) : '';
+
 describe.if(deep)('bun sync on a fixture project', () => {
-  const root = mkdtempSync(join(tmpdir(), 'ui-up-e2e-'));
+  afterAll(() => { rmSync(root, { recursive: true, force: true }); });
 
   test('--headless keeps exactly the terminal flow of a run without the page (headless parity)', async () => {
     const f = buildUpFixture(join(root, 'parity'));
@@ -149,6 +163,15 @@ describe.if(deep)('bun sync on a fixture project', () => {
     expect(run.out).not.toContain(SECRET);
   }, 240_000);
 
+  test('two runs at once on one machine both finish: each clones into its own directory', async () => {
+    const twins = [buildUpFixture(join(root, 'twin-a')), buildUpFixture(join(root, 'twin-b'))];
+    const runs = await Promise.all(twins.map(async f => runUp(f, ['--auto', '--dry-run', '--no-gates', '--headless'])));
+    for (const run of runs) {
+      expect(run.out).not.toContain('CLONE_FAILED');
+      expect(run.exit).toBe(0);
+    }
+  }, 180_000);
+
   test('an explicit --auto in the page is read-only: no question, the run applies and reports', async () => {
     const f = buildUpFixture(join(root, 'auto'));
     const run = await runUp(f, ['--auto', '--ui', '--no-gates']);
@@ -158,4 +181,9 @@ describe.if(deep)('bun sync on a fixture project', () => {
     expect(run.events.some(e => e.t === 'report')).toBe(true);
     expect(run.events.at(-1)).toMatchObject({ t: 'run.end' });
   }, 180_000);
+});
+
+// Declared after the describe on purpose: it runs once that afterAll has fired.
+test.if(deep)('the fixture clones leave nothing behind in the temp dir', () => {
+  expect(existsSync(root)).toBe(false);
 });

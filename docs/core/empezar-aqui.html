@@ -351,8 +351,9 @@ bun setup</code></pre>
           ofrece una vez por sesión. El hook <code>pre-push</code> (vía
           <code>bun run git:policy verify</code>) solo te frena con ese mensaje si el bloque
           <code>git_strategy:</code> de <code>.agents/project.yaml</code> falta o no tiene
-          estrategia; con el bloque presente, lo que reporta es la diferencia entre la política
-          declarada y la que aplica GitHub.
+          estrategia. Con el bloque presente reporta la diferencia entre la política declarada y la
+          que aplica GitHub: mientras la estrategia siga heredada (o no haya un origin en GitHub) la
+          muestra como aviso y deja pasar el push; una vez elegida, esa diferencia frena el push.
         </p>
       </div>
       <p>
@@ -614,6 +615,15 @@ codex      # Codex CLI (Codex Desktop usa la misma config del repo)</code></pre>
               <td>ATR, comentario de QA y bugs</td>
             </tr>
             <tr>
+              <td>Execution sin ticket</td>
+              <td>a demanda, en el sprint o después</td>
+              <td><code>/exploratory-testing</code></td>
+              <td>
+                Escenarios candidatos ejecutados en vivo, marcados NEW, WEAK o COVERED contra la
+                cobertura que ya existe
+              </td>
+            </tr>
+            <tr>
               <td>Documentation</td>
               <td>después del sprint</td>
               <td><code>/test-documentation</code></td>
@@ -664,6 +674,25 @@ codex      # Codex CLI (Codex Desktop usa la misma config del repo)</code></pre>
             Ticket en "Ready For QA" o un retest de bug. Planifica, explora UI, API y DB, y reporta
             ATP, ATR, ATS y bugs en el TMS. Si la historia pasó por Shift-Left dentro de la ventana
             que declara <code>/sprint-testing</code>, se salta parte de la planificación.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge accent">Sin ticket</span>
+          <h3>/exploratory-testing</h3>
+          <p>
+            Un módulo, un flujo o la app entera, sin historia de por medio. Arma un charter, reparte
+            el reconocimiento entre varios agentes, intenta refutar cada hallazgo y te pregunta si
+            lo observado es lo esperado. Solo pasa a documentación lo que no estaba cubierto.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge accent">Sprint en flota</span>
+          <h3>/sprint-conductor</h3>
+          <p>
+            El sprint entero corrido por varios testers a la vez, uno por ticket, y el owner mirando
+            todo desde el Sprint Board. El conductor no prueba: arranca, vigila el entorno de
+            pruebas, cierra cada worker verificando sus artefactos y retoma la flota después de un
+            reinicio. Necesita Orca.
           </p>
         </div>
         <div class="card">
@@ -982,6 +1011,14 @@ subagente (contexto limpio)
               <td><code>/sprint-testing</code> con la clave o el número de sprint</td>
             </tr>
             <tr>
+              <td>Explorar un módulo, un flujo o la app sin ticket</td>
+              <td><code>/exploratory-testing</code></td>
+            </tr>
+            <tr>
+              <td>Correr el sprint en flota y mirarlo desde el Sprint Board</td>
+              <td><code>/sprint-conductor</code></td>
+            </tr>
+            <tr>
               <td>Documentar tests en Jira/Xray con ROI</td>
               <td><code>/test-documentation</code></td>
             </tr>
@@ -996,6 +1033,10 @@ subagente (contexto limpio)
             <tr>
               <td>Anotar una captura de un bug visual</td>
               <td>"anota este bug" (<code>bug-screenshot-annotation</code>)</td>
+            </tr>
+            <tr>
+              <td>Armar y publicar la página de evidencia de un ticket o un bug</td>
+              <td>"publica la evidencia" (<code>evidence-artifact</code>)</td>
             </tr>
             <tr>
               <td>Traer un issue de Jira con todos sus campos</td>
@@ -1070,6 +1111,10 @@ subagente (contexto limpio)
               <td><code>/test-documentation repair-traceability</code></td>
             </tr>
             <tr>
+              <td>Pasar a AUTOMATED los TCs cuyo código ya está en la rama de producción</td>
+              <td><code>/test-documentation post-promotion</code></td>
+            </tr>
+            <tr>
               <td>Explicar en lenguaje llano qué hacen los tests, en una página HTML</td>
               <td><code>/test-automation explain &lt;target&gt;</code></td>
             </tr>
@@ -1123,8 +1168,8 @@ subagente (contexto limpio)
         instala <code>bun setup</code> a nivel de proyecto. Además hay skills de usuario (la lista
         <code>USER_LEVEL_SKILLS</code> de <code>cli/install.ts</code>): el agente carga sin
         preguntar las que una regla del repo o tus propias instrucciones nombran para un momento
-        concreto (por ejemplo <code>mkd</code> cuando hay más de tres decisiones) y te pide permiso
-        para cualquier otra.
+        concreto (por ejemplo <code>mkd</code> cuando hay una decisión pesada, con tradeoffs reales)
+        y te pide permiso para cualquier otra.
       </p>
 
       <h3 id="skills-workflow">Workflow: los stages del pipeline</h3>
@@ -1142,6 +1187,22 @@ subagente (contexto limpio)
           <h3>sprint-testing</h3>
           <p>
             QA manual por issue o por sprint entero. Produce ATP, ATS, ATR, comentario de QA y bugs.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge accent">Execution sin ticket</span>
+          <h3>exploratory-testing</h3>
+          <p>
+            Exploración por módulo, flujo o barrido completo. Produce hallazgos verificados y
+            escenarios candidatos con su marca de cobertura.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge accent">Sprint en flota</span>
+          <h3>sprint-conductor</h3>
+          <p>
+            Conduce una flota de workers de sprint-testing desde el Sprint Board: arranque,
+            vigilancia del entorno, cierre verificado y retoma. Requiere Orca.
           </p>
         </div>
         <div class="card">
@@ -1270,6 +1331,26 @@ subagente (contexto limpio)
           <span class="badge accent">Sprint</span>
           <h3>sprint-testing</h3>
           <p>QA manual por ticket, de punta a punta.</p>
+        </a>
+        <a
+          class="card"
+          href="https://upex-galaxy.github.io/agentic-qa-boilerplate/decks/exploratory-testing/how-it-works.es.html"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="badge accent">Exploración</span>
+          <h3>exploratory-testing</h3>
+          <p>La exploración sin ticket, del charter al handoff.</p>
+        </a>
+        <a
+          class="card"
+          href="https://upex-galaxy.github.io/agentic-qa-boilerplate/decks/sprint-conductor/how-it-works.es.html"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="badge accent">Flota</span>
+          <h3>sprint-conductor</h3>
+          <p>Un sprint en flota, mirado desde el Sprint Board.</p>
         </a>
         <a
           class="card"
