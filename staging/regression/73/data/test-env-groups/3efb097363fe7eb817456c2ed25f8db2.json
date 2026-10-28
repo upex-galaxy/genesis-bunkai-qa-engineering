@@ -1,0 +1,1 @@
+{"id":"3efb097363fe7eb817456c2ed25f8db2","fullName":"integration/workspace-export/inspectWorkspaceExportArchive.test.ts:100:3","name":"BK-1012: should leave every invite token out of the archive when the workspace has pending invites","status":"passed","testResultsByEnv":{"default":"a79acebef40c4d23ff5caef8176713c3"}}

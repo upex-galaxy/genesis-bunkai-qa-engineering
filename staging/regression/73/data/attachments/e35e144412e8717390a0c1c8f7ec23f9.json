@@ -1,0 +1,12 @@
+{
+  "export": {
+    "id": "03bbef87-adbc-49f1-88a4-2785ca25d038",
+    "status": "running",
+    "archive_bytes": null,
+    "error_message": null,
+    "started_at": "2026-10-28T22:13:17.058+00:00",
+    "completed_at": null,
+    "expires_at": null,
+    "created_at": "2026-10-28T22:13:17.03812+00:00"
+  }
+}

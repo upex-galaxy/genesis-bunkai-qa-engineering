@@ -1,0 +1,1 @@
+{"id":"4f7a38e4dfd96d5d8ae5fe9eee6bce3e","fullName":"integration/workspace-export/inspectWorkspaceExportArchive.test.ts:113:3","name":"BK-1013: should contain only the exported workspace's records when the owner owns two workspaces","status":"passed","testResultsByEnv":{"default":"ed12d64f62f9c210579d1d45e8b21102"}}

@@ -1,0 +1,1 @@
+{"id":"ab703c2499bbd72f58bce436daa92c80","fullName":"integration/auth/user-session.test.ts:15:3","name":"BK-166: should get the current user with the stored PAT","status":"passed","testResultsByEnv":{"default":"fc05b64eb091d158674ee07cb2453d65"}}

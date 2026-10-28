@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-vspixt",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "9e6b2820-382a-410f-9a06-0b962ccd5be0",
+  "expires_in_days": 1
+}
