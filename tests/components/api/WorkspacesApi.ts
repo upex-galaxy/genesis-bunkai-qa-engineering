@@ -7,7 +7,7 @@
  *
  * Endpoints:
  * - GET    /api/v1/workspaces      - List workspaces the caller belongs to (cookie or Bearer)
- * - POST   /api/v1/workspaces      - Create a workspace (sent cookie-only, see below)
+ * - POST   /api/v1/workspaces      - Create a workspace (sent cookie-only, see below, with an Idempotency-Key)
  * - DELETE /api/v1/workspaces/{id} - Soft-delete an owned workspace (owner-only, session-only)
  * - POST   /api/v1/me/active-workspace     - Switch the active workspace (cookie-only, sets `bk_active_ws`)
  * - POST   /api/v1/workspaces/{id}/invites - Invite an email with a role (admin/owner)
@@ -38,6 +38,8 @@ import type {
   WorkspaceWithRole,
 } from '@schemas/workspaces.types';
 import type { TestContextOptions } from '@TestContext';
+
+import { randomUUID } from 'node:crypto';
 
 import { ApiBase } from '@api/ApiBase';
 import { expect } from '@playwright/test';
@@ -105,7 +107,7 @@ export class WorkspacesApi extends ApiBase {
   @step
   async createWorkspace(payload: CreateWorkspacePayload, timeoutMs?: number): Promise<Workspace> {
     const response = await this.request.post(this.apiEndpoint(this.endpoints.list), {
-      headers: this.cookieOnlyHeaders(),
+      headers: this.cookieOnlyHeaders({ 'Idempotency-Key': `qa-auto-${randomUUID()}` }),
       data: payload,
       timeout: timeoutMs,
     });

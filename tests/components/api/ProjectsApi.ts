@@ -8,7 +8,7 @@
  * alone, so the Bearer PAT the fixture propagates is deliberately ignored.
  *
  * Endpoints:
- * - POST /api/v1/workspaces/{id}/projects  - Create a project
+ * - POST /api/v1/workspaces/{id}/projects  - Create a project (Idempotency-Key per call)
  * - POST /api/v1/projects/{id}/environments - Create an environment
  * - POST /api/v1/projects/{id}/modules     - Create a module
  */
@@ -25,6 +25,8 @@ import type {
   ProjectEnvironment,
 } from '@schemas/workspace-content.types';
 import type { TestContextOptions } from '@TestContext';
+
+import { randomUUID } from 'node:crypto';
 
 import { ApiBase } from '@api/ApiBase';
 import { expect } from '@playwright/test';
@@ -56,6 +58,7 @@ export class ProjectsApi extends ApiBase {
     const [response, body] = await this.apiPOST<CreateProjectResponse, CreateProjectPayload>(
       this.endpoints.projectsOf(workspaceId),
       payload,
+      { headers: { 'Idempotency-Key': `qa-auto-${randomUUID()}` } },
     );
     expect(response.status(), 'project creation').toBe(201);
     return body.project;

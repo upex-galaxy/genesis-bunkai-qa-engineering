@@ -7,11 +7,13 @@
  * alone, so the Bearer PAT the fixture propagates is deliberately ignored.
  *
  * Endpoints:
- * - POST /api/v1/atcs - Create an ATC
+ * - POST /api/v1/atcs - Create an ATC (Idempotency-Key per call)
  */
 
 import type { Atc, CreateAtcPayload, CreateAtcResponse } from '@schemas/workspace-content.types';
 import type { TestContextOptions } from '@TestContext';
+
+import { randomUUID } from 'node:crypto';
 
 import { ApiBase } from '@api/ApiBase';
 import { expect } from '@playwright/test';
@@ -38,7 +40,9 @@ export class AtcsApi extends ApiBase {
   /** Helper: Create an ATC. Fails fast unless 201. */
   @step
   async createAtc(payload: CreateAtcPayload): Promise<Atc> {
-    const [response, body] = await this.apiPOST<CreateAtcResponse, CreateAtcPayload>(this.endpoints.atcs, payload);
+    const [response, body] = await this.apiPOST<CreateAtcResponse, CreateAtcPayload>(this.endpoints.atcs, payload, {
+      headers: { 'Idempotency-Key': `qa-auto-${randomUUID()}` },
+    });
     expect(response.status(), 'ATC creation').toBe(201);
     return body.atc;
   }

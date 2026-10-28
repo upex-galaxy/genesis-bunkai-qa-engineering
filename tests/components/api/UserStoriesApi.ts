@@ -8,7 +8,7 @@
  * alone, so the Bearer PAT the fixture propagates is deliberately ignored.
  *
  * Endpoints:
- * - POST /api/v1/modules/{id}/user-stories              - Create a user story
+ * - POST /api/v1/modules/{id}/user-stories              - Create a user story (Idempotency-Key per call)
  * - POST /api/v1/user-stories/{id}/acceptance-criteria  - Create an acceptance criterion
  */
 
@@ -21,6 +21,8 @@ import type {
   UserStory,
 } from '@schemas/workspace-content.types';
 import type { TestContextOptions } from '@TestContext';
+
+import { randomUUID } from 'node:crypto';
 
 import { ApiBase } from '@api/ApiBase';
 import { expect } from '@playwright/test';
@@ -51,6 +53,7 @@ export class UserStoriesApi extends ApiBase {
     const [response, body] = await this.apiPOST<CreateUserStoryResponse, CreateUserStoryPayload>(
       this.endpoints.storiesOf(moduleId),
       payload,
+      { headers: { 'Idempotency-Key': `qa-auto-${randomUUID()}` } },
     );
     expect(response.status(), 'user story creation').toBe(201);
     return body.user_story;
