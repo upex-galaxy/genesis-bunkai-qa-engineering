@@ -1,0 +1,1 @@
+{"id":"43f36d341d6eb453d51dd5848697375a","fullName":"integration/workspace-export/inspectWorkspaceExportArchive.test.ts:56:3","name":"BK-999: should produce a valid archive with no content records when the workspace is empty","status":"passed","testResultsByEnv":{"default":"5241d25cd9baa76780e26dfa0ab7160e"}}

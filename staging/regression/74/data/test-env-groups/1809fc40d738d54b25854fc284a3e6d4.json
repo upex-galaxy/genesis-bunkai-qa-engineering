@@ -1,0 +1,1 @@
+{"id":"1809fc40d738d54b25854fc284a3e6d4","fullName":"integration/workspace-export/downloadWorkspaceExport.test.ts:30:3","name":"BK-1019: should stream a zip attachment when the owner downloads a ready archive","status":"passed","testResultsByEnv":{"default":"c93e4e2b8959cb3469a56f6795169a44"}}

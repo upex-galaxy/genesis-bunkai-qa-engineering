@@ -1,0 +1,1 @@
+{"id":"2a763a52b5ef928a7ac111c3e4545939","fullName":"integration/workspace-export/requestWorkspaceExport.test.ts:30:3","name":"BK-1017: should return a queued job id when the owner requests an export of an idle workspace","status":"passed","testResultsByEnv":{"default":"af936f83b120ad5216fb473f780ad90e"}}

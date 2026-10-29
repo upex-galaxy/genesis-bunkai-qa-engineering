@@ -1,0 +1,1 @@
+{"id":"ec6ef6d84a9ef5326cb5a59cac997513","fullName":"integration/workspace-export/requestWorkspaceExport.test.ts:39:3","name":"BK-1018: should return a null export when the owner polls a never-exported workspace","status":"passed","testResultsByEnv":{"default":"0b504b489433bc74fbffc2d2095864fd"}}

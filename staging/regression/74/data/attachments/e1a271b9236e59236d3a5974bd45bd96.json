@@ -1,0 +1,14 @@
+{
+  "user": {
+    "id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "email": "test@aeasteaont.resend.app"
+  },
+  "pat": {
+    "id": "84e913e3-94da-459a-a1e4-f1471b0d4970",
+    "scopes": [
+      "atc:read",
+      "atc:write",
+      "run:execute"
+    ]
+  }
+}
