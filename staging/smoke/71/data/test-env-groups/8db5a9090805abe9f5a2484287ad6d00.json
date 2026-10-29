@@ -1,0 +1,1 @@
+{"id":"8db5a9090805abe9f5a2484287ad6d00","fullName":"integration/workspace-export/rejectPatOnWorkspaceExport.test.ts:47:5","name":"BK-1004: should reject a personal access token when it calls the export poll endpoint","status":"passed","testResultsByEnv":{"default":"5c46fef1e3665257c19959feea9942a4"}}
