@@ -1,0 +1,10 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tokens
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82
+---- API NOK: 403 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82/data-export
+✅ [BK-1004] rejectPatOnExportEndpoint - PASS (640ms)
+---- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/b08d62b1-92bf-4b7b-810e-fb6714bf599d
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/72fd2e40-fcae-4e34-8bc5-80532d421f82

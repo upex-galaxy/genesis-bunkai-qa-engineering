@@ -1,0 +1,1 @@
+{"id":"3aa62a54fc5963e5206878c340e922c7","fullName":"integration/auth/user-session.test.ts:43:3","name":"BK-166: should answer 401 without any credential","status":"passed","testResultsByEnv":{"default":"588525a5f49fb4d8b2e6de028f309fa7"}}

@@ -1,0 +1,1 @@
+{"id":"f67ccdbe6585960ae431023b1ba0a500","fullName":"integration/workspace-export/smoke.test.ts:13:3","name":"BK-1018: should return the export status shape when the owner polls it","status":"passed","testResultsByEnv":{"default":"67489bcc95230531314c9912faea1e79"}}
