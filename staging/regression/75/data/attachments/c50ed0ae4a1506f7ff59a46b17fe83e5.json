@@ -1,0 +1,11 @@
+{
+  "invite": {
+    "id": "de4c38b3-6661-4d1a-a298-266b03e2eb20",
+    "email": "qa-auto-bk508+lyo1uogt@example.com",
+    "role": "member",
+    "expires_at": "2026-11-06T03:55:53.814997+00:00",
+    "created_at": "2026-10-30T03:55:53.814997+00:00"
+  },
+  "token": "***",
+  "accept_url": "***"
+}

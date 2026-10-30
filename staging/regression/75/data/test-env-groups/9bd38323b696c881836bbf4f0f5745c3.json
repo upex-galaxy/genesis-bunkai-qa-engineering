@@ -1,0 +1,1 @@
+{"id":"9bd38323b696c881836bbf4f0f5745c3","fullName":"integration/workspace-export/inspectWorkspaceExportArchive.test.ts:85:3","name":"BK-1011: should leave every PAT secret out of the archive when the workspace has issued tokens","status":"passed","testResultsByEnv":{"default":"8db9f726e41a32cd1b52c7192cba8d01"}}
