@@ -1,0 +1,24 @@
+{
+  "user": {
+    "id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "email": "test@aeasteaont.resend.app"
+  },
+  "session": {
+    "access_token": "***",
+    "refresh_token": "***",
+    "expires_at": 1793421530,
+    "token_type": "bearer"
+  },
+  "pat": {
+    "token": "***",
+    "id": "1c1ac024-c4b4-4b90-8345-b65a6dfa9008",
+    "name": "qa-automation",
+    "scopes": [
+      "atc:read",
+      "atc:write",
+      "run:execute"
+    ],
+    "expires_at": "2026-11-01T03:38:50.649+00:00"
+  },
+  "warning": "Store the PAT token now — it cannot be retrieved later."
+}
