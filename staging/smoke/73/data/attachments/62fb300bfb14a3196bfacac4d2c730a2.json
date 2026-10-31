@@ -1,0 +1,34 @@
+{
+  "user": {
+    "id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "email": "test@aeasteaont.resend.app"
+  },
+  "workspaces": [
+    {
+      "id": "21912ef0-fdf2-41b4-87cc-979d42a810fa",
+      "slug": "qa-dryrun-ws1",
+      "name": "QA DryRun WS1",
+      "plan": "community",
+      "owner_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "created_at": "2026-08-23T15:37:12.257857+00:00"
+    },
+    {
+      "id": "1efb101f-d326-4d28-964a-21d2191de853",
+      "slug": "qa-auto-bk508-1792510817314-ylvlvs",
+      "name": "QA Auto BK-508 1792510817314-ylvlvs",
+      "plan": "community",
+      "owner_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "created_at": "2026-10-20T15:40:17.066442+00:00"
+    }
+  ],
+  "active_workspace_id": "21912ef0-fdf2-41b4-87cc-979d42a810fa",
+  "active_workspace_role": "owner",
+  "auth": {
+    "source": "bearer",
+    "scopes": [
+      "atc:read",
+      "atc:write",
+      "run:execute"
+    ]
+  }
+}
