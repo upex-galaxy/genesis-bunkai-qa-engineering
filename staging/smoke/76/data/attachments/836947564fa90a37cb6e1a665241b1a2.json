@@ -1,0 +1,13 @@
+{
+  "id": "58787606-4354-4e16-b8ce-1661ebef9220",
+  "token": "***",
+  "name": "qa-auto-bk508-usclew",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "d8438477-a75d-4eb8-8799-9b0cf8637fbf",
+  "expires_at": "2026-11-04T09:00:26.631+00:00",
+  "created_at": "2026-11-03T09:00:26.639927+00:00",
+  "warning": "Store this token now — it cannot be retrieved later."
+}
