@@ -1,0 +1,47 @@
+{
+  "run": {
+    "id": "a138cf72-edc7-43fb-b932-d2a2c6be39b3",
+    "atcs": [
+      {
+        "id": "cb453a7f-8de4-455e-9a84-f9902f2a6901",
+        "steps": [
+          {
+            "id": "d4346538-ac65-4fd7-a985-5753ad7083cf",
+            "note": null,
+            "status": "skipped",
+            "content": "Line one\nLine two with \"quotes\" and a {brace}",
+            "expected": "Expected\nmultiline",
+            "position": 1,
+            "input_data": null,
+            "atc_step_id": "32405cf0-70ad-4cc6-96b7-2e45f2dd68c3",
+            "executed_at": null,
+            "evidence_url": null
+          }
+        ],
+        "atc_id": "748ba951-b19c-4e74-a11d-f7e712397514",
+        "status": "skipped",
+        "position": 1,
+        "atc_title": "QA Auto multiline ATC"
+      }
+    ],
+    "status": "failed",
+    "test_id": "83600f85-f05d-42cc-b18c-5d27c7f04b28",
+    "version": 2,
+    "atc_count": 1,
+    "module_id": "b190b1aa-d63c-4f62-afe8-e54308eac43a",
+    "created_at": "2026-11-03T04:54:18.968422+00:00",
+    "project_id": "7dfdecd7-95f4-496c-a689-378a148709c8",
+    "started_at": "2026-11-03T04:54:18.968422+00:00",
+    "step_count": 1,
+    "test_title": "QA Auto export test\nwith newline in title",
+    "updated_at": "2026-11-03T04:54:19.206905+00:00",
+    "finished_at": "2026-11-03T04:54:19.206905+00:00",
+    "module_name": "Export",
+    "abort_reason": null,
+    "workspace_id": "e30105a8-e72d-4003-9cb6-623bdd99ead1",
+    "executor_mode": "human",
+    "environment_id": "677f64f1-a7f9-46c6-87dc-683b8873b619",
+    "environment_name": "staging",
+    "executor_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7"
+  }
+}
