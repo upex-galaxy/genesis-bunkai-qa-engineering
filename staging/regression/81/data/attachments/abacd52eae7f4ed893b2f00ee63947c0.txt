@@ -1,0 +1,7 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+---- API OK: 202 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/8065fefe-5d53-405d-9147-bb0f451ed4c9/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/8065fefe-5d53-405d-9147-bb0f451ed4c9/data-export
+✅ [BK-996] downloadReadyArchive - PASS (2519ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/8065fefe-5d53-405d-9147-bb0f451ed4c9/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/8065fefe-5d53-405d-9147-bb0f451ed4c9
