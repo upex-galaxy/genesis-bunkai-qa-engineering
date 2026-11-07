@@ -24,6 +24,16 @@
     "type": "string",
     "name": "Affected hardware"
   },
+  "ai_effort": {
+    "id": null,
+    "type": "option",
+    "name": "AI Effort",
+    "options": {
+      "low": null,
+      "medium": null,
+      "high": null
+    }
+  },
   "agent_sessions": {
     "id": "customfield_10026",
     "type": "array",
