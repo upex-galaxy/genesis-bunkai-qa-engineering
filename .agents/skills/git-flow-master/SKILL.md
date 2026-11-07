@@ -2,7 +2,7 @@
 name: git-flow-master
 description: "End-to-end Git operator for any branching strategy. Auto-detects the project's strategy (solo-main, main+integration, enterprise multi-branch, trunk-based, GitFlow, GitHub Flow, GitLab Flow, SDET integration-trunk for chained test-automation suites) from .git config, branches, and the `git_strategy:` block in `.agents/project.yaml`, then adapts every commit, branch, push, PR, conflict-fix, and chained-PR action to that strategy. Use this skill whenever the user wants to: create a branch (`crear branch`, `new feature branch`, `start work on UPEX-123`), commit changes (`commit this`, `commitear esto`, `make a commit`, `commit and push`), push code (`push`, `push to main`, `push to staging`, `subir cambios`), open a pull request (`create PR`, `open PR`, `abrir PR`, `crear pull request`, `gh pr create`), fix merge conflicts (`fix conflict`, `resolver conflicto`, `merge conflict`, `rebase conflict`, `push rejected`), plan stacked or chained PRs (`stack of PRs`, `chained PRs`, `split this PR`, `PR demasiado grande`), set up an isolated git worktree (`worktree`, `work in a worktree`, `isolate this work`, `parallel session`, `aislar el trabajo`, `trabajar aislado`), set up or bootstrap a branching strategy on a fresh repo (`set up our git strategy`, `bootstrap branching`, `configura el flujo de git`, `git strategy setup`, `materialize the git flow`, `create the staging branch and write the runbook`), or pick / change / set up a branching strategy (`git flow`, `git strategy`, `branching strategy`, `which git flow do we use`, `set up our git strategy`, `bootstrap branching`, `configura el flujo de git`). Trigger even when the user does not say `git-flow-master` literally — if the work is git-or-PR-shaped, this is the right tool. Do NOT use for: testing tickets (use /sprint-testing), authoring test cases in TMS (use /test-documentation), writing automated tests (use /test-automation), running regression suites (use /regression-testing), or general code editing — git-flow-master operates strictly on the version-control layer."
 license: MIT
-compatibility: [claude-code, codex, opencode]
+compatibility: [claude-code, codex, opencode, pi]
 phase: implementation
 complementary_categories: []
 metadata:
@@ -156,7 +156,7 @@ Apply in order; stop at the first definitive answer:
 
 ### Persist the decision
 
-Once resolved (whether by detection or by asking), write/update the `git_strategy:` block **in place** inside `.agents/project.yaml` (preserve the rest of the file — it holds project identity, env config, etc.; create the block if it is missing). NEVER write a separate file. It is the single source of truth. At minimum the first five operations need `git_strategy.strategy` + `git_strategy.branches`; the full schema (with `git_strategy.decisions`, `git_strategy.protected`, `git_strategy.policy`, `git_strategy.branch_prefixes`, `git_strategy.meta`) is populated by Strategy Setup (3.6).
+Once resolved (whether by detection or by asking), write/update the `git_strategy:` block **in place** inside `.agents/project.yaml` (preserve the rest of the file — it holds project identity, env config, etc.; create the block if it is missing), values only: each key is documented in `.agents/project.schema.yaml`, never in the yaml (ADR-0025). NEVER write a separate file. It is the single source of truth. At minimum the first five operations need `git_strategy.strategy` + `git_strategy.branches`; the full schema (with `git_strategy.decisions`, `git_strategy.protected`, `git_strategy.policy`, `git_strategy.branch_prefixes`, `git_strategy.meta`) is populated by Strategy Setup (3.6).
 
 ```yaml
 # .agents/project.yaml — git_strategy block (only the fields that apply shown)
@@ -353,7 +353,15 @@ gh pr create \
   [--draft]
 ```
 
-**Stop at PR creation.** Merging is the user's explicit next step. Never auto-merge. Surface: _"Review the PR. Once approved, merge via the GitHub UI or run `gh pr merge {number} --squash --delete-branch`."_ **One carve-out**: when a supervised worker's dispatch or brief NAMES the merge as a step, that instruction IS the explicit next step and the worker merges. The rule exists so a PR is never merged by an agent acting on its own judgement; a dispatch that says "open the PR and merge it" is not the agent's judgement, it is the owner's, delivered through the channel the fleet uses for every other instruction. Say in the report that the merge was pre-authorized and by which line of the brief.
+**Stop at PR creation.** Merging is the user's explicit next step. Never auto-merge. Surface: _"Review the PR. Once approved, merge via the GitHub UI or run `gh pr merge {number} {merge-flag}`."_ with the flag chosen by the rule below. **One carve-out**: when a supervised worker's dispatch or brief NAMES the merge as a step, that instruction IS the explicit next step and the worker merges. The rule exists so a PR is never merged by an agent acting on its own judgement; a dispatch that says "open the PR and merge it" is not the agent's judgement, it is the owner's, delivered through the channel the fleet uses for every other instruction. Say in the report that the merge was pre-authorized and by which line of the brief.
+
+**Which merge flag (one rule, `sdet` first).** `sdet` (the integration trunk) is the Dojo standard for test-automation suites, so its rule comes first and is never relaxed:
+
+| PR | Flag | Squash |
+| --- | --- | --- |
+| Ticket or Plus Branch → the trunk `test/<module>-suite` | `--merge` (a merge commit, the `--no-ff` equivalent) | **Never.** It flattens the per-ticket history the suite exists to keep (`references/sdet-integration-trunk.md`). |
+| Final `trunk → main` | `--merge` | Only when the host allows no other method; the chain then survives on the pushed trunk and the PR body says so. Do not add `--delete-branch` here: the trunk is deleted after CI is green on `main`. |
+| Any other strategy | the flag that matches `git_strategy.decisions.feature_merge`: `merge-commit` → `--merge`, `squash` → `--squash`, `rebase-merge` → `--rebase` | Fine for a short-lived branch whose intermediate commits carry no meaning (the default when `feature_merge` is `n/a` or the block is missing). Use `--merge` when per-commit history matters. |
 
 **Optional pre-PR adversarial gate** — when the diff exceeds the 400-line cognitive review budget OR touches shared scaffolding (KATA base classes, fixtures, OpenAPI schemas), surface `/judgment-day` as an optional pre-PR review: _"Diff is large / touches shared scaffolding. Want to run `/judgment-day` before opening the PR?"_. Two blind judges review the diff in parallel; only approves when both agree. See `.agents/skills/judgment-day/SKILL.md`. Never invoked automatically — user opts in.
 
