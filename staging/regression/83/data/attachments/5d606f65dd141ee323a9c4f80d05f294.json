@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-ozenoe",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "85e0b1d9-a4c0-42d1-b893-710890e15591",
+  "expires_in_days": 1
+}
