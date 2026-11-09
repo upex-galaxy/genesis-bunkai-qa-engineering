@@ -1,0 +1,9 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tokens
+---- API OK: 202 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6c751a44-85bc-4c3e-aed5-99ce765a7ecf/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6c751a44-85bc-4c3e-aed5-99ce765a7ecf/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6c751a44-85bc-4c3e-aed5-99ce765a7ecf/data-export
+✅ [BK-1011] downloadArchiveExcludingPatSecrets - PASS (864ms)
+---- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/75c815f4-ed83-4a62-bf28-1b7f2159662c
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6c751a44-85bc-4c3e-aed5-99ce765a7ecf/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6c751a44-85bc-4c3e-aed5-99ce765a7ecf
