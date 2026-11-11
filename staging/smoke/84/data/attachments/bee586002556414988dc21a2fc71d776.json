@@ -1,0 +1,13 @@
+{
+  "id": "dcc80ed8-e321-4949-b2a1-3b99000ece09",
+  "token": "***",
+  "name": "qa-auto-bk508-xciz9f",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "44792510-76fb-4da2-ab99-32ade40d0739",
+  "expires_at": "2026-11-12T08:50:21.507+00:00",
+  "created_at": "2026-11-11T08:50:21.519263+00:00",
+  "warning": "Store this token now — it cannot be retrieved later."
+}
