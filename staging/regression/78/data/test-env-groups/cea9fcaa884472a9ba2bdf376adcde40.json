@@ -1,1 +1,0 @@
-{"id":"cea9fcaa884472a9ba2bdf376adcde40","fullName":"integration/workspace-export/requestWorkspaceExport.test.ts:45:3","name":"BK-1018: should return the lifecycle shape when the owner polls a requested export","status":"passed","testResultsByEnv":{"default":"e71aef97ee48b2ee04ed8033783e741e"}}

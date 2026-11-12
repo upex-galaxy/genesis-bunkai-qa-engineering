@@ -1,1 +1,0 @@
-{"id":"537cffd0147b4f521b130387e08fcfc9","fullName":"integration/workspace-export/rejectPatOnWorkspaceExport.test.ts:47:5","name":"BK-1004: should reject a personal access token when it calls the export request endpoint","status":"passed","testResultsByEnv":{"default":"7a0caf551f23f8e93e95dfb7134d146b"}}
