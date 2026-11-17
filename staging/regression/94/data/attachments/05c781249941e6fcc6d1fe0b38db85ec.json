@@ -1,0 +1,12 @@
+{
+  "export": {
+    "id": "6afaaaa9-b5fa-4dc9-bfc0-157526261ea5",
+    "status": "running",
+    "archive_bytes": null,
+    "error_message": null,
+    "started_at": "2026-11-17T22:45:04.568+00:00",
+    "completed_at": null,
+    "expires_at": null,
+    "created_at": "2026-11-17T22:45:04.557886+00:00"
+  }
+}
