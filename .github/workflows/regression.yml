@@ -112,7 +112,7 @@ jobs:
   # ============================================
   IntegrationTests:
     name: Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:
       name: ${{ github.event.inputs.environment || 'staging' }}
@@ -198,7 +198,7 @@ jobs:
   E2ETests:
     name: E2E Tests
     needs: IntegrationTests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment:
       name: ${{ github.event.inputs.environment || 'staging' }}
@@ -310,7 +310,7 @@ jobs:
   allure-report:
     name: Build & Deploy Allure Report
     needs: [IntegrationTests, E2ETests]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ always() && github.event.inputs.generate_allure != 'false' }}
 
     steps:
@@ -455,7 +455,7 @@ jobs:
   XrayImport:
     name: Import Results to Xray
     needs: [IntegrationTests, E2ETests]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # `always()` so results still reach the TMS after a failing suite. The
     # `vars` expression is repeated rather than read from `env.TMS_PROVIDER`:
@@ -564,7 +564,7 @@ jobs:
   # slack-notification:
   #   name: Slack Notification
   #   needs: [IntegrationTests, E2ETests, allure-report]
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-24.04
   #   if: always()
   #   steps:
   #     - name: Send Slack Notification
@@ -614,7 +614,7 @@ jobs:
 #
 # regression:
 #   name: ${{ matrix.module }} Tests
-#   runs-on: ubuntu-latest
+#   runs-on: ubuntu-24.04
 #   timeout-minutes: 60
 #   strategy:
 #     fail-fast: false
