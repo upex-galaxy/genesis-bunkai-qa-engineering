@@ -1,6 +1,6 @@
 # Skill Registry (auto-generated)
 
-> Generated: `2026-11-18T22:14:10.503Z`
+> Generated: `2026-11-18T22:27:20.408Z`
 > Generator: `bun scripts/build-skill-registry.ts`
 > Protocol: `.agents/skills/agentic-qa-core/references/skill-resolver.md`
 
@@ -452,7 +452,7 @@ Skills indexed: 32
 - ---
 - name: playwright-cli
 - description: Automate browser interactions, test web pages and work with Playwright tests.
-- allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*)
+- allowed-tools: Bash(playwright-cli:*) Bash(npx playwright:*) Bash(npx --no-install playwright:*)
 - ---
 - playwright-cli open
 - playwright-cli goto https://playwright.dev
@@ -601,7 +601,7 @@ Skills indexed: 32
 - license: MIT
 - metadata:
 - author: resend
-- version: "2.7.0"
+- version: "2.25.0"
 - homepage: https://resend.com/docs/cli-agents
 - (truncated — read full SKILL.md for the rest)
 
