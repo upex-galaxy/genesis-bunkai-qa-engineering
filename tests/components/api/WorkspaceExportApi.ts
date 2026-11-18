@@ -722,7 +722,7 @@ export class WorkspaceExportApi extends ApiBase {
       }
       recordsOf(path, text).forEach((record, index) => {
         const scoped = typeof record === 'object' && record !== null && 'workspace_id' in record;
-        if (scoped && (record as { workspace_id: unknown }).workspace_id !== args.workspaceId) {
+        if (scoped && (record).workspace_id !== args.workspaceId) {
           foreignRecords.push(`${path}#${index}`);
         }
       });

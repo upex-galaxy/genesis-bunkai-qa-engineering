@@ -1,31 +1,32 @@
 {
   "schemaVersion": 7,
   "templateRepo": "upex-galaxy/agentic-qa-boilerplate",
-  "templateCommit": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
+  "templateCommit": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
   "perComponentCommit": {
-    "skills": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
+    "skills": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
     "commands": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "scripts": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "docs": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "cli": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "vscode": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "husky": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "agents-docs": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
+    "scripts": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "docs": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "cli": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "vscode": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "husky": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "agents-docs": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
     "claude-config": "b71a4a624498a6bb99201f72b6ae6342b4542e8b",
-    "tooling": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "env-template": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "agent-compatibility": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "codex-config": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "agent-root-config": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "config-core": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "env-schema": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "instructions": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "worktree-include": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "orca-config": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "playwright-cli-config": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "tests-utils": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "pi-adapter": "c95f2cc2cc2d3522aee6627777ea54cc4617009c",
-    "pi-config": "c95f2cc2cc2d3522aee6627777ea54cc4617009c"
+    "tooling": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "env-template": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "agent-compatibility": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "codex-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "agent-root-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "config-core": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "env-schema": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "instructions": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "worktree-include": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "orca-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "playwright-cli-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "tests-utils": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "pi-adapter": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "pi-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4",
+    "oxlint-config": "e8c6fa1ce15396eff0034ce4ab5654d364e7d0c4"
   },
   "syncedComponents": [],
   "ignoreFileSync": {
@@ -102,7 +103,7 @@
   "packageJsonSync": {
     "package.json": {
       "scripts": {
-        "lastSyncedSha": "e46cab728d60d7d5774fc9324e876c5f26f46d94",
+        "lastSyncedSha": "2664fb4f64c9cc995ef22c9eb51ef94b7e5fb032",
         "appliedKeys": [
           "context:hydrate",
           "jira:components",
@@ -136,30 +137,34 @@
           "board:up",
           "context:coverage",
           "evidence",
-          "xray:payload"
+          "xray:payload",
+          "clean",
+          "lint:cached",
+          "oxlint:check"
         ],
         "keptKeys": {
-          "repo:check": "bun run format:check && bun run lint:check && bun run types:check && bun run vars:check && bun run vars:schema:check && bun run skills:check && bun run instructions:check && bun run skills:registry:check && bun run docs:check && bun run shared:check && bun run agents:compat:check && bun run agents:schema:check && bun run kata:manifest:check && bun run vars:env:check && bun run git:policy verify",
           "setup": "bun cli/preflight.ts --for setup --gate && bun cli/install.ts"
         }
       },
       "devDependencies": {
-        "lastSyncedSha": "e46cab728d60d7d5774fc9324e876c5f26f46d94",
+        "lastSyncedSha": "2664fb4f64c9cc995ef22c9eb51ef94b7e5fb032",
         "appliedKeys": [
-          "varlock"
+          "varlock",
+          "eslint-plugin-playwright",
+          "oxlint"
         ]
       },
       "dependencies": {
-        "lastSyncedSha": "e46cab728d60d7d5774fc9324e876c5f26f46d94",
+        "lastSyncedSha": "2664fb4f64c9cc995ef22c9eb51ef94b7e5fb032",
         "appliedKeys": []
       },
       "lint-staged": {
-        "lastSyncedSha": "e46cab728d60d7d5774fc9324e876c5f26f46d94",
+        "lastSyncedSha": "2664fb4f64c9cc995ef22c9eb51ef94b7e5fb032",
         "appliedKeys": []
       }
     }
   },
   "cliVersion": "8.5",
-  "lastSyncedAt": "2026-11-10T20:10:30.738Z",
+  "lastSyncedAt": "2026-11-18T22:14:08.236Z",
   "variableSystemVersion": 1
 }
