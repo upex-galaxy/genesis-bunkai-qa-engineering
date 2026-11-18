@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-10-28T17:59:49.582Z",
+  "generatedAt": "2026-11-18T18:52:47.131Z",
   "components": {
     "api": [
       {
@@ -44,6 +44,12 @@
         ]
       },
       {
+        "name": "BugsApi",
+        "file": "BugsApi.ts",
+        "relativePath": "tests/components/api/BugsApi.ts",
+        "atcs": []
+      },
+      {
         "name": "ProjectsApi",
         "file": "ProjectsApi.ts",
         "relativePath": "tests/components/api/ProjectsApi.ts",
@@ -72,6 +78,43 @@
         "file": "UserStoriesApi.ts",
         "relativePath": "tests/components/api/UserStoriesApi.ts",
         "atcs": []
+      },
+      {
+        "name": "WorkspaceDeletionApi",
+        "file": "WorkspaceDeletionApi.ts",
+        "relativePath": "tests/components/api/WorkspaceDeletionApi.ts",
+        "atcs": [
+          {
+            "id": "BK-922",
+            "method": "rejectDeleteByNonOwner",
+            "line": 270
+          },
+          {
+            "id": "BK-938",
+            "method": "verifyEntityUnreachableAfterDeletion",
+            "line": 423
+          },
+          {
+            "id": "BK-954",
+            "method": "refuseDeletedWorkspacePat",
+            "line": 316
+          },
+          {
+            "id": "BK-956",
+            "method": "refuseDeletedWorkspaceInvite",
+            "line": 352
+          },
+          {
+            "id": "BK-960",
+            "method": "leaveOtherWorkspaceUntouched",
+            "line": 392
+          },
+          {
+            "id": "BK-981",
+            "method": "restoreDeletedWorkspace",
+            "line": 452
+          }
+        ]
       },
       {
         "name": "WorkspaceExportApi",
@@ -206,10 +249,59 @@
             "line": 103
           }
         ]
+      },
+      {
+        "name": "WorkspacesSettingsPage",
+        "file": "WorkspacesSettingsPage.ts",
+        "relativePath": "tests/components/ui/WorkspacesSettingsPage.ts",
+        "atcs": [
+          {
+            "id": "BK-926",
+            "method": "verifyConfirmGatedByExactName",
+            "line": 161
+          },
+          {
+            "id": "BK-930",
+            "method": "dismissDeleteConfirmationChangingNothing",
+            "line": 194
+          },
+          {
+            "id": "BK-937",
+            "method": "deleteOwnedWorkspaceAsOwner",
+            "line": 237
+          },
+          {
+            "id": "BK-941",
+            "method": "verifyDeletedWorkspaceScreensBlocked",
+            "line": 354
+          },
+          {
+            "id": "BK-946",
+            "method": "deleteOnlyWorkspaceLandingOnOnboarding",
+            "line": 312
+          }
+        ]
       }
     ]
   },
   "steps": [
+    {
+      "name": "WorkspaceDeletionSteps",
+      "file": "WorkspaceDeletionSteps.ts",
+      "relativePath": "tests/components/steps/WorkspaceDeletionSteps.ts",
+      "methods": [
+        "cleanupDeletionWorkspace",
+        "createMemberOnlyWorkspace",
+        "createOwnedWorkspace",
+        "createOwnedWorkspaceWithContent",
+        "deleteAsOwner",
+        "grantTeammate",
+        "isWorkspaceGone",
+        "openLoneOwnerContext",
+        "openRoleSession",
+        "releaseMemberOnlyWorkspace"
+      ]
+    },
     {
       "name": "WorkspaceExportSteps",
       "file": "WorkspaceExportSteps.ts",
@@ -225,10 +317,10 @@
     }
   ],
   "summary": {
-    "totalComponents": 12,
-    "totalATCs": 25,
-    "apiComponents": 10,
-    "uiComponents": 2,
-    "stepsModules": 1
+    "totalComponents": 15,
+    "totalATCs": 36,
+    "apiComponents": 12,
+    "uiComponents": 3,
+    "stepsModules": 2
   }
 }

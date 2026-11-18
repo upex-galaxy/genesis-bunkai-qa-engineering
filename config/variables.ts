@@ -100,6 +100,28 @@ const roleCredentialVarNames: Record<Environment, Record<RoleUserName, { email: 
 };
 
 // ============================================
+// Lone-Owner Account (variables from .env)
+// A real account that belongs to NO workspace (BK-946: deleting its only
+// workspace lands on onboarding). Staging only, read at the point of use by the
+// one test that needs it, by name.
+// ============================================
+
+const loneOwnerCredentialVarNames: Partial<Record<Environment, { email: string, password: string }>> = {
+  staging: { email: 'STAGING_LONE_OWNER_EMAIL', password: 'STAGING_LONE_OWNER_PASSWORD' },
+};
+
+// ============================================
+// Read-Only Database Connection (variable from .env)
+// Optional: a SELECT-only role (`qa_inspector_ro`) used to read the
+// `workspace_deletions` audit row, which has no API surface (BK-937). Absent
+// = the audit assertions skip with a reason; nothing else needs it.
+// ============================================
+
+const readOnlyDbVarNames: Partial<Record<Environment, string>> = {
+  staging: 'STAGING_DB_RO_URL',
+};
+
+// ============================================
 // Environment Detection
 // ============================================
 
@@ -184,6 +206,27 @@ function readRoleUser(role: RoleUserName): { email: string, password: string } {
   );
 }
 
+/**
+ * The lone-owner account for the active environment, read at the point of use.
+ * Throws a NAMED error when it is not declared or either half is empty.
+ */
+function readLoneOwner(): { email: string, password: string } {
+  const names = loneOwnerCredentialVarNames[env.current];
+  if (!names) {
+    throw new Error(`No lone-owner account is declared for TEST_ENV=${env.current} (config/variables.ts loneOwnerCredentialVarNames).`);
+  }
+  const email = process.env[names.email] ?? '';
+  const password = process.env[names.password] ?? '';
+  if (email !== '' && password !== '') { return { email, password }; }
+  const missing = [email === '' ? names.email : null, password === '' ? names.password : null]
+    .filter((n): n is string => n !== null);
+  throw new Error(
+    `The lone-owner account for TEST_ENV=${env.current} is not set: ${missing.join(', ')} `
+    + '(declared in config/variables.ts loneOwnerCredentialVarNames, values in .env). '
+    + 'Only the BK-946 test needs it.',
+  );
+}
+
 // ============================================
 // Main Configuration Object
 // ============================================
@@ -217,6 +260,22 @@ export const config = {
     get admin(): { email: string, password: string } { return readRoleUser('admin'); },
     get member(): { email: string, password: string } { return readRoleUser('member'); },
     get viewer(): { email: string, password: string } { return readRoleUser('viewer'); },
+  },
+
+  // Account with no workspace (configure in .env). Getter: validated on first read, by name.
+  get loneOwner(): { email: string, password: string } {
+    return readLoneOwner();
+  },
+
+  // Read-only DB connection for audit reads. NAME-only here: the value is read by
+  // tests/utils/deletionAudit.ts through `readOnlyDb.url`, `null` when unset.
+  readOnlyDb: {
+    get varName(): string | null { return readOnlyDbVarNames[env.current] ?? null; },
+    get url(): string | null {
+      const name = readOnlyDbVarNames[env.current];
+      const value = name ? (process.env[name] ?? '') : '';
+      return value === '' ? null : value;
+    },
   },
 
   // TMS / Browser / Reporting — synced (config/variables.core.ts)

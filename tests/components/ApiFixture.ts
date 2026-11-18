@@ -20,11 +20,13 @@ import { ActivityApi } from '@api/ActivityApi';
 import { ApiBase } from '@api/ApiBase';
 import { AtcsApi } from '@api/AtcsApi';
 import { AuthApi } from '@api/AuthApi';
+import { BugsApi } from '@api/BugsApi';
 import { ProjectsApi } from '@api/ProjectsApi';
 import { RunsApi } from '@api/RunsApi';
 import { TestsApi } from '@api/TestsApi';
 import { TokensApi } from '@api/TokensApi';
 import { UserStoriesApi } from '@api/UserStoriesApi';
+import { WorkspaceDeletionApi } from '@api/WorkspaceDeletionApi';
 import { WorkspaceExportApi } from '@api/WorkspaceExportApi';
 import { WorkspacesApi } from '@api/WorkspacesApi';
 
@@ -42,7 +44,13 @@ export class ApiFixture extends ApiBase {
   /** Workspace data export component (BK-508) - cookie-only routes */
   readonly workspaceExport: WorkspaceExportApi;
 
-  /** Content seeding helpers (cookie-only): projects, environments, modules */
+  /** Workspace deletion component (BK-512) - cookie-only routes */
+  readonly workspaceDeletion: WorkspaceDeletionApi;
+
+  /** Content seeding helpers (cookie-only): standalone bugs */
+  readonly bugs: BugsApi;
+
+  /** Content seeding helpers (cookie-only): projects, environments, modules, milestones */
   readonly projects: ProjectsApi;
 
   /** Content seeding helpers (cookie-only): user stories, acceptance criteria */
@@ -70,6 +78,8 @@ export class ApiFixture extends ApiBase {
     this.auth = new AuthApi(options);
     this.workspaces = new WorkspacesApi(options);
     this.workspaceExport = new WorkspaceExportApi(options);
+    this.workspaceDeletion = new WorkspaceDeletionApi(options);
+    this.bugs = new BugsApi(options);
     this.projects = new ProjectsApi(options);
     this.userStories = new UserStoriesApi(options);
     this.atcs = new AtcsApi(options);
@@ -92,6 +102,8 @@ export class ApiFixture extends ApiBase {
     this.auth.setAuthToken(token);
     this.workspaces.setAuthToken(token);
     this.workspaceExport.setAuthToken(token);
+    this.workspaceDeletion.setAuthToken(token);
+    this.bugs.setAuthToken(token);
     this.projects.setAuthToken(token);
     this.userStories.setAuthToken(token);
     this.atcs.setAuthToken(token);
@@ -109,6 +121,8 @@ export class ApiFixture extends ApiBase {
     this.auth.clearAuthToken();
     this.workspaces.clearAuthToken();
     this.workspaceExport.clearAuthToken();
+    this.workspaceDeletion.clearAuthToken();
+    this.bugs.clearAuthToken();
     this.projects.clearAuthToken();
     this.userStories.clearAuthToken();
     this.atcs.clearAuthToken();

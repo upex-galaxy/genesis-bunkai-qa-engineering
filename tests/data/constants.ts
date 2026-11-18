@@ -78,3 +78,26 @@ export const EXPORT_RACE_CALL_TIMEOUT_MS = 5_000;
  * budget can be computed from bounded calls.
  */
 export const EXPORT_PRECONDITION_CALL_TIMEOUT_MS = 10_000;
+
+/** Slug prefix of every synthetic workspace created by the BK-512 suite (manual purge key). */
+export const DELETION_SLUG_PREFIX = 'qa-auto-bk512-';
+
+/** Child entity types BK-938 proves unreachable once the Owner deletes the workspace. */
+export const DELETION_ENTITY_TYPES = [
+  'project',
+  'module',
+  'user_story',
+  'acceptance_criterion',
+  'atc',
+  'test',
+  'run',
+  'bug',
+  'milestone',
+  'environment',
+] as const;
+
+/** Entity type seeded in a workspace and probed after its deletion. */
+export type DeletionEntityType = (typeof DELETION_ENTITY_TYPES)[number];
+
+/** Upper bound of the active-workspace read-back after a UI deletion (the UI re-points before it redirects). */
+export const DELETION_UI_SETTLE_TIMEOUT_MS = 15_000;

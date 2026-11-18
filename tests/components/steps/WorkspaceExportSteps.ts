@@ -16,7 +16,17 @@
  */
 
 import type { APIRequestContext } from '@playwright/test';
-import type { Run, RunVerdict, Test } from '@schemas/workspace-content.types';
+import type {
+  AcceptanceCriterion,
+  Atc,
+  Module,
+  Project,
+  ProjectEnvironment,
+  Run,
+  RunVerdict,
+  Test,
+  UserStory,
+} from '@schemas/workspace-content.types';
 import type { WorkspaceExportJob } from '@schemas/workspace-export.types';
 import type { InviteRole, Workspace } from '@schemas/workspaces.types';
 import type { TestContextOptions } from '@TestContext';
@@ -30,6 +40,13 @@ import { TestContext } from '@TestContext';
 export interface SeededWorkspaceContent {
   test: Test
   runs: Run[]
+  /** The rest of the seeded chain, for suites that probe every entity (BK-512). */
+  project: Project
+  environment: ProjectEnvironment
+  module: Module
+  story: UserStory
+  criterion: AcceptanceCriterion
+  atc: Atc
 }
 
 export class WorkspaceExportSteps extends TestContext {
@@ -82,7 +99,7 @@ export class WorkspaceExportSteps extends TestContext {
       }
     }
 
-    return { test, runs };
+    return { test, runs, project, environment, module, story, criterion, atc };
   }
 
   /**
@@ -115,15 +132,19 @@ export class WorkspaceExportSteps extends TestContext {
    * switch fails, the just-created workspace is soft-deleted (best effort)
    * before the error is rethrown, so it never leaks. With `requestTimeoutMs`,
    * the creation and the switch are each bounded by it (default: the request
-   * context's timeout).
+   * context's timeout). With `slugPrefix`, the workspace is created under that
+   * suite's slug prefix instead of the BK-508 one (BK-512 passes its own).
    */
   async createSyntheticWorkspace(
-    options: { makeActive?: boolean, requestTimeoutMs?: number } = {},
+    options: { makeActive?: boolean, requestTimeoutMs?: number, slugPrefix?: string } = {},
   ): Promise<Workspace> {
     if (options.makeActive && !this._page) {
       throw new Error('createSyntheticWorkspace({ makeActive: true }) needs WorkspaceExportSteps built with a page.');
     }
-    const workspace = await this.api.workspaces.createWorkspace(this.data.createWorkspacePayload(), options.requestTimeoutMs);
+    const workspace = await this.api.workspaces.createWorkspace(
+      this.data.createWorkspacePayload({ prefix: options.slugPrefix }),
+      options.requestTimeoutMs,
+    );
     if (options.makeActive) {
       try {
         await new WorkspacesApi({ request: this._page!.request }).setActiveWorkspace(workspace.id, options.requestTimeoutMs);

@@ -19,6 +19,7 @@ import type { TestContextOptions } from '@TestContext';
 import { DataExportPage } from '@ui/DataExportPage';
 import { LoginPage } from '@ui/LoginPage';
 import { UiBase } from '@ui/UiBase';
+import { WorkspacesSettingsPage } from '@ui/WorkspacesSettingsPage';
 
 // ============================================
 // UI Fixture Class
@@ -31,11 +32,15 @@ export class UiFixture extends UiBase {
   /** Settings > Data export (BK-508) */
   readonly dataExport: DataExportPage;
 
+  /** Settings > Workspaces: list, delete confirmation (BK-512) */
+  readonly workspacesSettings: WorkspacesSettingsPage;
+
   constructor(options: TestContextOptions) {
     super(options);
 
     // All components receive the same options (same page context)
     this.login = new LoginPage(options);
     this.dataExport = new DataExportPage(options);
+    this.workspacesSettings = new WorkspacesSettingsPage(options);
   }
 }

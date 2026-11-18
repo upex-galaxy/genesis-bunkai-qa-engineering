@@ -11,15 +11,19 @@
  * - POST /api/v1/workspaces/{id}/projects  - Create a project (Idempotency-Key per call)
  * - POST /api/v1/projects/{id}/environments - Create an environment
  * - POST /api/v1/projects/{id}/modules     - Create a module
+ * - POST /api/v1/projects/{id}/milestones  - Create a milestone
  */
 
 import type {
   CreateEnvironmentPayload,
   CreateEnvironmentResponse,
+  CreateMilestonePayload,
+  CreateMilestoneResponse,
   CreateModulePayload,
   CreateModuleResponse,
   CreateProjectPayload,
   CreateProjectResponse,
+  Milestone,
   Module,
   Project,
   ProjectEnvironment,
@@ -37,6 +41,7 @@ export class ProjectsApi extends ApiBase {
     projectsOf: (workspaceId: string) => `/workspaces/${workspaceId}/projects`,
     environmentsOf: (projectId: string) => `/projects/${projectId}/environments`,
     modulesOf: (projectId: string) => `/projects/${projectId}/modules`,
+    milestonesOf: (projectId: string) => `/projects/${projectId}/milestones`,
   };
 
   constructor(options: TestContextOptions) {
@@ -84,5 +89,16 @@ export class ProjectsApi extends ApiBase {
     );
     expect(response.status(), 'module creation').toBe(201);
     return body.module;
+  }
+
+  /** Helper: Create a milestone in a project (seed only). Fails fast unless 201. */
+  @step
+  async createMilestone(projectId: string, payload: CreateMilestonePayload): Promise<Milestone> {
+    const [response, body] = await this.apiPOST<CreateMilestoneResponse, CreateMilestonePayload>(
+      this.endpoints.milestonesOf(projectId),
+      payload,
+    );
+    expect(response.status(), 'milestone creation').toBe(201);
+    return body.milestone;
   }
 }

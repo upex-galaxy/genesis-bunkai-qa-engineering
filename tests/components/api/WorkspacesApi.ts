@@ -8,7 +8,9 @@
  * Endpoints:
  * - GET    /api/v1/workspaces      - List workspaces the caller belongs to (cookie or Bearer)
  * - POST   /api/v1/workspaces      - Create a workspace (sent cookie-only, see below, with an Idempotency-Key)
+ * - GET    /api/v1/workspaces/{id} - Read one workspace (cookie or Bearer)
  * - DELETE /api/v1/workspaces/{id} - Soft-delete an owned workspace (owner-only, session-only)
+ * - POST   /api/v1/workspaces/{id}/restore - Restore a soft-deleted workspace (owner-only, session-only)
  * - POST   /api/v1/me/active-workspace     - Switch the active workspace (cookie-only, sets `bk_active_ws`)
  * - POST   /api/v1/workspaces/{id}/invites - Invite an email with a role (admin/owner)
  * - POST   /api/v1/invites/accept          - Redeem an invite token (the invitee's own session)
@@ -21,6 +23,7 @@
  */
 
 import type { APIResponse } from '@playwright/test';
+import type { ErrorEnvelope } from '@schemas/auth.types';
 import type {
   AcceptInvitePayload,
   AcceptInviteResponse,
@@ -30,8 +33,10 @@ import type {
   CreateWorkspaceResponse,
   DeleteWorkspacePayload,
   DeleteWorkspaceResponse,
+  GetWorkspaceResponse,
   InviteRole,
   ListWorkspacesResponse,
+  RestoreWorkspaceResponse,
   SetActiveWorkspacePayload,
   SetActiveWorkspaceResponse,
   Workspace,
@@ -52,6 +57,7 @@ export type {
   DeleteWorkspaceResponse,
   InviteRole,
   ListWorkspacesResponse,
+  RestoreWorkspaceResponse,
   Workspace,
   WorkspaceWithRole,
 } from '@schemas/workspaces.types';
@@ -60,6 +66,7 @@ export class WorkspacesApi extends ApiBase {
   private readonly endpoints = {
     list: '/workspaces',
     byId: (workspaceId: string) => `/workspaces/${workspaceId}`,
+    restoreOf: (workspaceId: string) => `/workspaces/${workspaceId}/restore`,
     activeWorkspace: '/me/active-workspace',
     invitesOf: (workspaceId: string) => `/workspaces/${workspaceId}/invites`,
     acceptInvite: '/invites/accept',
@@ -119,8 +126,9 @@ export class WorkspacesApi extends ApiBase {
   }
 
   /**
-   * Helper: Soft-delete an owned workspace. The route requires the workspace
-   * name as confirmation. Fails fast unless 200.
+   * Helper: Soft-delete an owned workspace. Fails fast unless 200. The route
+   * ignores any body (the type-the-name gate is UI-only, BK-512), so
+   * `confirmName` is sent harmlessly and proves nothing about that gate.
    */
   @step
   async deleteWorkspace(args: { workspaceId: string, confirmName: string }): Promise<DeleteWorkspaceResponse> {
@@ -135,6 +143,39 @@ export class WorkspacesApi extends ApiBase {
 
     expect(response.status(), 'workspace soft-delete').toBe(200);
     return body;
+  }
+
+  /**
+   * Helper: Read one workspace by id on the caller's own session (cookie-only).
+   * Returns the raw response: callers assert the status they expect (200 for a
+   * live member, 404 once the workspace is deleted or not visible).
+   */
+  @step
+  async getWorkspaceById(workspaceId: string): Promise<[APIResponse, GetWorkspaceResponse]> {
+    return this.apiGET<GetWorkspaceResponse>(this.endpoints.byId(workspaceId), { cookieOnly: true });
+  }
+
+  /**
+   * Helper: Soft-delete a workspace WITHOUT asserting the outcome (cookie-only),
+   * for callers that expect a refusal or race it. Returns the raw response.
+   */
+  @step
+  async deleteWorkspaceRaw(workspaceId: string): Promise<[APIResponse, DeleteWorkspaceResponse & ErrorEnvelope]> {
+    return this.apiDELETE<DeleteWorkspaceResponse & ErrorEnvelope>(this.endpoints.byId(workspaceId), { cookieOnly: true });
+  }
+
+  /**
+   * Helper: Restore a soft-deleted workspace WITHOUT asserting the outcome
+   * (cookie-only, owner-only). Returns the raw response.
+   */
+  @step
+  async restoreWorkspace(workspaceId: string): Promise<[APIResponse, RestoreWorkspaceResponse]> {
+    const [response, body] = await this.apiPOST<RestoreWorkspaceResponse, Record<string, never>>(
+      this.endpoints.restoreOf(workspaceId),
+      {},
+      { cookieOnly: true },
+    );
+    return [response, body];
   }
 
   /**
@@ -216,6 +257,28 @@ export class WorkspacesApi extends ApiBase {
 
     expect(response.status(), 'invite acceptance').toBe(200);
     return body;
+  }
+
+  /**
+   * Helper: Redeem an invite token WITHOUT asserting the outcome (call it on the
+   * invitee's request context), for callers that expect a refusal. Returns the
+   * raw response and its error envelope. The token never reaches an attachment.
+   */
+  @step
+  async acceptInviteRaw(args: { token: string }): Promise<[APIResponse, ErrorEnvelope]> {
+    const payload: AcceptInvitePayload = { token: args.token };
+    const response = await this.request.post(this.apiEndpoint(this.endpoints.acceptInvite), {
+      headers: this.cookieOnlyHeaders(),
+      data: payload,
+    });
+    const body = await this.getResponseJsonObject<ErrorEnvelope>(response);
+    await attachRequestResponseToAllure({
+      url: this.endpoints.acceptInvite,
+      method: 'POST',
+      responseBody: body,
+      requestBody: { token: '***' },
+    });
+    return [response, body];
   }
 
   /**

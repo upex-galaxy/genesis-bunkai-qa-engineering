@@ -106,3 +106,23 @@ export type FinishRunResponse = FinishRunPath['responses']['200']['content']['ap
 
 /** Final verdict accepted by the finish route. */
 export type RunVerdict = FinishRunPayload['verdict'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/bugs (standalone bug, requires Idempotency-Key)
+// ============================================================================
+
+type CreateBugPath = paths['/api/v1/bugs']['post'];
+
+export type CreateBugPayload = components['schemas']['BugStandaloneCreateBody'];
+export type CreateBugResponse = CreateBugPath['responses']['201']['content']['application/json'];
+export type Bug = CreateBugResponse['bug'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/projects/{id}/milestones
+// ============================================================================
+
+type CreateMilestonePath = paths['/api/v1/projects/{id}/milestones']['post'];
+
+export type Milestone = components['schemas']['Milestone'];
+export type CreateMilestonePayload = NonNullable<CreateMilestonePath['requestBody']>['content']['application/json'];
+export type CreateMilestoneResponse = CreateMilestonePath['responses']['201']['content']['application/json'];

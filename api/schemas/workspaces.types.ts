@@ -86,3 +86,46 @@ export type AcceptInvitePayload = components['schemas']['InviteAcceptBody'];
 
 /** 200 body: `{ ok, workspace_id, role }`. */
 export type AcceptInviteResponse = components['schemas']['InviteAcceptResponse'];
+
+// ============================================================================
+// Endpoint Types - GET /api/v1/workspaces/{id}
+// ============================================================================
+
+/** 200 body: `{ workspace }`. */
+export type GetWorkspaceResponse = components['schemas']['WorkspaceResponse'];
+
+// ============================================================================
+// Endpoint Types - POST /api/v1/workspaces/{id}/restore (owner-only, session-only)
+// ============================================================================
+
+/** 200 body: `{ workspaceId, workspaceName }`. */
+export type RestoreWorkspaceResponse = components['schemas']['WorkspaceRestoreResponse'];
+
+// ============================================================================
+// Hand-written: `workspace_deletions` audit row (no API surface, read through a DB role)
+// ============================================================================
+
+/** One `workspace_deletions` row, as the read-only audit utility returns it. */
+export interface WorkspaceDeletionRecord {
+  workspaceId: string
+  workspaceName: string
+  workspaceSlug: string
+  requestedBy: string
+  requestedAt: Date
+  purgeDeadline: Date
+  purgedAt: Date | null
+  memberCount: number
+}
+
+// ============================================================================
+// Schema Types - workspace read-backs used to prove "nothing changed" (BK-512)
+// ============================================================================
+
+/** GET /api/v1/workspaces/{id}/open-bugs body. */
+export type OpenBugs = components['schemas']['OpenBugs'];
+
+/** GET /api/v1/workspaces/{id}/recent-projects body. */
+export type RecentProjects = components['schemas']['RecentProjects'];
+
+/** GET /api/v1/workspaces/{id}/coverage body. */
+export type WorkspaceCoverage = components['schemas']['WorkspaceCoverage'];

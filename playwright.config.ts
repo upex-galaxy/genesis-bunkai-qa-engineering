@@ -16,17 +16,25 @@ const baseURL = config.baseUrl;
 
 // Tests that need the non-Owner role sessions from roles-setup (BK-1001). They
 // run ONLY in the e2e-roles project, so e2e and smoke-ui never need role creds.
-const roleSessionTests = /hideDataExportFromNonOwners\.test\.ts$/;
+const roleSessionTests = /(hideDataExportFromNonOwners|blockTeammateAfterDeletion|deleteOwnedWorkspace)\.test\.ts$/;
 
-// roles-setup + e2e-roles exist only when asked for, so a plain run never needs
-// the role accounts. Asked for = RUN_ROLE_TESTS=1, or `--project=e2e-roles` on
-// the command line (what the `test:e2e:roles` script passes). The argv match is
-// written back to the env flag so worker processes, which inherit the env but
-// not the argv, load the same project list.
+// API-only specs that need the non-Owner role sessions (BK-512: the non-Owner
+// refusal, the second-workspace isolation and the invite redeemed by a viewer).
+// They run ONLY in the integration-roles project, so a plain `integration` or
+// smoke run never needs role credentials.
+const roleIntegrationTests = /(rejectDeleteByNonOwner|isolateOtherWorkspace|refuseDeletedWorkspaceInvite)\.test\.ts$/;
+
+// roles-setup + e2e-roles + integration-roles exist only when asked for, so a
+// plain run never needs the role accounts. Asked for = RUN_ROLE_TESTS=1, or
+// `--project=e2e-roles` / `--project=integration-roles` on the command line
+// (what the `test:e2e:roles` and `test:integration:roles` scripts pass). The
+// argv match is written back to the env flag so worker processes, which inherit
+// the env but not the argv, load the same project list.
 // Case-insensitive, like Playwright's own --project filter.
+const roleProjectNames = ['e2e-roles', 'integration-roles'];
 const roleProjectRequested = process.argv.some((arg, i, argv) =>
-  arg.toLowerCase() === '--project=e2e-roles'
-  || (arg === '--project' && argv[i + 1]?.toLowerCase() === 'e2e-roles'));
+  roleProjectNames.some(name => arg.toLowerCase() === `--project=${name}`
+    || (arg === '--project' && argv[i + 1]?.toLowerCase() === name)));
 if (roleProjectRequested) {
   process.env.RUN_ROLE_TESTS = '1';
 }
@@ -189,11 +197,28 @@ export default defineConfig({
     {
       name: 'integration',
       testMatch: '**/integration/**/*.test.ts',
+      testIgnore: roleIntegrationTests, // runs in integration-roles (needs roles-setup)
       dependencies: ['api-setup'],
       use: {
         storageState: config.auth.apiSessionPath,
       },
     },
+
+    // ============================================
+    // Integration Tests with a second, non-Owner identity (role sessions from
+    // roles-setup). Same Owner session as `integration`, no browser.
+    // Usage: the `test:integration:roles` script in package.json
+    // ============================================
+    ...(includeRoleProjects
+      ? [{
+          name: 'integration-roles',
+          testMatch: roleIntegrationTests,
+          dependencies: ['api-setup', 'roles-setup'],
+          use: {
+            storageState: config.auth.apiSessionPath,
+          },
+        }]
+      : []),
 
     // ============================================
     // Smoke Tests - @critical tagged tests from any suite
@@ -215,6 +240,7 @@ export default defineConfig({
       name: 'smoke-api',
       grep: /@critical/,
       testMatch: '**/integration/**/*.test.ts',
+      testIgnore: roleIntegrationTests, // runs in integration-roles (needs roles-setup)
       dependencies: ['api-setup'],
       use: {
         storageState: config.auth.apiSessionPath,

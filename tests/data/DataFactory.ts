@@ -69,15 +69,45 @@ export class DataFactory {
   }
 
   /**
-   * Payload for a synthetic workspace. Slug: `qa-auto-bk508-<ts>-<rand6>`
-   * (matches `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`, <= 40 chars).
+   * Payload for a synthetic workspace. Slug: `<prefix><ts>-<rand6>` (default
+   * prefix `qa-auto-bk508-`; matches `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`, <= 40
+   * chars). The name carries the ticket key read from the prefix (`BK-508`).
    */
-  static createWorkspacePayload(overrides?: Partial<CreateWorkspacePayload>): CreateWorkspacePayload {
+  static createWorkspacePayload(
+    overrides?: Partial<CreateWorkspacePayload> & { prefix?: string },
+  ): CreateWorkspacePayload {
+    const { prefix = SYNTHETIC_WORKSPACE_SLUG_PREFIX, ...payloadOverrides } = overrides ?? {};
     const suffix = `${Date.now()}-${faker.string.alphanumeric({ length: 6, casing: 'lower' })}`;
+    const ticket = /bk(\d+)/i.exec(prefix)?.[1];
     return {
-      name: `QA Auto BK-508 ${suffix}`,
-      slug: `${SYNTHETIC_WORKSPACE_SLUG_PREFIX}${suffix}`,
-      ...overrides,
+      name: `QA Auto BK-${ticket ?? '508'} ${suffix}`,
+      slug: `${prefix}${suffix}`,
+      ...payloadOverrides,
+    };
+  }
+
+  /**
+   * A personal access token that was never issued: `bk_pat_` + 43 random
+   * base64url characters (BK-954 oracle of "never existed").
+   */
+  static createUnknownPat(): string {
+    return `bk_pat_${faker.string.alphanumeric({ length: 43 })}`;
+  }
+
+  /**
+   * An invite token that was never issued: `bk_inv_` + 43 random base64url
+   * characters (BK-956 oracle of "never existed").
+   */
+  static createUnknownInviteToken(): string {
+    return `bk_inv_${faker.string.alphanumeric({ length: 43 })}`;
+  }
+
+  /** Milestone payload for seeding: unique name, target date 30 days ahead (UTC calendar date). */
+  static createMilestonePayload(): { name: string, target_date: string } {
+    const target = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    return {
+      name: `QA Auto milestone ${faker.string.alphanumeric({ length: 8, casing: 'lower' })}`,
+      target_date: target.toISOString().slice(0, 10),
     };
   }
 
