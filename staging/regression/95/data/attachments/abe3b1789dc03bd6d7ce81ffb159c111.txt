@@ -1,0 +1,7 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 202 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/232b4649-d1a3-4597-86e9-e9658b4216fe/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/232b4649-d1a3-4597-86e9-e9658b4216fe/data-export
+✅ [BK-1017] requestExportSuccessfully - PASS (595ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/232b4649-d1a3-4597-86e9-e9658b4216fe/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/232b4649-d1a3-4597-86e9-e9658b4216fe/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/232b4649-d1a3-4597-86e9-e9658b4216fe
