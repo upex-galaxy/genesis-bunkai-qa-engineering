@@ -63,6 +63,12 @@ env:
   STAGING_MEMBER_PASSWORD: ${{ secrets.STAGING_MEMBER_PASSWORD }}
   STAGING_VIEWER_EMAIL: ${{ secrets.STAGING_VIEWER_EMAIL }}
   STAGING_VIEWER_PASSWORD: ${{ secrets.STAGING_VIEWER_PASSWORD }}
+  # Account with no workspace (BK-512: deleting the only workspace lands on onboarding)
+  STAGING_LONE_OWNER_EMAIL: ${{ secrets.STAGING_LONE_OWNER_EMAIL }}
+  STAGING_LONE_OWNER_PASSWORD: ${{ secrets.STAGING_LONE_OWNER_PASSWORD }}
+  # Optional read-only DB URL (BK-512 deletion audit). Unset = that check is
+  # recorded NOT RUN, never FAILED.
+  STAGING_DB_RO_URL: ${{ secrets.STAGING_DB_RO_URL }}
   # TMS Configuration (for Xray sync)
   # TMS modality. Only 'xray' has Test Executions to import into — a jira-native
   # project writes a per-Test status field instead, so the XrayImport job below
@@ -137,8 +143,10 @@ jobs:
       - name: Install Playwright (API context)
         run: bun run pw:install
 
+      # One Playwright process for both projects: reports/atc_results.json is
+      # written once per process, so a second run would overwrite the first.
       - name: Run Integration Tests on ${{ env.TEST_ENV }}
-        run: bun run test:integration
+        run: bun run test:integration -- --project=integration-roles
 
       # The TMS write-back runs HERE, after the Playwright process has exited:
       # reports/atc_results.json is written by KataReporter.onEnd(), which fires
@@ -223,8 +231,9 @@ jobs:
       - name: Install Playwright Browsers
         run: bun run pw:install
 
+      # One Playwright process for both projects (see the integration job).
       - name: Run E2E Tests on ${{ env.TEST_ENV }}
-        run: bun run test:e2e
+        run: bun run test:e2e -- --project=e2e-roles
 
       # The TMS write-back runs HERE, after the Playwright process has exited:
       # reports/atc_results.json is written by KataReporter.onEnd(), which fires
