@@ -16,7 +16,14 @@
  */
 import antfu from '@antfu/eslint-config';
 
-import { BASE_ESLINT_OPTIONS, CLI_IMPORT_CLOSURE, KATA_IMPORT_ALIASES } from './eslint.config.base.js';
+import {
+  BASE_ESLINT_OPTIONS,
+  CLI_IMPORT_CLOSURE,
+  KATA_IMPORT_ALIASES,
+  KATA_PLAYWRIGHT,
+  KATA_RULES,
+  KATA_SHAPE,
+} from './eslint.config.base.js';
 
 export default antfu(
   {
@@ -30,4 +37,18 @@ export default antfu(
   },
   CLI_IMPORT_CLOSURE,
   KATA_IMPORT_ALIASES,
+  KATA_RULES,
+  KATA_SHAPE,
+  KATA_PLAYWRIGHT,
+  {
+    // Temporary: specs written before the e8c6fa1 sync predate these KATA rules; restore error once refactored.
+    files: ['tests/**'],
+    rules: {
+      'kata/layer-imports': 'warn',
+      'kata/no-raw-page-in-spec': 'warn',
+      'max-lines': 'warn',
+      'playwright/no-nth-methods': 'warn',
+      'playwright/no-skipped-test': 'warn',
+    },
+  },
 );

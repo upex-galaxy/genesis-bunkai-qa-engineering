@@ -38,8 +38,8 @@
         "--filter",
         "DBHUB_TYPE,DBHUB_HOST,DBHUB_PORT,DBHUB_DATABASE,DBHUB_USER,DBHUB_PASSWORD",
         "--",
-        "bun",
-        "x",
+        "bunx",
+        "-y",
         "@bytebase/dbhub@1.2.1",
         "--config",
         "dbhub.toml"
@@ -58,8 +58,8 @@
         "--filter",
         "API_BASE_URL,OPENAPI_SPEC_PATH",
         "--",
-        "bun",
-        "x",
+        "bunx",
+        "-y",
         "@ivotoby/openapi-mcp-server@1.16.1",
         "--tools",
         "dynamic"
