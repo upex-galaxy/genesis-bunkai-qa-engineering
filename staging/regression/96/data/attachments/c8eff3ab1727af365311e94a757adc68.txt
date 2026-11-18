@@ -1,0 +1,8 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tokens
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/eb76d5b1-6b5b-4b9d-9356-a3812fbd0fcb
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/eb76d5b1-6b5b-4b9d-9356-a3812fbd0fcb
+---- API NOK: 401 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/eb76d5b1-6b5b-4b9d-9356-a3812fbd0fcb
+---- API NOK: 401 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/eb76d5b1-6b5b-4b9d-9356-a3812fbd0fcb
+✅ [BK-954] refuseDeletedWorkspacePat - PASS (665ms)
+---- API NOK: 404 - https://staging-upexbunkai.vercel.app/api/v1/tokens/e7adde8b-dc25-4b51-9e19-6d38d4caa298

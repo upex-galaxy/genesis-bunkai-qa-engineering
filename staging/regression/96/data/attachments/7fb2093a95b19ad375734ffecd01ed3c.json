@@ -1,0 +1,12 @@
+{
+  "module": {
+    "id": "a188bc32-f59d-48d2-b330-4e654ea04925",
+    "project_id": "917a0d22-90bd-4d36-a2ee-1dd1045f698e",
+    "parent_module_id": null,
+    "path": "export",
+    "name": "Export",
+    "position": 0,
+    "description": null,
+    "created_at": "2026-11-18T23:02:42.759889+00:00"
+  }
+}
