@@ -38,6 +38,10 @@ export interface LoginCredentials {
 // ============================================
 
 export class LoginPage extends UiBase {
+  private readonly emailInput = () => this.page.getByTestId('login-email');
+  private readonly continueButton = () => this.page.getByTestId('login-continue');
+  private readonly passwordInput = () => this.page.getByTestId('login-password');
+
   constructor(options: TestContextOptions) {
     super(options);
   }
@@ -51,9 +55,9 @@ export class LoginPage extends UiBase {
    * Step 1: email + Continue. Step 2: password + Sign in.
    */
   private async fillAndSubmitLoginForm(credentials: LoginCredentials): Promise<void> {
-    await this.page.getByTestId('login-email').fill(credentials.email);
-    await this.page.getByTestId('login-continue').click();
-    await this.page.getByTestId('login-password').fill(credentials.password);
+    await this.emailInput().fill(credentials.email);
+    await this.continueButton().click();
+    await this.passwordInput().fill(credentials.password);
     await this.page.getByTestId('login-signin').click();
   }
 
@@ -68,6 +72,27 @@ export class LoginPage extends UiBase {
   @step
   async goto(): Promise<void> {
     await this.page.goto(this.buildUrl('/login'));
+  }
+
+  @step
+  async createAccountThroughSignup(args: {
+    email: string
+    password: string
+    readCode: () => Promise<string | null>
+  }): Promise<void> {
+    await this.goto();
+    await this.emailInput().fill(args.email);
+    await this.continueButton().click();
+    await this.passwordInput().fill(args.password);
+    await this.page.getByTestId('login-create').click();
+    await expect(this.page.getByTestId('login-otp')).toBeVisible();
+    const code = await args.readCode();
+    if (code === null) {
+      throw new Error('No sign-up verification code reached the inbox in time.');
+    }
+    await this.page.getByTestId('login-otp').fill(code);
+    await this.page.getByTestId('login-verify').click();
+    await this.page.waitForURL(url => !url.pathname.includes('/login'));
   }
 
   // ============================================

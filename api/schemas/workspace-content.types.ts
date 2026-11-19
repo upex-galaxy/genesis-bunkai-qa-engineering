@@ -126,3 +126,10 @@ type CreateMilestonePath = paths['/api/v1/projects/{id}/milestones']['post'];
 export type Milestone = components['schemas']['Milestone'];
 export type CreateMilestonePayload = NonNullable<CreateMilestonePath['requestBody']>['content']['application/json'];
 export type CreateMilestoneResponse = CreateMilestonePath['responses']['201']['content']['application/json'];
+
+export type ListProjectsResponse = paths['/api/v1/workspaces/{id}/projects']['get']['responses']['200']['content']['application/json'];
+export type ListUserStoriesResponse = paths['/api/v1/modules/{id}/user-stories']['get']['responses']['200']['content']['application/json'];
+export type AtcSearchResponse = paths['/api/v1/atcs/search']['get']['responses']['200']['content']['application/json'];
+export type ListBugsResponse = paths['/api/v1/bugs']['get']['responses']['200']['content']['application/json'];
+export type AtcUsageResponse = paths['/api/v1/atcs/{id}/usage']['get']['responses']['200']['content']['application/json'];
+export type ListWorkspaceRunsResponse = paths['/api/v1/workspaces/{id}/runs']['get']['responses']['200']['content']['application/json'];

@@ -18,6 +18,7 @@ import type { TestContextOptions } from '@TestContext';
 
 import { DataExportPage } from '@ui/DataExportPage';
 import { LoginPage } from '@ui/LoginPage';
+import { OnboardingPage } from '@ui/OnboardingPage';
 import { UiBase } from '@ui/UiBase';
 import { WorkspacesSettingsPage } from '@ui/WorkspacesSettingsPage';
 
@@ -35,6 +36,8 @@ export class UiFixture extends UiBase {
   /** Settings > Workspaces: list, delete confirmation (BK-512) */
   readonly workspacesSettings: WorkspacesSettingsPage;
 
+  readonly onboarding: OnboardingPage;
+
   constructor(options: TestContextOptions) {
     super(options);
 
@@ -42,5 +45,6 @@ export class UiFixture extends UiBase {
     this.login = new LoginPage(options);
     this.dataExport = new DataExportPage(options);
     this.workspacesSettings = new WorkspacesSettingsPage(options);
+    this.onboarding = new OnboardingPage(options);
   }
 }

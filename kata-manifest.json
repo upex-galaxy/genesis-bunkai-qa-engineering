@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-11-18T22:14:08.326Z",
+  "generatedAt": "2026-11-19T22:21:03.988Z",
   "components": {
     "api": [
       {
@@ -48,6 +48,48 @@
         "file": "BugsApi.ts",
         "relativePath": "tests/components/api/BugsApi.ts",
         "atcs": []
+      },
+      {
+        "name": "IdempotencyApi",
+        "file": "IdempotencyApi.ts",
+        "relativePath": "tests/components/api/IdempotencyApi.ts",
+        "atcs": [
+          {
+            "id": "BK-1690",
+            "method": "refuseCreateWithoutKey",
+            "line": 145
+          },
+          {
+            "id": "BK-1698",
+            "method": "replayCreateWithSameKey",
+            "line": 169
+          },
+          {
+            "id": "BK-1700",
+            "method": "createNewRecordAfterKeyExpired",
+            "line": 306
+          },
+          {
+            "id": "BK-1701",
+            "method": "refuseKeyReuseWithDifferentPayload",
+            "line": 192
+          },
+          {
+            "id": "BK-1705",
+            "method": "refuseKeyReuseUnderAnotherParent",
+            "line": 216
+          },
+          {
+            "id": "BK-1715",
+            "method": "bootstrapFirstWorkspaceWithFreshPat",
+            "line": 280
+          },
+          {
+            "id": "BK-1718",
+            "method": "verifyEarlierAdopterContractUnchanged",
+            "line": 247
+          }
+        ]
       },
       {
         "name": "ProjectsApi",
@@ -241,12 +283,24 @@
           {
             "id": "BK-313",
             "method": "loginSuccessfully",
-            "line": 85
+            "line": 110
           },
           {
             "id": "BK-314",
             "method": "loginWithInvalidCredentials",
-            "line": 103
+            "line": 128
+          }
+        ]
+      },
+      {
+        "name": "OnboardingPage",
+        "file": "OnboardingPage.ts",
+        "relativePath": "tests/components/ui/OnboardingPage.ts",
+        "atcs": [
+          {
+            "id": "BK-1714",
+            "method": "completeOnboardingCreatingFirstWorkspace",
+            "line": 15
           }
         ]
       },
@@ -286,6 +340,19 @@
   },
   "steps": [
     {
+      "name": "IdempotencySteps",
+      "file": "IdempotencySteps.ts",
+      "relativePath": "tests/components/steps/IdempotencySteps.ts",
+      "methods": [
+        "cleanupStaleWorkspacesWithSlugPrefix",
+        "cleanupWorkspaces",
+        "createParentChain",
+        "openFreshPatContext",
+        "releaseFreshPatContext",
+        "seedEarlierAdopterParents"
+      ]
+    },
+    {
       "name": "WorkspaceDeletionSteps",
       "file": "WorkspaceDeletionSteps.ts",
       "relativePath": "tests/components/steps/WorkspaceDeletionSteps.ts",
@@ -317,10 +384,10 @@
     }
   ],
   "summary": {
-    "totalComponents": 15,
-    "totalATCs": 36,
-    "apiComponents": 12,
-    "uiComponents": 3,
-    "stepsModules": 2
+    "totalComponents": 17,
+    "totalATCs": 44,
+    "apiComponents": 13,
+    "uiComponents": 4,
+    "stepsModules": 3
   }
 }

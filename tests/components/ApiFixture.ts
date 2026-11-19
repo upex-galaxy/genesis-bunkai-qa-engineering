@@ -21,6 +21,7 @@ import { ApiBase } from '@api/ApiBase';
 import { AtcsApi } from '@api/AtcsApi';
 import { AuthApi } from '@api/AuthApi';
 import { BugsApi } from '@api/BugsApi';
+import { IdempotencyApi } from '@api/IdempotencyApi';
 import { ProjectsApi } from '@api/ProjectsApi';
 import { RunsApi } from '@api/RunsApi';
 import { TestsApi } from '@api/TestsApi';
@@ -71,6 +72,8 @@ export class ApiFixture extends ApiBase {
   /** Personal Access Tokens helpers (cookie-only): issue / revoke */
   readonly tokens: TokensApi;
 
+  readonly idempotency: IdempotencyApi;
+
   constructor(options: TestContextOptions) {
     super(options);
 
@@ -87,6 +90,7 @@ export class ApiFixture extends ApiBase {
     this.runs = new RunsApi(options);
     this.activity = new ActivityApi(options);
     this.tokens = new TokensApi(options);
+    this.idempotency = new IdempotencyApi(options);
   }
 
   // ============================================
@@ -111,6 +115,7 @@ export class ApiFixture extends ApiBase {
     this.runs.setAuthToken(token);
     this.activity.setAuthToken(token);
     this.tokens.setAuthToken(token);
+    this.idempotency.setAuthToken(token);
   }
 
   /**
@@ -130,5 +135,6 @@ export class ApiFixture extends ApiBase {
     this.runs.clearAuthToken();
     this.activity.clearAuthToken();
     this.tokens.clearAuthToken();
+    this.idempotency.clearAuthToken();
   }
 }

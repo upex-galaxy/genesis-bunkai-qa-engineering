@@ -121,6 +121,29 @@ const readOnlyDbVarNames: Partial<Record<Environment, string>> = {
   staging: 'STAGING_DB_RO_URL',
 };
 
+const bootstrapCredentialVarNames: Partial<Record<Environment, { email: string, password: string }>> = {
+  staging: { email: 'STAGING_BOOTSTRAP_EMAIL', password: 'STAGING_BOOTSTRAP_PASSWORD' },
+};
+
+const IDEMPOTENCY_DB_VAR_NAMES = ['DBHUB_HOST', 'DBHUB_PORT', 'DBHUB_DATABASE', 'DBHUB_USER', 'DBHUB_PASSWORD'] as const;
+
+export interface DbConnection {
+  host: string
+  port: number
+  database: string
+  username: string
+  password: string
+}
+
+function readIdempotencyDb(): DbConnection | null {
+  if (CORE_ENV.current !== 'staging') { return null; }
+  const [host, port, database, username, password] = IDEMPOTENCY_DB_VAR_NAMES.map(name => process.env[name] ?? '');
+  if ([host, port, database, username, password].includes('')) { return null; }
+  return { host, port: Number(port), database, username, password };
+}
+
+const QA_INBOX_API_KEY_VAR = 'RESEND_API_KEY';
+
 // ============================================
 // Environment Detection
 // ============================================
@@ -227,6 +250,23 @@ function readLoneOwner(): { email: string, password: string } {
   );
 }
 
+function readBootstrapUser(): { email: string, password: string } {
+  const names = bootstrapCredentialVarNames[env.current];
+  if (!names) {
+    throw new Error(`No bootstrap account is declared for TEST_ENV=${env.current} (config/variables.ts bootstrapCredentialVarNames).`);
+  }
+  const email = process.env[names.email] ?? '';
+  const password = process.env[names.password] ?? '';
+  if (email !== '' && password !== '') { return { email, password }; }
+  const missing = [email === '' ? names.email : null, password === '' ? names.password : null]
+    .filter((n): n is string => n !== null);
+  throw new Error(
+    `The bootstrap account for TEST_ENV=${env.current} is not set: ${missing.join(', ')} `
+    + '(declared in config/variables.ts bootstrapCredentialVarNames, values in .env). '
+    + 'Only the BK-1715 test needs it.',
+  );
+}
+
 // ============================================
 // Main Configuration Object
 // ============================================
@@ -274,6 +314,26 @@ export const config = {
     get url(): string | null {
       const name = readOnlyDbVarNames[env.current];
       const value = name ? (process.env[name] ?? '') : '';
+      return value === '' ? null : value;
+    },
+  },
+
+  get bootstrapUser(): { email: string, password: string } {
+    return readBootstrapUser();
+  },
+
+  bootstrapUserVarNames: bootstrapCredentialVarNames,
+
+  idempotencyDb: {
+    varNames: IDEMPOTENCY_DB_VAR_NAMES,
+    get connection(): DbConnection | null { return readIdempotencyDb(); },
+  },
+
+  qaInbox: {
+    apiKeyVarName: QA_INBOX_API_KEY_VAR,
+    domain: 'aeasteaont.resend.app',
+    get apiKey(): string | null {
+      const value = process.env[QA_INBOX_API_KEY_VAR] ?? '';
       return value === '' ? null : value;
     },
   },

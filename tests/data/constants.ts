@@ -101,3 +101,37 @@ export type DeletionEntityType = (typeof DELETION_ENTITY_TYPES)[number];
 
 /** Upper bound of the active-workspace read-back after a UI deletion (the UI re-points before it redirects). */
 export const DELETION_UI_SETTLE_TIMEOUT_MS = 15_000;
+
+export const IDEMPOTENCY_SLUG_PREFIX = 'qa-auto-bk667-';
+
+export const IDEMPOTENCY_TARGETS = ['workspaces', 'projects', 'user-stories', 'atcs', 'bugs'] as const;
+
+export type IdempotencyTarget = (typeof IDEMPOTENCY_TARGETS)[number];
+
+export const PARENT_SCOPED_TARGETS = ['projects', 'user-stories', 'atcs', 'bugs'] as const;
+
+export type ParentScopedTarget = (typeof PARENT_SCOPED_TARGETS)[number];
+
+export const EXPIRING_KEY_TARGETS = ['atcs', 'bugs'] as const;
+
+export type ExpiringKeyTarget = (typeof EXPIRING_KEY_TARGETS)[number];
+
+export const EARLIER_ADOPTER_TARGETS = ['tests', 'runs'] as const;
+
+export type EarlierAdopterTarget = (typeof EARLIER_ADOPTER_TARGETS)[number];
+
+export const IDEMPOTENCY_ENDPOINTS: Record<IdempotencyTarget | EarlierAdopterTarget, string> = {
+  'workspaces': 'POST /api/v1/workspaces',
+  'projects': 'POST /api/v1/workspaces/{id}/projects',
+  'user-stories': 'POST /api/v1/modules/{id}/user-stories',
+  'atcs': 'POST /api/v1/atcs',
+  'bugs': 'POST /api/v1/bugs',
+  'tests': 'POST /api/v1/tests',
+  'runs': 'POST /api/v1/runs',
+};
+
+export const IDEMPOTENCY_KEY_PATTERN = /^[\w-]{8,128}$/;
+
+export const SIGNUP_OTP_TIMEOUT_MS = 90_000;
+
+export const IDEMPOTENCY_LEFTOVER_MIN_AGE_MS = 60 * 60_000;

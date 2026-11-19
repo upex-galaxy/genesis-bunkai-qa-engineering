@@ -12,8 +12,9 @@
 import type { TestCredentials, TestUser } from '@data/types';
 import type { CreateWorkspacePayload } from '@schemas/workspaces.types';
 
-import { SYNTHETIC_WORKSPACE_SLUG_PREFIX } from '@data/constants';
+import { IDEMPOTENCY_SLUG_PREFIX, SYNTHETIC_WORKSPACE_SLUG_PREFIX } from '@data/constants';
 import { faker } from '@faker-js/faker';
+import { config } from '@variables';
 
 export class DataFactory {
   // ============================================
@@ -124,6 +125,19 @@ export class DataFactory {
    */
   static createInviteEmail(): string {
     return `qa-auto-bk508+${faker.string.alphanumeric({ length: 8, casing: 'lower' })}@example.com`;
+  }
+
+  static createIdempotencyKey(tc: string): string {
+    return `${IDEMPOTENCY_SLUG_PREFIX}${tc}-${faker.string.uuid()}`;
+  }
+
+  static createIdempotencyMarker(tc: string): string {
+    return `${IDEMPOTENCY_SLUG_PREFIX}${tc}-${faker.string.alphanumeric({ length: 8, casing: 'lower' })}`;
+  }
+
+  static createSignupCredentials(): TestCredentials {
+    const local = `${IDEMPOTENCY_SLUG_PREFIX}${Date.now()}-${faker.string.alphanumeric({ length: 6, casing: 'lower' })}`;
+    return { email: `${local}@${config.qaInbox.domain}`, password: this.securePassword() };
   }
 
   /**
