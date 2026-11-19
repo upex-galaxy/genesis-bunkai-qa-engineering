@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "id": "94adebc0-3053-4951-b929-630e9e455066",
+      "entity_type": "workspace",
+      "action": "export.requested",
+      "action_label": "requested a workspace data export",
+      "actor": {
+        "user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+        "email": "test@aeasteaont.resend.app"
+      },
+      "item": {
+        "label": "a workspace",
+        "entity_id": "657cb318-7130-4dcc-a146-a3b850be2bd4"
+      },
+      "payload": {},
+      "created_at": "2026-11-19T12:51:18.602602+00:00"
+    }
+  ],
+  "next_cursor": null
+}
