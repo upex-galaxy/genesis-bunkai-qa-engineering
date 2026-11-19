@@ -1,0 +1,14 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281/invites
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/invites/accept
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tokens
+---- API NOK: 403 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281
+---- API NOK: 403 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281
+✅ [BK-922] rejectDeleteByNonOwner - PASS (1340ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281/membership
+---- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/4840dfce-67f6-4cea-aa4d-1af587b56fae
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/1ed3361a-c7b2-4832-9cf3-41a737df8281

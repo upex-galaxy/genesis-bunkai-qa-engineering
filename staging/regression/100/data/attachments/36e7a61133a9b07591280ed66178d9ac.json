@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "88ec83c9-921c-4f7c-940e-660c5c0931e9",
+    "slug": "idempotency/atc-41314586",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "3f8b25fd-90c5-4338-8282-9d78bff69b2d",
+        "content": "Send the create request",
+        "expected": "The record is created once",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "qa-auto-bk667-tc1-j1cv0p9b",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "e15d11b7-b594-4a92-955d-b2efa7cd2393",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-19T23:36:07.23603+00:00",
+    "project_id": "85c873a9-4f1d-4c81-9138-68b4096fec41",
+    "updated_at": "2026-11-19T23:36:07.23603+00:00",
+    "archived_at": null,
+    "user_story_id": "d11c51be-5ac0-4e16-b420-2b882b37e112",
+    "acceptance_criterion_ids": [
+      "e2b161b6-af72-40fa-9c32-f40d2a4d24ab"
+    ]
+  }
+}

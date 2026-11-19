@@ -1,0 +1,18 @@
+{
+  "data": [],
+  "aggregates": {
+    "by_status": {
+      "open": 0,
+      "closed": 0,
+      "resolved": 0,
+      "in_progress": 0
+    },
+    "by_severity": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0
+    }
+  },
+  "next_cursor": null
+}
