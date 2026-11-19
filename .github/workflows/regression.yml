@@ -69,6 +69,20 @@ env:
   # Optional read-only DB URL (BK-512 deletion audit). Unset = that check is
   # recorded NOT RUN, never FAILED.
   STAGING_DB_RO_URL: ${{ secrets.STAGING_DB_RO_URL }}
+  # BK-667 optional credentials. Unset = the test that needs them is recorded
+  # SKIPPED with the variable names, never FAILED.
+  # Never-onboarded account (TC26: a fresh PAT bootstraps the first workspace)
+  STAGING_BOOTSTRAP_EMAIL: ${{ secrets.STAGING_BOOTSTRAP_EMAIL }}
+  STAGING_BOOTSTRAP_PASSWORD: ${{ secrets.STAGING_BOOTSTRAP_PASSWORD }}
+  # Resend key with receiving access (TC25: read the sign-up code)
+  RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+  # Guarded write as qa_inspector_rw (TC11: age one idempotency key, ADR-0030)
+  DBHUB_TYPE: postgres
+  DBHUB_HOST: ${{ secrets.DBHUB_HOST }}
+  DBHUB_PORT: ${{ secrets.DBHUB_PORT }}
+  DBHUB_DATABASE: ${{ secrets.DBHUB_DATABASE }}
+  DBHUB_USER: ${{ secrets.DBHUB_USER }}
+  DBHUB_PASSWORD: ${{ secrets.DBHUB_PASSWORD }}
   # TMS Configuration (for Xray sync)
   # TMS modality. Only 'xray' has Test Executions to import into — a jira-native
   # project writes a per-Test status field instead, so the XrayImport job below
