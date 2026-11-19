@@ -1,0 +1,8 @@
+{
+  "name": "qa-auto-bk508-zikust",
+  "scopes": [
+    "workspace:admin"
+  ],
+  "workspace_id": "c94efcf5-cbef-4e18-a1b2-a1704e6d155c",
+  "expires_in_days": 1
+}

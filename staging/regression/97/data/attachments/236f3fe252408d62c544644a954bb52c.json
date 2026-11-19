@@ -1,0 +1,12 @@
+{
+  "id": "54549a3b-4c4b-4a7d-8f0b-eba3893337bf",
+  "token": "***",
+  "name": "qa-auto-bk508-zikust",
+  "scopes": [
+    "workspace:admin"
+  ],
+  "workspace_id": "c94efcf5-cbef-4e18-a1b2-a1704e6d155c",
+  "expires_at": "2026-11-20T01:09:59.637+00:00",
+  "created_at": "2026-11-19T01:09:59.648849+00:00",
+  "warning": "Store this token now — it cannot be retrieved later."
+}

@@ -1,0 +1,21 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/654c66ca-f415-4c06-8cda-4eeae55bae51/invites
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/invites/accept
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/recent-projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/open-bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/coverage
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/recent-projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/open-bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/21912ef0-fdf2-41b4-87cc-979d42a810fa/coverage
+⏭️ [BK-937] deleteOwnedWorkspaceAsOwner - SKIP: Test is skipped: workspace_deletions audit not checked: STAGING_DB_RO_URL is not set (needs the qa_inspector_ro read-only connection); the UI assertions ran and passed
+---- API NOK: 404 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/0bffba09-4e97-4504-896e-3e4bd2aae753
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/654c66ca-f415-4c06-8cda-4eeae55bae51/membership
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/654c66ca-f415-4c06-8cda-4eeae55bae51/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/654c66ca-f415-4c06-8cda-4eeae55bae51
