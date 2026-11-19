@@ -1,0 +1,18 @@
+
+============================================================
+KATA Architecture - Global Teardown
+============================================================
+
+ATC Coverage:
+   22 unique ATC tracked (41 total executions)
+   ✅ Passed: 22 | ❌ Failed: 0 | ⏭️ Skipped: 0
+
+[SYNC] Syncing results to TMS...
+   Provider: xray
+   Status: Failed
+   Message: ATC report file not found: reports/atc_results.json
+
+============================================================
+[OK] Global teardown complete
+============================================================
+
