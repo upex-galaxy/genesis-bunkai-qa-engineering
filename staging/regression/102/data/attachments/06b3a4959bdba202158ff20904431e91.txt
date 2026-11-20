@@ -1,0 +1,10 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/2c43dbcb-6511-47c1-8ce3-88371de2877d/invites
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/2c43dbcb-6511-47c1-8ce3-88371de2877d/invites
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/2c43dbcb-6511-47c1-8ce3-88371de2877d
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API NOK: 404 - https://staging-upexbunkai.vercel.app/api/v1/invites/accept
+---- API NOK: 404 - https://staging-upexbunkai.vercel.app/api/v1/invites/accept
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+✅ [BK-956] refuseDeletedWorkspaceInvite - PASS (1293ms)

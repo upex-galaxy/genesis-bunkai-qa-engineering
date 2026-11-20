@@ -1,0 +1,13 @@
+{
+  "workspaces": [
+    {
+      "id": "6148d0d7-21f6-487b-b791-c3722fbc3317",
+      "slug": "qa-auto-bk667-tc26-1795151711013-ygz3wj",
+      "name": "QA Auto BK-667 1795151711013-ygz3wj",
+      "owner_user_id": "43d4cb47-9e31-4e76-8440-4c2b00c92f9d",
+      "plan": "community",
+      "created_at": "2026-11-20T05:15:11.877876+00:00",
+      "role": "owner"
+    }
+  ]
+}

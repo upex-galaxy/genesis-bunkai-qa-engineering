@@ -1,0 +1,8 @@
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+✅ [BK-1700] createNewRecordAfterKeyExpired - PASS (2322ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/3d360fbc-2f19-43e8-ac30-3476457c6326
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/3d360fbc-2f19-43e8-ac30-3476457c6326

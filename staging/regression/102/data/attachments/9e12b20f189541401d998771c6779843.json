@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "conflict",
+    "message": "An export is already being prepared for this workspace.",
+    "details": {
+      "reason": "export_in_progress"
+    },
+    "request_id": "e5978108-df8d-45c5-a41f-bf3a7c4df042"
+  }
+}

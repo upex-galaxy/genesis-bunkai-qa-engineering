@@ -1,0 +1,13 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 202 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/data-export
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/invites
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/invites/accept
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/data-export
+✅ [BK-1001] verifySectionHiddenForNonOwner - PASS (3184ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/membership
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7d35225a-162b-44cf-bd39-04525c39d802

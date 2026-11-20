@@ -1,0 +1,16 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7bce61e4-1dfb-405f-9b44-804556ec8c9a/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/899d7df9-4e14-4af2-afe3-3d3d5db5fdd7/modules
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/c33b2367-845f-458c-967a-31d31ed0fd54/user-stories
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/user-stories/b586da83-e62d-4f30-8fc6-6f546022456e/acceptance-criteria
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/899d7df9-4e14-4af2-afe3-3d3d5db5fdd7/environments
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/tests
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/atcs/845019c2-afe3-490c-a911-a71008cf9339/usage
+✅ [BK-1718] verifyEarlierAdopterContractUnchanged - PASS (2069ms)

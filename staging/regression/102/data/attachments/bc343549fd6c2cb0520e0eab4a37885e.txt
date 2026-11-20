@@ -1,0 +1,12 @@
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+✅ [BK-1715] bootstrapFirstWorkspaceWithFreshPat - PASS (2156ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6148d0d7-21f6-487b-b791-c3722fbc3317
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6148d0d7-21f6-487b-b791-c3722fbc3317
+---- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/d596667c-f4e0-43dc-83a3-7864d2d294d6

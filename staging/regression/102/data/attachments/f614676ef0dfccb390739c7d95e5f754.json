@@ -1,0 +1,69 @@
+{
+  "data": [
+    {
+      "id": "989ef541-d1af-4ac6-826e-fa7522e5a054",
+      "title": "qa-auto-bk667-tc11-3qti5ep0",
+      "atc_id": null,
+      "module": {
+        "id": "e8092d18-1e51-40b0-ac26-a945af312a5f",
+        "name": "Idempotency",
+        "path": "idempotency"
+      },
+      "run_id": null,
+      "status": "open",
+      "severity": "P3",
+      "module_id": "e8092d18-1e51-40b0-ac26-a945af312a5f",
+      "created_at": "2026-11-20T05:15:22.460579+00:00",
+      "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "project_id": "d8e111be-d36e-42a3-b009-53404d92b4b7",
+      "updated_at": "2026-11-20T05:15:22.460579+00:00",
+      "description": null,
+      "run_step_id": null,
+      "workspace_id": "3d360fbc-2f19-43e8-ac30-3476457c6326",
+      "evidence_urls": [],
+      "assignee_user_id": null,
+      "steps_to_reproduce": "",
+      "assignee": null
+    },
+    {
+      "id": "797d6ed0-7e8c-4094-b253-4382ad137377",
+      "title": "qa-auto-bk667-tc11-3qti5ep0",
+      "atc_id": null,
+      "module": {
+        "id": "e8092d18-1e51-40b0-ac26-a945af312a5f",
+        "name": "Idempotency",
+        "path": "idempotency"
+      },
+      "run_id": null,
+      "status": "open",
+      "severity": "P3",
+      "module_id": "e8092d18-1e51-40b0-ac26-a945af312a5f",
+      "created_at": "2026-11-20T05:15:20.892138+00:00",
+      "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "project_id": "d8e111be-d36e-42a3-b009-53404d92b4b7",
+      "updated_at": "2026-11-20T05:15:20.892138+00:00",
+      "description": null,
+      "run_step_id": null,
+      "workspace_id": "3d360fbc-2f19-43e8-ac30-3476457c6326",
+      "evidence_urls": [],
+      "assignee_user_id": null,
+      "steps_to_reproduce": "",
+      "assignee": null
+    }
+  ],
+  "aggregates": {
+    "by_status": {
+      "open": 2,
+      "closed": 0,
+      "resolved": 0,
+      "in_progress": 0
+    },
+    "by_severity": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 2,
+      "P4": 0
+    }
+  },
+  "next_cursor": null
+}

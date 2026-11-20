@@ -1,0 +1,50 @@
+{
+  "run": {
+    "id": "75ff6c1a-9225-47da-bcc4-43218778f652",
+    "atcs": [
+      {
+        "id": "86ca4fbb-5975-481a-ab77-536a139d76c3",
+        "steps": [
+          {
+            "id": "118976ed-1c30-4b1a-b90c-5dd97eeaf2be",
+            "note": null,
+            "status": "pending",
+            "content": "Send the request",
+            "expected": "It is accepted",
+            "position": 1,
+            "input_data": null,
+            "atc_step_id": "99546dae-6fbb-463e-8e13-280a23a860bb",
+            "executed_at": null,
+            "evidence_url": null
+          }
+        ],
+        "atc_id": "e44aded6-5e36-4ca1-a35a-a6e98fdb1f7f",
+        "status": "pending",
+        "position": 1,
+        "atc_title": "QA Auto BK-667 ATC of the runs row"
+      }
+    ],
+    "status": "running",
+    "test_id": "d17dfbfb-b630-40e0-9760-735a563d1f1e",
+    "version": 1,
+    "replayed": false,
+    "atc_count": 1,
+    "module_id": "c33b2367-845f-458c-967a-31d31ed0fd54",
+    "created_at": "2026-11-20T05:15:41.064227+00:00",
+    "project_id": "899d7df9-4e14-4af2-afe3-3d3d5db5fdd7",
+    "started_at": "2026-11-20T05:15:41.064227+00:00",
+    "step_count": 1,
+    "test_title": "QA Auto BK-667 test of the runs row",
+    "updated_at": "2026-11-20T05:15:41.064227+00:00",
+    "finished_at": null,
+    "module_name": "Idempotency",
+    "abort_reason": null,
+    "workspace_id": "7bce61e4-1dfb-405f-9b44-804556ec8c9a",
+    "evidence_urls": [],
+    "executor_mode": "human",
+    "executor_name": "qa-automation",
+    "environment_id": "298f7beb-95cb-4916-a2ab-7f601f112b96",
+    "environment_name": "staging",
+    "executor_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7"
+  }
+}

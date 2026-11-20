@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Environment not found.",
+    "details": {
+      "reason": "not_found"
+    },
+    "request_id": "40ce68ad-b35f-4f69-ab1e-86c404bc4609"
+  }
+}
