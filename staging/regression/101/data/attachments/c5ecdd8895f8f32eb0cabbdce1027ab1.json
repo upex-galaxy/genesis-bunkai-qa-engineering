@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+      "id": "506b4142-f21f-4880-bd3c-e9b62371a7b8",
+      "slug": "qa-auto-export-project",
+      "name": "QA Auto Export Project",
+      "module_count": 1,
+      "atc_count": 1,
+      "last_activity_at": "2026-11-20T00:01:00.225039+00:00"
+    }
+  ]
+}

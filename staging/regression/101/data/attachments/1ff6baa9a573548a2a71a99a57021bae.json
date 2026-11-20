@@ -1,0 +1,11 @@
+{
+  "invite": {
+    "id": "def920a2-4a13-4a07-9efb-f50bafbbb82f",
+    "email": "test@aeasteaont.resend.app",
+    "role": "member",
+    "expires_at": "2026-11-27T00:06:25.266318+00:00",
+    "created_at": "2026-11-20T00:06:25.266318+00:00"
+  },
+  "token": "***",
+  "accept_url": "***"
+}

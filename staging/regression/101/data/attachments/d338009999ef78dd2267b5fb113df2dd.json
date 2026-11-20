@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "b2113997-10e3-4a5a-8337-e762d037a08d",
+    "slug": "idempotency/atc-6a93b090",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "682d5bfb-eec3-4cc1-990f-7c5473df6ef7",
+        "content": "Send the create request",
+        "expected": "The record is created once",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "qa-auto-bk667-tc16-pivbohr5",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "c0a0cbce-0c9b-431b-b0e6-f9334cbd8d2c",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-20T00:00:00.767128+00:00",
+    "project_id": "aab42841-77be-47b6-8193-6e220615f897",
+    "updated_at": "2026-11-20T00:00:00.767128+00:00",
+    "archived_at": null,
+    "user_story_id": "44ba07ce-edda-47e5-aa3f-ec80b62bbdb4",
+    "acceptance_criterion_ids": [
+      "d2bd16a6-fb1f-460d-8e17-2433e31ca81c"
+    ]
+  }
+}

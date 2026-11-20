@@ -1,0 +1,16 @@
+{
+  "title": "QA Auto BK-667 ATC of the runs row",
+  "module_id": "c63ccc67-8011-4337-9d09-bc8baa9ba082",
+  "user_story_id": "7a55d79e-de8a-4452-926a-02cb2bd4cafd",
+  "acceptance_criterion_ids": [
+    "03777c71-cb57-45cf-9580-62c53f177c10"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the request",
+      "expected": "It is accepted"
+    }
+  ]
+}

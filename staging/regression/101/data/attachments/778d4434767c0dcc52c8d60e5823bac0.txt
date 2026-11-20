@@ -1,0 +1,5 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+✅ [BK-994] openDataExportSectionAsOwner - PASS (2093ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/539a267b-5365-48be-a01b-65b878826763/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/539a267b-5365-48be-a01b-65b878826763

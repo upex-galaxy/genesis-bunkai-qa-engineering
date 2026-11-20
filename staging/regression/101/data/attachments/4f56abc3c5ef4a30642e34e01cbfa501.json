@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-leckge",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "300a7e8e-d31a-4880-b87a-5d0db7c3cddf",
+  "expires_in_days": 1
+}

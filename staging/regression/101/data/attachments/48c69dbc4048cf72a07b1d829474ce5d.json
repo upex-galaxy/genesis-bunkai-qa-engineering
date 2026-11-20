@@ -1,0 +1,16 @@
+{
+  "title": "qa-auto-bk667-tc16-pivbohr5",
+  "module_id": "1a8fd1d6-bcb6-47bc-a8e1-5f09ddde0381",
+  "user_story_id": "ce41789c-7ff5-4aec-96f5-c4b8275d7280",
+  "acceptance_criterion_ids": [
+    "69c983a5-7474-4e46-976d-982c20a104bd"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the create request",
+      "expected": "The record is created once"
+    }
+  ]
+}

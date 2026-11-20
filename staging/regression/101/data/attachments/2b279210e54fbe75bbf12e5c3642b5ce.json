@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Workspace not found.",
+    "request_id": "d1bbd732-690d-4853-9f3b-d9c5f253360a"
+  }
+}
