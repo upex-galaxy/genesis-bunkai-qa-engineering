@@ -1,0 +1,5 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/2dbd44a0-0f5a-429d-a358-d95948702d5d/user-stories
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/modules/2dbd44a0-0f5a-429d-a358-d95948702d5d/user-stories
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/modules/2dbd44a0-0f5a-429d-a358-d95948702d5d/user-stories
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/modules/2dbd44a0-0f5a-429d-a358-d95948702d5d/user-stories
+✅ [BK-1701] refuseKeyReuseWithDifferentPayload - PASS (1103ms)
