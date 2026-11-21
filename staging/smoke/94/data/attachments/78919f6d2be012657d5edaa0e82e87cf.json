@@ -1,0 +1,12 @@
+{
+  "acceptance_criterion": {
+    "id": "750fc75a-f751-4e9e-a298-d75baaa9dd73",
+    "title": "A retry never writes twice",
+    "position": 1,
+    "created_at": "2026-11-21T09:12:38.10842+00:00",
+    "archived_at": null,
+    "description": null,
+    "user_story_id": "3b655158-7d9d-4eb2-b5e6-16221b675a98",
+    "archive_batch_id": null
+  }
+}

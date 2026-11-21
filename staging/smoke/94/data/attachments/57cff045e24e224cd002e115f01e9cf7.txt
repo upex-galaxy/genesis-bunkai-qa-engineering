@@ -1,0 +1,10 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+✅ [BK-1701] refuseKeyReuseWithDifferentPayload - PASS (1385ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/340ec201-127d-47e1-811c-bec3a17524fc
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/340ec201-127d-47e1-811c-bec3a17524fc
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/5473002f-ec84-4ca7-a6fb-d88aae8d13e2
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/5473002f-ec84-4ca7-a6fb-d88aae8d13e2
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces

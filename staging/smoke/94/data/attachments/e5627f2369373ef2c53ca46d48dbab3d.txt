@@ -1,0 +1,14 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/f8c0e8b6-3bcf-4321-a4f6-d4c77b8815db/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/e57ff344-fdf2-438d-b81f-1f50d77f1e55/modules
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/37c80447-6c23-4a44-a1c1-f661a782a943/user-stories
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/user-stories/3b655158-7d9d-4eb2-b5e6-16221b675a98/acceptance-criteria
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7421a039-9c7b-455e-8938-ce9849c7046d/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/a536d2e4-d43b-40e9-9962-4b03220ee166/modules
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/b4e842ba-45dd-4974-bc58-7d98002fd606/user-stories
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/user-stories/10c4dd8f-40a1-48f0-9320-0fc6c90dec60/acceptance-criteria
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/f8c0e8b6-3bcf-4321-a4f6-d4c77b8815db/projects
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7421a039-9c7b-455e-8938-ce9849c7046d/projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/7421a039-9c7b-455e-8938-ce9849c7046d/projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/f8c0e8b6-3bcf-4321-a4f6-d4c77b8815db/projects
