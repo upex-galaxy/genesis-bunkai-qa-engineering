@@ -1,0 +1,16 @@
+{
+  "title": "qa-auto-bk667-tc16-xnvtii6q",
+  "module_id": "9f454df6-be38-4bb9-8662-b396d1686d17",
+  "user_story_id": "4421b40b-fc8a-4f9f-a82c-ae8a12d47bac",
+  "acceptance_criterion_ids": [
+    "fd1ba987-25ef-43f7-9cda-4f72bc8b978e"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the create request",
+      "expected": "The record is created once"
+    }
+  ]
+}

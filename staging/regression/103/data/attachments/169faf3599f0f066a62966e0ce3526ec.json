@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-rvcrnm",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "e496627e-2c93-4858-af8a-c9ce58cc8e8e",
+  "expires_in_days": 1
+}

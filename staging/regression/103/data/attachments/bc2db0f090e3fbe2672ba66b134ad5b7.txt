@@ -1,0 +1,2 @@
+---- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/dd127119-7079-4775-bb0d-a57997090939
+[Roles Setup] member session cookie saved to .auth/role-member.json

@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "bc119ba8-01e7-455d-be22-e9897a4d39d8",
+    "slug": "export/atc-4215289a",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "04b07411-9e6b-40eb-853b-1ac1b4d06cab",
+        "content": "Line one\nLine two with \"quotes\" and a {brace}",
+        "expected": "Expected\nmultiline",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "QA Auto multiline ATC",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "91a930b3-c22b-49e5-81dd-c82ef4874d5c",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-21T05:09:08.651691+00:00",
+    "project_id": "217f7483-41e6-4857-97de-88b6565fd8fc",
+    "updated_at": "2026-11-21T05:09:08.651691+00:00",
+    "archived_at": null,
+    "user_story_id": "c5155249-ca40-44ce-bcf3-42f97a263827",
+    "acceptance_criterion_ids": [
+      "f1c61614-f14a-4648-9dc8-6f3d4c18e357"
+    ]
+  }
+}

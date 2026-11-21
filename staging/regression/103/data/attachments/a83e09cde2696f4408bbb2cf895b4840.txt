@@ -1,0 +1,1 @@
+[ERROR] ATC report file not found: reports/atc_results.json. It is written by KataReporter.onEnd() when the Playwright process exits, so run `bun run test:sync` as a step AFTER the test step, not before it and not inside the suite.

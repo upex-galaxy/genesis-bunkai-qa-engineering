@@ -1,0 +1,5 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
+✅ [BK-926] verifyConfirmGatedByExactName - PASS (1490ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/37126cf6-2a06-4627-a219-7f2e5e16c924/data-export
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/37126cf6-2a06-4627-a219-7f2e5e16c924

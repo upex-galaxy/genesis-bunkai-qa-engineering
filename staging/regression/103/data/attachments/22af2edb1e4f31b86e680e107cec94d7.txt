@@ -1,0 +1,10 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/546a5a99-821d-43ee-b015-5a4d03a132fe/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/bf439893-608e-45cb-8619-c9137586c6d5/modules
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/425d1063-2048-4978-a1d8-2ea5f10e1ade/user-stories
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/user-stories/8eabd4da-cbd4-4315-83ab-2522a3f00e58/acceptance-criteria
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+✅ [BK-1690] refuseCreateWithoutKey - PASS (951ms)

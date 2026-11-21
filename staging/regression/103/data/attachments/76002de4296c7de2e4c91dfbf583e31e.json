@@ -1,0 +1,30 @@
+{
+  "bug": {
+    "id": "41fbf88e-7b0c-4bdc-948e-32fd1de26648",
+    "title": "qa-auto-bk667-tc16-yyinkkai",
+    "atc_id": null,
+    "module": {
+      "id": "dbcdd6ac-aef2-4444-918e-ceb3766f91c4",
+      "name": "Idempotency",
+      "path": "idempotency",
+      "archived_at": null
+    },
+    "origin": null,
+    "run_id": null,
+    "status": "open",
+    "severity": "P3",
+    "module_id": "dbcdd6ac-aef2-4444-918e-ceb3766f91c4",
+    "created_at": "2026-11-21T05:08:00.347566+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "project_id": "f8bdcb35-95fd-4652-99a2-ebef7040070b",
+    "updated_at": "2026-11-21T05:08:00.347566+00:00",
+    "description": null,
+    "run_step_id": null,
+    "workspace_id": "020b389d-3c36-4052-b5a5-a81ea3886bca",
+    "evidence_urls": [],
+    "content_version": 1,
+    "assignee_user_id": null,
+    "steps_to_reproduce": "",
+    "evidence_attachments": []
+  }
+}
