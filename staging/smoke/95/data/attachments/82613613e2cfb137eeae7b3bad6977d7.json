@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "id": "775ab6c2-e9a2-4661-8db6-e9815f4ce91b",
+      "slug": "qa-auto-bk-667-parent-project",
+      "name": "QA Auto BK-667 parent project",
+      "created_at": "2026-11-22T09:21:50.900131+00:00"
+    },
+    {
+      "id": "fa5abd87-c9a6-44c1-9ce1-b83f0ca67561",
+      "slug": "qa-auto-bk667-tc16-hpcvst5s",
+      "name": "qa-auto-bk667-tc16-hpcvst5s",
+      "created_at": "2026-11-22T09:21:54.188235+00:00"
+    }
+  ]
+}
