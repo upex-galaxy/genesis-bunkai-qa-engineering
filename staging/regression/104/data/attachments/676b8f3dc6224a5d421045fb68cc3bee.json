@@ -1,0 +1,26 @@
+{
+  "user_stories": [
+    {
+      "id": "8d42da7e-e5aa-45f7-a525-243b5d46bc18",
+      "module_id": "79790fbd-6de4-4362-bcd2-64b4919d30ca",
+      "project_id": "b05f12f0-66a1-4ff4-8958-8a2ed45d3efe",
+      "title": "qa-auto-bk667-tc9-es3dp4ag",
+      "description": null,
+      "external_id": null,
+      "external_url": null,
+      "created_at": "2026-11-22T04:34:02.544237+00:00",
+      "archived_at": null
+    },
+    {
+      "id": "fd819f0e-eae5-48c3-9fe8-236fe5bee2d2",
+      "module_id": "79790fbd-6de4-4362-bcd2-64b4919d30ca",
+      "project_id": "b05f12f0-66a1-4ff4-8958-8a2ed45d3efe",
+      "title": "QA Auto BK-667 parent story",
+      "description": null,
+      "external_id": null,
+      "external_url": null,
+      "created_at": "2026-11-22T04:33:59.327634+00:00",
+      "archived_at": null
+    }
+  ]
+}

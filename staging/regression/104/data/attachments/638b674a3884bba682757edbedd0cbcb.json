@@ -1,0 +1,16 @@
+{
+  "title": "QA Auto multiline ATC",
+  "module_id": "5b41d1ee-8fb3-4eb6-9f7f-73ba1591fa6f",
+  "user_story_id": "a61c879e-0429-4a9f-bc08-953fe54c9334",
+  "acceptance_criterion_ids": [
+    "7438ccbe-73ef-4d40-adc8-162044d76304"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Line one\nLine two with \"quotes\" and a {brace}",
+      "expected": "Expected\nmultiline"
+    }
+  ]
+}

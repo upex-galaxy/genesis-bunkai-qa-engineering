@@ -1,1 +1,0 @@
-{"id":"802d4ad3bbe272bf722a29b14beb8649","fullName":"integration/workspace-export/inspectWorkspaceExportArchive.test.ts:74:3","name":"BK-1015: should encode run snapshots as NDJSON when the workspace has run history","status":"passed","testResultsByEnv":{"default":"b8c3a9456be041b3513d955aead86a00"}}

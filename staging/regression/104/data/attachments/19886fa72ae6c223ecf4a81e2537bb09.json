@@ -1,0 +1,15 @@
+{
+  "test": {
+    "id": "a0a423fb-2f7d-4faf-b7e6-16c96754c621",
+    "steps": [
+      {
+        "atc_id": "adfef3a4-efd5-4bb2-9042-43218e3dd7e0",
+        "position": 1
+      }
+    ],
+    "title": "QA Auto BK-667 test of the runs row",
+    "created_at": "2026-11-22T04:33:43.151768+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "workspace_id": "ce64dd7d-8483-40ba-8850-79dae2d75c47"
+  }
+}
