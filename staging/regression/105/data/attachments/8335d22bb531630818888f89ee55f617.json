@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "Invite token is invalid.",
+    "request_id": "d9506be6-1e19-4902-9b49-eb8e64f56bef"
+  }
+}

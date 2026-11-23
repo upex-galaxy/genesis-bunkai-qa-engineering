@@ -1,0 +1,22 @@
+{
+  "workspaces": [
+    {
+      "id": "ebd2427c-07e2-4843-b4ed-f16bede5d111",
+      "slug": "acme-qa",
+      "name": "Acme QA",
+      "owner_user_id": "08cfcc8e-2b52-433a-be29-bb90eb467a7a",
+      "plan": "community",
+      "created_at": "2026-09-10T20:51:57.831386+00:00",
+      "role": "viewer"
+    },
+    {
+      "id": "dbf77c2a-722d-4837-99e3-de8dded0f69e",
+      "slug": "qa-auto-bk508-1795410977133-qdtvcb",
+      "name": "QA Auto BK-508 1795410977133-qdtvcb",
+      "owner_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "plan": "community",
+      "created_at": "2026-11-23T05:16:17.434171+00:00",
+      "role": "viewer"
+    }
+  ]
+}
