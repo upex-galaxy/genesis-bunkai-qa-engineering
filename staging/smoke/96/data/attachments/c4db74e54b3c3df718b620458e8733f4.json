@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-vyj3sy",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "069b3669-41f5-4203-9b78-aca8ece48197",
+  "expires_in_days": 1
+}
