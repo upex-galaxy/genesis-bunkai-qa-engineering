@@ -1,0 +1,1 @@
+{"id":"3aa62a54fc5963e5206878c340e922c7.78da8f10f4bdec4f42c9a38fa7183165","fullName":"integration/auth/user-session.test.ts › BK-166: User Session API (no credentials) › BK-166: should answer 401 without any credential","name":"BK-166: should answer 401 without any credential","status":"passed","testResultsByEnv":{"default":"c9edd89e1c8829d9e04e75bcae9f7742"}}

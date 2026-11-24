@@ -1,0 +1,30 @@
+{
+  "bug": {
+    "id": "70d7bb12-4d5a-4078-bf18-baad9c3c71a8",
+    "title": "qa-auto-bk667-tc9-ys9wxusu",
+    "atc_id": null,
+    "module": {
+      "id": "90a4f10a-9e76-4c29-86a3-180288599aec",
+      "name": "Idempotency",
+      "path": "idempotency",
+      "archived_at": null
+    },
+    "origin": null,
+    "run_id": null,
+    "status": "open",
+    "severity": "P3",
+    "module_id": "90a4f10a-9e76-4c29-86a3-180288599aec",
+    "created_at": "2026-11-24T12:00:44.449282+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "project_id": "6715d626-ad9b-4aff-9f4a-6803409c06b7",
+    "updated_at": "2026-11-24T12:00:44.449282+00:00",
+    "description": null,
+    "run_step_id": null,
+    "workspace_id": "2a69802b-958b-4e2a-8375-4df98ed8aad6",
+    "evidence_urls": [],
+    "content_version": 1,
+    "assignee_user_id": null,
+    "steps_to_reproduce": "",
+    "evidence_attachments": []
+  }
+}
