@@ -1,0 +1,8 @@
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/runs
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/runs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/runs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/runs
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/runs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/3996c4ed-80cb-416f-b05d-8a26b156be22/runs
+✅ [BK-1718] verifyEarlierAdopterContractUnchanged - PASS (1692ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/3996c4ed-80cb-416f-b05d-8a26b156be22

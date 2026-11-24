@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": "ea5400a0-38ac-4687-996b-8693f303c7f8",
+      "status": "running",
+      "test_id": "0bf9e4ee-71c7-4ed5-b71d-a47abb7c2f05",
+      "project_id": "459e4a0b-31bd-4a93-9a8b-61cc916e691e",
+      "started_at": "2026-11-24T07:54:38.878496+00:00",
+      "test_title": "QA Auto BK-667 test of the runs row",
+      "finished_at": null,
+      "failed_steps": 0,
+      "passed_steps": 0,
+      "project_name": "QA Auto BK-667 parent project",
+      "project_slug": "qa-auto-bk-667-parent-project",
+      "blocked_steps": 0,
+      "executor_mode": "human",
+      "environment_name": "staging"
+    }
+  ],
+  "next_cursor": null,
+  "workspace_run_count": 1
+}

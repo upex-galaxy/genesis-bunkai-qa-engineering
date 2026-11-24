@@ -1,0 +1,28 @@
+{
+  "projects": [
+    {
+      "id": "3627d502-c307-4839-a747-a738a22b0aee",
+      "slug": "pepe123",
+      "name": "pepe123",
+      "module_count": 0,
+      "atc_count": 0,
+      "last_activity_at": "2026-09-09T21:40:37.456088+00:00"
+    },
+    {
+      "id": "413855f8-0f7c-423a-a8f3-8702daba9ed6",
+      "slug": "pepe",
+      "name": "pepe",
+      "module_count": 0,
+      "atc_count": 0,
+      "last_activity_at": "2026-08-30T00:38:22.045437+00:00"
+    },
+    {
+      "id": "3b9e197e-91cb-4fe3-a7b2-6620cb69d344",
+      "slug": "qa-santander",
+      "name": "QA SANTANDER",
+      "module_count": 0,
+      "atc_count": 0,
+      "last_activity_at": "2026-08-23T16:02:04.69694+00:00"
+    }
+  ]
+}
