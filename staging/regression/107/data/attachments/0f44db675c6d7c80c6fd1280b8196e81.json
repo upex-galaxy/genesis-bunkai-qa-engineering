@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "0406cf62-289c-4388-b824-91d3f5854b92",
+    "slug": "idempotency/atc-fc45c92f",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "870ac80e-4df9-4edd-b0aa-3e6d40b634a9",
+        "content": "Send the request",
+        "expected": "It is accepted",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "QA Auto BK-667 ATC of the runs row",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "2c45f8dd-6543-4d52-aeff-988b6b588cd3",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-25T06:29:39.401887+00:00",
+    "project_id": "d94ad434-9c6e-4898-b450-3702088367f8",
+    "updated_at": "2026-11-25T06:29:39.401887+00:00",
+    "archived_at": null,
+    "user_story_id": "d1c91d80-d87c-44fe-bef5-7778941e7cf2",
+    "acceptance_criterion_ids": [
+      "fc26194d-277d-40d4-80c8-895dd21e9e7b"
+    ]
+  }
+}

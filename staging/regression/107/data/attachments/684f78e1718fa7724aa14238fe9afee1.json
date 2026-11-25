@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "id": "6b30eced-73d9-4ee3-a253-f11b9db9b51e",
+      "title": "qa-auto-bk667-tc9-r1b83q0l",
+      "atc_id": null,
+      "module": {
+        "id": "ab9eb817-3f63-4205-b083-930b4e3c44d9",
+        "name": "Idempotency",
+        "path": "idempotency"
+      },
+      "run_id": null,
+      "status": "open",
+      "severity": "P3",
+      "module_id": "ab9eb817-3f63-4205-b083-930b4e3c44d9",
+      "created_at": "2026-11-25T06:29:52.877629+00:00",
+      "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+      "project_id": "162c72d8-81e8-4f58-a450-75067b2d335b",
+      "updated_at": "2026-11-25T06:29:52.877629+00:00",
+      "description": null,
+      "run_step_id": null,
+      "workspace_id": "e34c9135-ca9e-40be-a684-05d76a97f87b",
+      "evidence_urls": [],
+      "assignee_user_id": null,
+      "steps_to_reproduce": "",
+      "assignee": null
+    }
+  ],
+  "aggregates": {
+    "by_status": {
+      "open": 1,
+      "closed": 0,
+      "resolved": 0,
+      "in_progress": 0
+    },
+    "by_severity": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 1,
+      "P4": 0
+    }
+  },
+  "next_cursor": null
+}

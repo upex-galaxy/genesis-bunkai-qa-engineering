@@ -1,0 +1,19 @@
+{
+  "atc": {
+    "id": "a02de9f8-9653-4a39-ba8d-4dab9ef1993b",
+    "slug": "export/atc-bb318784",
+    "tags": [],
+    "layer": "API",
+    "title": "QA Auto multiline ATC",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "fbd14206-b8ee-4f2f-b20e-b298cbd175ee",
+    "technique": null,
+    "created_at": "2026-11-25T06:30:11.387305+00:00",
+    "project_id": "f9834719-e41c-4f84-9a17-df9aa77fac21",
+    "updated_at": "2026-11-25T06:30:11.387305+00:00",
+    "archived_at": null,
+    "user_story_id": "b54cdcb9-f327-4084-bab3-2f071525aeab"
+  }
+}

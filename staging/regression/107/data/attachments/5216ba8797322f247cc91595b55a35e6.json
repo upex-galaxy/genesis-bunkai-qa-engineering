@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "forbidden",
+    "message": "Only the workspace Owner can delete or restore this workspace.",
+    "request_id": "ec4851e5-e3e5-4c4d-96c4-84d91e23abb7"
+  }
+}

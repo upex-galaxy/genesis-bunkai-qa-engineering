@@ -1,0 +1,12 @@
+{
+  "export": {
+    "id": "5dafe7bd-32d8-4fe0-99b5-e5e96c95e55b",
+    "status": "completed",
+    "archive_bytes": 2468,
+    "error_message": null,
+    "started_at": "2026-11-25T06:33:32.176+00:00",
+    "completed_at": "2026-11-25T06:33:32.457+00:00",
+    "expires_at": "2026-12-02T06:33:32.457+00:00",
+    "created_at": "2026-11-25T06:33:32.157902+00:00"
+  }
+}

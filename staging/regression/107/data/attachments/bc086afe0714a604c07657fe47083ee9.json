@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "b732a4bc-4a0b-4df4-aecd-eb57b8180f85",
+    "slug": "idempotency/atc-cf01e265",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "af186d08-e7f6-4ad8-bb21-c5b68ffa0d25",
+        "content": "Send the request",
+        "expected": "It is accepted",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "QA Auto BK-667 ATC chained by the tests row",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "2c45f8dd-6543-4d52-aeff-988b6b588cd3",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-25T06:29:39.179564+00:00",
+    "project_id": "d94ad434-9c6e-4898-b450-3702088367f8",
+    "updated_at": "2026-11-25T06:29:39.179564+00:00",
+    "archived_at": null,
+    "user_story_id": "d1c91d80-d87c-44fe-bef5-7778941e7cf2",
+    "acceptance_criterion_ids": [
+      "fc26194d-277d-40d4-80c8-895dd21e9e7b"
+    ]
+  }
+}

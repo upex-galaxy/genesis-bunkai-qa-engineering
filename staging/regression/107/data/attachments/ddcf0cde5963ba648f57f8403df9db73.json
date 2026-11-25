@@ -1,0 +1,53 @@
+{
+  "items": [
+    {
+      "id": "d5d485dc-8fb5-4ae2-b7a3-d2a953b6af22",
+      "entity_type": "workspace",
+      "action": "export.downloaded",
+      "action_label": "downloaded the workspace data export",
+      "actor": {
+        "user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+        "email": "test@aeasteaont.resend.app"
+      },
+      "item": {
+        "label": "a workspace",
+        "entity_id": "aeb8fbf3-faf9-4df7-b29d-a2eaac416419"
+      },
+      "payload": {},
+      "created_at": "2026-11-25T06:30:21.954959+00:00"
+    },
+    {
+      "id": "8a6867f2-2f7e-473d-a097-cc48db8cfeb3",
+      "entity_type": "workspace",
+      "action": "export.downloaded",
+      "action_label": "downloaded the workspace data export",
+      "actor": {
+        "user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+        "email": "test@aeasteaont.resend.app"
+      },
+      "item": {
+        "label": "a workspace",
+        "entity_id": "aeb8fbf3-faf9-4df7-b29d-a2eaac416419"
+      },
+      "payload": {},
+      "created_at": "2026-11-25T06:30:21.251602+00:00"
+    },
+    {
+      "id": "2ebe66d5-a43b-49b5-849f-6f2f921b4edd",
+      "entity_type": "workspace",
+      "action": "export.requested",
+      "action_label": "requested a workspace data export",
+      "actor": {
+        "user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+        "email": "test@aeasteaont.resend.app"
+      },
+      "item": {
+        "label": "a workspace",
+        "entity_id": "aeb8fbf3-faf9-4df7-b29d-a2eaac416419"
+      },
+      "payload": {},
+      "created_at": "2026-11-25T06:30:20.050294+00:00"
+    }
+  ],
+  "next_cursor": null
+}
