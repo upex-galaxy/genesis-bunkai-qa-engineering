@@ -1,0 +1,32 @@
+{
+  "atc": {
+    "id": "bdcd2575-18a7-4502-8d92-0fbc3d47e57e",
+    "slug": "idempotency/atc-dd1ee8d9",
+    "tags": [],
+    "layer": "API",
+    "steps": [
+      {
+        "id": "8583441f-ac74-4494-9dcc-c368d27c10e9",
+        "content": "Send the create request",
+        "expected": "The record is created once",
+        "position": 1,
+        "input_data": null
+      }
+    ],
+    "title": "qa-auto-bk667-tc9-drvryvmb",
+    "status": "unrun",
+    "version": 1,
+    "priority": null,
+    "module_id": "7eb458c0-0d21-42a6-9f7f-cdf3d77e2a26",
+    "technique": null,
+    "assertions": [],
+    "created_at": "2026-11-25T10:53:15.200244+00:00",
+    "project_id": "e9bd03d1-c8e6-4422-bacf-9177b3c359e0",
+    "updated_at": "2026-11-25T10:53:15.200244+00:00",
+    "archived_at": null,
+    "user_story_id": "4d44d46d-051a-42aa-a3af-30d00188b2e6",
+    "acceptance_criterion_ids": [
+      "a9f5fe29-e180-4439-8332-abf43cf23165"
+    ]
+  }
+}

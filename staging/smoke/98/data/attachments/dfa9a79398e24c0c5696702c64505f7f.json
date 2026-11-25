@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "conflict",
+    "message": "Idempotency-Key reused with a different request payload.",
+    "request_id": "3dd0e4ca-208f-47e5-a928-6d68f0dfb445"
+  }
+}

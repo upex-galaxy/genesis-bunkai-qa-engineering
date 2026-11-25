@@ -1,0 +1,16 @@
+{
+  "title": "qa-auto-bk667-tc9-drvryvmb",
+  "module_id": "7eb458c0-0d21-42a6-9f7f-cdf3d77e2a26",
+  "user_story_id": "4d44d46d-051a-42aa-a3af-30d00188b2e6",
+  "acceptance_criterion_ids": [
+    "a9f5fe29-e180-4439-8332-abf43cf23165"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the create request",
+      "expected": "The record is created once"
+    }
+  ]
+}

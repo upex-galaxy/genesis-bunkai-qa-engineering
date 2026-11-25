@@ -1,0 +1,21 @@
+{
+  "kpis": {
+    "ac_bound": 1,
+    "ac_total": 1,
+    "ac_executed": 0,
+    "modules_total": 1,
+    "modules_fully_covered": 0
+  },
+  "modules": [
+    {
+      "status": "not_run",
+      "ac_total": 1,
+      "module_id": "7f3232d5-57a3-412b-beb0-ae83dd715574",
+      "ac_not_run": 1,
+      "ac_executed": 0,
+      "module_name": "Export",
+      "ac_uncovered": 0
+    }
+  ],
+  "no_coverage": []
+}
