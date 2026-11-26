@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "This workspace was deleted.",
+    "details": {
+      "reason": "workspace_deleted"
+    },
+    "request_id": "c7d9e632-0cb4-4d0c-97f4-0fc2130c9749"
+  }
+}

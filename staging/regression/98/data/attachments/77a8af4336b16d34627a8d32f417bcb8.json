@@ -1,7 +1,0 @@
-{
-  "error": {
-    "code": "not_found",
-    "message": "Token not found or already revoked.",
-    "request_id": "7eeb84ff-d021-4854-b302-bb7178247a94"
-  }
-}

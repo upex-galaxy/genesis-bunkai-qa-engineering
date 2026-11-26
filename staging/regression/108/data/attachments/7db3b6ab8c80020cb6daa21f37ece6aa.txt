@@ -1,0 +1,5 @@
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/atcs/search
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/atcs/search
+✅ [BK-1690] refuseCreateWithoutKey - PASS (859ms)

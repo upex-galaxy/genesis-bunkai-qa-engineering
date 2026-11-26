@@ -1,0 +1,12 @@
+{
+  "acceptance_criterion": {
+    "id": "c63e9236-00fe-4f10-8f31-359e88705a1d",
+    "title": "Runs are exported as NDJSON",
+    "position": 1,
+    "created_at": "2026-11-26T06:23:27.649568+00:00",
+    "archived_at": null,
+    "description": null,
+    "user_story_id": "e05f26ec-01d4-43d9-b724-4641c9f92a1c",
+    "archive_batch_id": null
+  }
+}
