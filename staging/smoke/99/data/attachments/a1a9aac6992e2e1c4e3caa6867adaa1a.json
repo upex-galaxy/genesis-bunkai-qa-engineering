@@ -1,0 +1,15 @@
+{
+  "user_stories": [
+    {
+      "id": "cccb19a5-f7a1-46d7-b22f-288d2331cf26",
+      "module_id": "efffcf9d-e30e-416b-abd4-cfedca48dbea",
+      "project_id": "7b454a92-45bd-4af4-820e-aa2ef8dcdefd",
+      "title": "QA Auto BK-667 parent story",
+      "description": null,
+      "external_id": null,
+      "external_url": null,
+      "created_at": "2026-11-26T10:34:05.803282+00:00",
+      "archived_at": null
+    }
+  ]
+}
