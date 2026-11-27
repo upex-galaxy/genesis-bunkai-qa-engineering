@@ -1,0 +1,9 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API NOK: 409 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+✅ [BK-1705] refuseKeyReuseUnderAnotherParent - PASS (887ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/b85ea83e-d33b-4b9f-9ed1-b41085b78745
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/b85ea83e-d33b-4b9f-9ed1-b41085b78745
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/ff9e970e-4cfc-4929-90bf-83cad18f1e80
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/ff9e970e-4cfc-4929-90bf-83cad18f1e80

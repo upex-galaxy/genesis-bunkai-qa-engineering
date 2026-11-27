@@ -1,0 +1,15 @@
+{
+  "test": {
+    "id": "1cdb2e22-173c-42f2-8b9c-dda77e1fd894",
+    "steps": [
+      {
+        "atc_id": "1641e721-448e-4fbd-977d-30b28dc5adfc",
+        "position": 1
+      }
+    ],
+    "title": "QA Auto export test\nwith newline in title",
+    "created_at": "2026-11-27T06:12:00.953617+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "workspace_id": "95a8277b-351a-413a-a223-8aca6fcb4fb3"
+  }
+}

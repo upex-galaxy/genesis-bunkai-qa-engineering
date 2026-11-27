@@ -1,0 +1,16 @@
+{
+  "title": "qa-auto-bk667-tc16-vlldalox",
+  "module_id": "38b08a73-e037-4b3e-959a-1ea98dae5035",
+  "user_story_id": "74769bd3-1955-4a75-b188-0bb81be1c4a5",
+  "acceptance_criterion_ids": [
+    "e58898e8-def2-4f06-94ed-40ec358cae23"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the create request",
+      "expected": "The record is created once"
+    }
+  ]
+}

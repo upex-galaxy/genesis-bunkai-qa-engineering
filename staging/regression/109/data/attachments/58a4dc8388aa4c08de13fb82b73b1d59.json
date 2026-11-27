@@ -1,0 +1,28 @@
+{
+  "user": {
+    "id": "13523ece-bed2-44e8-ae69-9c88fdd97601",
+    "email": "qa-auto-bk667-1795760058726-rtp4a3@aeasteaont.resend.app",
+    "display_name": null
+  },
+  "workspaces": [
+    {
+      "id": "dce3a0ed-fe13-47de-99bf-aa848a44fb7a",
+      "slug": "qa-auto-bk667-tc25-czdpf4xv",
+      "name": "QA Auto BK-667 qa-auto-bk667-tc25-czdpf4xv",
+      "plan": "community",
+      "owner_user_id": "13523ece-bed2-44e8-ae69-9c88fdd97601",
+      "created_at": "2026-11-27T06:14:26.916193+00:00"
+    }
+  ],
+  "active_workspace_id": "dce3a0ed-fe13-47de-99bf-aa848a44fb7a",
+  "active_workspace_role": "owner",
+  "auth": {
+    "source": "cookie",
+    "scopes": [
+      "atc:read",
+      "atc:write",
+      "run:execute",
+      "workspace:admin"
+    ]
+  }
+}

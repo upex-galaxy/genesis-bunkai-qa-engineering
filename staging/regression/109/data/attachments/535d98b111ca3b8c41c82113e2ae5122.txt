@@ -1,0 +1,11 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a5a4d0b2-8a8e-4eff-8c43-96b72f1913d3/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/projects/3482314b-edd3-4ba7-a4b4-6d721e43b365/modules
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/modules/850f85c8-27d8-453d-8d4b-2a141ce14560/user-stories
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/user-stories/29ad29be-e3f0-491c-857f-0e6533da1a6f/acceptance-criteria
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/atcs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/atcs/search
+✅ [BK-1700] createNewRecordAfterKeyExpired - PASS (1069ms)

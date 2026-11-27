@@ -1,0 +1,54 @@
+{
+  "run": {
+    "id": "0e101b25-8bef-4623-bc46-0d1de5eb5e64",
+    "atcs": [
+      {
+        "id": "4ce5aaea-bfd9-4107-b9ad-d25b892e8b84",
+        "steps": [
+          {
+            "id": "d451c5fc-60cc-458f-a1a9-45147b496b45",
+            "note": null,
+            "status": "pending",
+            "content": "Send the request",
+            "expected": "It is accepted",
+            "position": 1,
+            "input_data": null,
+            "atc_step_id": "a1a87d7e-b8db-48c1-a1e1-bfb92dedc7f0",
+            "executed_at": null,
+            "evidence_url": null
+          }
+        ],
+        "atc_id": "c402a343-e359-42b7-867e-55197bfa56a1",
+        "status": "pending",
+        "position": 1,
+        "atc_title": "QA Auto BK-667 ATC of the runs row"
+      }
+    ],
+    "branch": null,
+    "commit": null,
+    "status": "running",
+    "test_id": "facbaf1e-1662-4cc4-b5c9-2521dafc1570",
+    "version": 1,
+    "replayed": false,
+    "atc_count": 1,
+    "module_id": "fe7f726a-dbd3-40d0-83fc-dfdbcfb17b39",
+    "created_at": "2026-11-27T06:11:11.221465+00:00",
+    "project_id": "ec40faf4-3fed-43b6-bdde-753ed4e4af6e",
+    "started_at": "2026-11-27T06:11:11.221465+00:00",
+    "step_count": 1,
+    "test_title": "QA Auto BK-667 test of the runs row",
+    "updated_at": "2026-11-27T06:11:11.221465+00:00",
+    "finished_at": null,
+    "module_name": "Idempotency",
+    "abort_reason": null,
+    "pipeline_url": null,
+    "workspace_id": "f36c13cb-c80f-468c-8b76-754c14249971",
+    "evidence_urls": [],
+    "executor_mode": "human",
+    "executor_name": "qa-automation",
+    "pipeline_name": null,
+    "environment_id": "63942f7c-8ffa-4c2f-b193-235031fb1f3b",
+    "environment_name": "staging",
+    "executor_user_id": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7"
+  }
+}

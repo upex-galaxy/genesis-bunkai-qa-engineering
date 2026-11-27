@@ -1,0 +1,11 @@
+{
+  "invite": {
+    "id": "a13afc44-0916-457f-a924-87c067babbb8",
+    "email": "bunkai-staging-member@aeasteaont.resend.app",
+    "role": "member",
+    "expires_at": "2026-12-04T06:15:20.175572+00:00",
+    "created_at": "2026-11-27T06:15:20.175572+00:00"
+  },
+  "token": "***",
+  "accept_url": "***"
+}

@@ -1,0 +1,16 @@
+{
+  "title": "QA Auto BK-667 ATC chained by the tests row",
+  "module_id": "fe7f726a-dbd3-40d0-83fc-dfdbcfb17b39",
+  "user_story_id": "7226c960-bd37-4a1e-b695-0126a8327dd6",
+  "acceptance_criterion_ids": [
+    "74a04f1f-69c8-400e-a867-6618287ab7b5"
+  ],
+  "layer": "API",
+  "steps": [
+    {
+      "position": 1,
+      "content": "Send the request",
+      "expected": "It is accepted"
+    }
+  ]
+}
