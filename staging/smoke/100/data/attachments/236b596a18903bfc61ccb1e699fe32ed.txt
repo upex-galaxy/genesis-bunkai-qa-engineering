@@ -1,0 +1,5 @@
+---- API NOK: 400 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a4bdac67-dc96-4398-acc7-d24ce194c50f/projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a4bdac67-dc96-4398-acc7-d24ce194c50f/projects
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a4bdac67-dc96-4398-acc7-d24ce194c50f/projects
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a4bdac67-dc96-4398-acc7-d24ce194c50f/projects
+✅ [BK-1690] refuseCreateWithoutKey - PASS (819ms)
