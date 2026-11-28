@@ -1,0 +1,12 @@
+{
+  "module": {
+    "id": "21ff2722-0a70-4eb5-bda8-84d8c5c63355",
+    "project_id": "3f718a84-d644-48f9-a38e-5a3a06f8e5d2",
+    "parent_module_id": null,
+    "path": "idempotency",
+    "name": "Idempotency",
+    "position": 0,
+    "description": null,
+    "created_at": "2026-11-28T09:47:51.085477+00:00"
+  }
+}
