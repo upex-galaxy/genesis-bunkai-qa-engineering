@@ -1,0 +1,30 @@
+{
+  "bug": {
+    "id": "60cfa954-3a95-4776-a78a-b0ce3079dfb7",
+    "title": "QA Auto BK-512 standalone bug",
+    "atc_id": null,
+    "module": {
+      "id": "ecfab045-e910-4a0b-9491-6a370b7f219f",
+      "name": "Export",
+      "path": "export",
+      "archived_at": null
+    },
+    "origin": null,
+    "run_id": null,
+    "status": "open",
+    "severity": "P3",
+    "module_id": "ecfab045-e910-4a0b-9491-6a370b7f219f",
+    "created_at": "2026-11-28T05:55:19.380144+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "project_id": "05a1c297-e805-47cc-ade5-3ffb71c12ad3",
+    "updated_at": "2026-11-28T05:55:19.380144+00:00",
+    "description": null,
+    "run_step_id": null,
+    "workspace_id": "cfa0d2c2-bcf9-42f7-ae57-de75bdf770d9",
+    "evidence_urls": [],
+    "content_version": 1,
+    "assignee_user_id": null,
+    "steps_to_reproduce": "",
+    "evidence_attachments": []
+  }
+}

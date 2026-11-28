@@ -1,0 +1,9 @@
+{
+  "name": "qa-auto-bk508-liuvrr",
+  "scopes": [
+    "atc:read",
+    "workspace:admin"
+  ],
+  "workspace_id": "1ec6cf90-7ceb-4fcf-8d0f-7f9c86c0d70d",
+  "expires_in_days": 1
+}

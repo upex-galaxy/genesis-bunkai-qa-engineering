@@ -1,0 +1,9 @@
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/bugs
+✅ [BK-1698] replayCreateWithSameKey - PASS (631ms)
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/0db85db9-7953-40cf-be79-4fde937b7dc3
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/0db85db9-7953-40cf-be79-4fde937b7dc3
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/10c60978-cbca-4adb-b6cc-3fd04bec3fb2
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/10c60978-cbca-4adb-b6cc-3fd04bec3fb2
+---- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces

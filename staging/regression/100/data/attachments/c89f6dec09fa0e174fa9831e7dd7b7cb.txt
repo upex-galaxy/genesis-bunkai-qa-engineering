@@ -1,5 +1,0 @@
----- API OK: 204 - https://staging-upexbunkai.vercel.app/api/v1/tokens/318caec3-1303-404a-a75e-51e0da69f54b
----- API OK: 201 - https://staging-upexbunkai.vercel.app/api/v1/workspaces
----- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me/active-workspace
-✅ [BK-946] deleteOnlyWorkspaceLandingOnOnboarding - PASS (2721ms)
----- API NOK: 404 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/6418078c-ee23-46d5-b9e0-0e2bb9a9829d

@@ -1,0 +1,15 @@
+{
+  "test": {
+    "id": "0bdffefa-583a-43e8-bcc8-bae84c106570",
+    "steps": [
+      {
+        "atc_id": "d16b067c-0952-466a-bdbc-7672c9f6e747",
+        "position": 1
+      }
+    ],
+    "title": "qa-auto-bk667-tc29-7jev2c63",
+    "created_at": "2026-11-28T05:51:35.266692+00:00",
+    "created_by": "1a4e8b67-0e8c-454d-b1ad-b36ca4f96ed7",
+    "workspace_id": "9d0011d8-faa5-43e3-8ac0-48be585248a5"
+  }
+}

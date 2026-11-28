@@ -1,4 +1,0 @@
-✅ [BK-1714] completeOnboardingCreatingFirstWorkspace - PASS (2103ms)
----- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/me
----- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a6e7f466-0b2f-4176-add4-882d676d3c63
----- API OK: 200 - https://staging-upexbunkai.vercel.app/api/v1/workspaces/a6e7f466-0b2f-4176-add4-882d676d3c63
